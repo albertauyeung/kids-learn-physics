@@ -58,9 +58,9 @@ export default {
         { type: 'q', t: 'u1.min-to-s' },
         { type: 'q', t: 'u1.unit-choice' },
         { type: 'q', t: 'u1.mm-to-cm' },
-        { type: 'q', t: 'u1.s-to-ms' },
+        { type: 'q', t: 'u1.estimate-mcq' },
         { type: 'q', t: 'u1.h-to-min' },
-        { type: 'q', t: 'u1.cm-to-m' },
+        { type: 'q', t: 'u1.chain-convert' },
       ],
     },
     // ------------------------------------------------------------------
@@ -93,9 +93,9 @@ export default {
         { type: 'q', t: 'u1.disp-backforth' },
         { type: 'q', t: 'u1.lap' },
         { type: 'q', t: 'u1.disp-bigger' },
+        { type: 'q', t: 'u1.disp-three' },
         { type: 'q', t: 'u1.disp-backforth' },
-        { type: 'q', t: 'u1.dist-backforth' },
-        { type: 'q', t: 'u1.disp-backforth' },
+        { type: 'q', t: 'u1.disp-three' },
       ],
     },
     // ------------------------------------------------------------------
@@ -104,7 +104,7 @@ export default {
       steps: [
         {
           type: 'predict', prompt: 'Race time! The <b>minecart</b> (8 metres per second, written 8 m/s) races <b>40 m</b>. Pip sprints (5 m/s) but only needs to run <b>20 m</b>. Who finishes first?',
-          choices: ['The minecart', 'Pip', 'It is a tie'], answer: 1, keepOrder: true,
+          choices: ['The minecart', 'Pip', 'It is a tie'], answer: 1, keepOrder: true, revealAfterSim: true,
           explain: 'The minecart needs 40 ÷ 8 = 5 s. Pip needs 20 ÷ 5 = 4 s. Faster doesn\'t always mean first!',
         },
         {
@@ -134,6 +134,15 @@ export default {
             editDistance: { min: 10, max: 60, step: 10 },
           },
         },
+        {
+          type: 'info', title: 'Worked example: rearranging',
+          html: `<p>A horse runs at <b>6 m/s</b> for <b>5 s</b>. How far does it go?</p>
+                 <p>We know <b>speed = distance ÷ time</b>. Multiply both sides by time:</p>
+                 <p class="eq">distance = speed × time = 6 × 5 = 30 m</p>
+                 <p>How long to run <b>42 m</b>? Divide both sides of distance = speed × time by speed:</p>
+                 <p class="eq">time = distance ÷ speed = 42 ÷ 6 = 7 s</p>
+                 <p class="tip">Check it makes sense: 7 s at 6 m/s → 7 × 6 = 42 m ✔</p>`,
+        },
         { type: 'q', t: 'u1.eq-distance' },
         { type: 'q', t: 'u1.eq-time' },
         { type: 'q', t: 'u1.speed-basic' },
@@ -141,7 +150,11 @@ export default {
         { type: 'q', t: 'u1.speed-time' },
         { type: 'q', t: 'u1.speed-unit-mcq' },
         { type: 'q', t: 'u1.speed-kmh' },
-        { type: 'q', t: 'u1.speed-basic' },
+        {
+          type: 'info', title: 'Try at home! 🏃', speaker: 'friend',
+          html: `<p>Measure out <b>10 m</b> (about 13 big steps). Ask someone to time you with a phone while you <b>walk</b> it, then while you <b>run</b> it.</p>
+                 <p>Work out your speed for each: <b>10 ÷ your time</b>. A normal walk is about 1.4 m/s. How does your run compare with Pip's sprint (5 m/s)?</p>`,
+        },
       ],
     },
     // ------------------------------------------------------------------
@@ -155,13 +168,13 @@ export default {
         },
         {
           type: 'predict', prompt: 'Pip walks 3 km at 6 km/h, then another 3 km at 2 km/h. What is his average speed?',
-          choices: ['4 km/h', '3 km/h', '8 km/h', '2 km/h'], answer: 1, keepOrder: true,
+          choices: ['4 km/h', '3 km/h', '8 km/h', '2 km/h'], answer: 1, keepOrder: true, revealAfterSim: true,
           explain: 'First part: 3 ÷ 6 = 0.5 h. Second part: 3 ÷ 2 = 1.5 h. Total: 6 km in 2 h = 3 km/h — not 4!',
         },
         {
           type: 'sim', widget: 'journey', goal: true, title: 'Journey Planner',
-          html: 'Press <b>Go!</b> and compare the real average with "the average of the two speeds". Then try changing the sliders.',
-          params: { d1: 3, s1: 6, d2: 3, s2: 2 },
+          html: 'Press <b>Go!</b> to test your prediction. Then take the challenge: find legs where the trap gives the right answer.',
+          params: { d1: 3, s1: 6, d2: 3, s2: 2, goal: 'equal-average' },
         },
         {
           type: 'info', title: 'Why the trap works',
@@ -179,8 +192,8 @@ export default {
         { type: 'q', t: 'u1.avg-speeds' },
         { type: 'q', t: 'u1.ms-to-kmh' },
         { type: 'q', t: 'u1.avg-trap-mcq' },
-        { type: 'q', t: 'u1.avg-times' },
-        { type: 'q', t: 'u1.kmh-to-ms' },
+        { type: 'q', t: 'u1.spot-bug-avg' },
+        { type: 'q', t: 'u1.avg-inverse' },
       ],
     },
     // ------------------------------------------------------------------
@@ -189,7 +202,8 @@ export default {
       steps: [
         {
           type: 'info', title: 'Pictures of motion',
-          html: `<p>A <b>distance–time graph</b> tells a story: time goes along the bottom, distance goes up the side.</p>
+          html: `<p>A <b>distance–time graph</b> tells a story: time goes along the bottom, <b>distance from the start</b> goes up the side.</p>
+                 <p class="tip">It is <b>not</b> a picture of the path — a line going up doesn't mean walking uphill!</p>
                  <ul><li><b>Steeper</b> line → faster</li><li><b>Flat</b> line → standing still</li><li><b>Straight</b> line → steady speed</li></ul>`,
         },
         {
@@ -200,12 +214,12 @@ export default {
         {
           type: 'sim', widget: 'motion-mapper', goal: true, title: 'Motion Mapper',
           html: 'Press <b>Record</b>, then move Pip using the slider (or drag him on the track). Try: walk slowly, stop, then run!',
-          params: { duration: 10, track: [0, 20], label: 'distance' },
+          params: { duration: 10, track: [0, 20], label: 'distance from start' },
         },
         {
           type: 'sim', widget: 'motion-mapper', goal: true, title: 'Match the Graph',
           html: 'Can you move Pip so your line matches the dashed one?',
-          params: { duration: 10, track: [0, 20], label: 'distance', target: [[0, 0], [4, 8], [7, 8], [10, 18]], tolerance: 1.6 },
+          params: { duration: 10, track: [0, 20], label: 'distance from start', target: [[0, 0], [4, 8], [7, 8], [10, 18]], tolerance: 1.6 },
         },
         {
           type: 'info', title: 'Speed from a graph',
@@ -214,12 +228,12 @@ export default {
                  <p>In the Match the Graph challenge, Pip went 8 m in the first 4 s: <b>2 m/s</b>. Then he stopped for 3 s. Then 10 m in 3 s ≈ 3.3 m/s.</p>`,
         },
         { type: 'q', t: 'u1.graph-still-mcq' },
+        { type: 'q', t: 'u1.graph-story-mcq' },
         { type: 'q', t: 'u1.graph-faster-mcq' },
+        { type: 'q', t: 'u1.graph-height-mcq' },
         { type: 'q', t: 'u1.graph-speed' },
         { type: 'q', t: 'u1.graph-stop' },
         { type: 'q', t: 'u1.graph-speed' },
-        { type: 'q', t: 'u1.graph-stop' },
-        { type: 'q', t: 'u1.speed-distance' },
       ],
     },
     // ------------------------------------------------------------------
@@ -239,6 +253,13 @@ export default {
     {
       id: 'mech.u1.psB', type: 'problems', title: 'Word Problems', icon: 'bookshelf',
       steps: [
+        {
+          type: 'info', title: 'Worked example: watch the units',
+          html: `<p>A bus goes <b>15 km at 30 km/h</b>. How many <b>minutes</b>?</p>
+                 <p>1. time = distance ÷ speed = 15 ÷ 30 = <b>0.5 hours</b> (km and km/h give hours).</p>
+                 <p>2. Turn hours into minutes: 0.5 × 60 = <b>30 minutes</b>.</p>
+                 <p class="tip">Always ask: what unit does my answer come out in, and what unit does the question want?</p>`,
+        },
         { type: 'q', t: 'u1.speed-kmh' },
         { type: 'q', t: 'u1.wp-school' },
         { type: 'q', t: 'u1.wp-thunder' },
@@ -247,6 +268,25 @@ export default {
         { type: 'q', t: 'u1.wp-avg-trap' },
         { type: 'q', t: 'u1.puzzle-snail' },
         { type: 'q', t: 'u1.puzzle-impossible' },
+      ],
+    },
+    {
+      id: 'mech.u1.review', type: 'problems', title: 'Unit 1 Review', icon: 'diamondore',
+      steps: [
+        {
+          type: 'info', title: 'Unit 1 Review', speaker: 'friend',
+          html: `<p>One question on each big idea from this unit. Get <b>8 out of 10</b> right first time to <b>master</b> Unit 1 — and get ready for the boss!</p>`,
+        },
+        { type: 'q', t: 'u1.chain-convert' },
+        { type: 'q', t: 'u1.disp-three' },
+        { type: 'q', t: 'u1.disp-bigger' },
+        { type: 'q', t: 'u1.speed-time' },
+        { type: 'q', t: 'u1.kmh-to-ms' },
+        { type: 'q', t: 'u1.avg-speeds' },
+        { type: 'q', t: 'u1.spot-bug-avg' },
+        { type: 'q', t: 'u1.graph-height-mcq' },
+        { type: 'q', t: 'u1.graph-story-mcq' },
+        { type: 'q', t: 'u1.wp-school' },
       ],
     },
     {
@@ -264,7 +304,7 @@ export default {
         { type: 'q', t: 'u1.wp-avg-trap' },
         { type: 'q', t: 'u1.graph-stop' },
         { type: 'q', t: 'u1.wp-school' },
-        { type: 'q', t: 'u1.speed-time' },
+        { type: 'q', t: 'u1.avg-inverse' },
         { type: 'q', t: 'u1.wp-thunder' },
       ],
     },

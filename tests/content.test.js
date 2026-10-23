@@ -123,3 +123,57 @@ test('index.html preloads every JavaScript module', async () => {
     assert.ok(html.includes(`<link rel="modulepreload" href="${rel}">`), `missing modulepreload for ${rel}`);
   }
 });
+
+// ---------- Learning-design rules (from the learning review) ----------
+import { fmt } from '../js/core/util.js';
+
+test('hints never give away the final answer', () => {
+  for (const t of allTemplates()) {
+    for (let seed = 1; seed <= 200; seed++) {
+      const q = instantiate(t.id, seed);
+      if (q.type !== 'numeric' || !q.hints) continue;
+      const ans = fmt(q.answer);
+      for (const hint of q.hints) {
+        assert.ok(!new RegExp(`=\\s*${ans.replace(/[.+−-]/g, '\\$&')}(?![\\d.])`).test(hint), `${t.id} seed ${seed}: hint reveals the answer: ${hint}`);
+      }
+    }
+  }
+});
+
+test('mistake-specific feedback is well-formed', () => {
+  let withErrors = 0;
+  for (const t of allTemplates()) {
+    for (let seed = 1; seed <= 100; seed++) {
+      const q = instantiate(t.id, seed);
+      if (!q.errors) continue;
+      withErrors++;
+      for (const e of q.errors) {
+        assert.equal(typeof e.msg, 'string', t.id);
+        assert.ok(e.msg.length > 10, t.id);
+        assert.ok(typeof e.value === 'number', `${t.id}: error value must be a number`);
+      }
+    }
+  }
+  assert.ok(withErrors > 3000, 'most numeric templates should anticipate common mistakes');
+});
+
+test('predictions revealed after an experiment are followed by one', () => {
+  for (const unit of playableUnits()) for (const s of unit.sessions) {
+    s.steps.forEach((step, i) => {
+      if (step.type !== 'predict' || !step.revealAfterSim) return;
+      const nextSim = s.steps.slice(i + 1).find((x) => x.type === 'sim');
+      const nextQ = s.steps.slice(i + 1).findIndex((x) => ['q', 'mcq', 'numeric', 'equation'].includes(x.type));
+      const simIdx = s.steps.slice(i + 1).indexOf(nextSim);
+      assert.ok(nextSim && nextSim.goal && (nextQ === -1 || simIdx < nextQ), `${s.id}: reveal-after-sim prediction needs a goal sim before the questions`);
+    });
+  }
+});
+
+test('every lesson includes at least one concept question (not just calculations)', () => {
+  for (const unit of playableUnits()) for (const s of unit.sessions.filter((x) => x.type === 'lesson')) {
+    const kinds = s.steps.filter((x) => x.type === 'q').map((x) => instantiate(x.t, 1).type);
+    const concept = kinds.filter((k) => k !== 'numeric').length + s.steps.filter((x) => x.type === 'equation').length;
+    if (s.id === 'mech.u2.lp') continue; // the maths power-up lesson is calculation practice by design
+    assert.ok(concept >= 1, `${s.id} has no concept questions`);
+  }
+});

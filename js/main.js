@@ -198,6 +198,7 @@ function learnScreen(main) {
       h('div', { class: 'unit-title' }, unit.title),
       h('div', { class: 'unit-sub' }, unit.comingSoon ? `Coming soon · ${unit.subtitle}` : unit.subtitle),
       unit.power ? h('div', { class: 'unit-power' }, unit.power) : '',
+      mastered(unit) ? h('div', { class: 'unit-mastered' }, '★ Mastered — Unit Review passed with 80% or more') : '',
     ));
     if (!unit.comingSoon) {
       const path = h('div', { class: 'path' });
@@ -227,6 +228,12 @@ function learnScreen(main) {
   });
 
   main.append(h('p', { class: 'footnote' }, 'More topics coming soon: Waves, Light, Electricity and Space will appear here too.'));
+}
+
+// A unit is mastered once its review session has been passed with at least 80% first-time accuracy.
+function mastered(unit) {
+  const review = unit.sessions?.find((s) => s.id.endsWith('.review'));
+  return !!review && (S.sessionRecord(review.id)?.bestAccuracy || 0) >= 0.8;
 }
 
 function crown(rec) {
@@ -305,7 +312,10 @@ function warmupReview(units, current) {
   const rng = makeRng(randomSeed());
   const picks = [];
   for (const m of rng.shuffle(uniqueMistakes())) if (picks.length < 1) picks.push(m);
-  for (const t of rng.shuffle([...new Set(done)].filter(hasTemplate))) if (picks.length < 2 && !picks.includes(t)) picks.push(t);
+  // Then the question type practised longest ago (never-seen first), so old ideas keep coming back.
+  const seen = S.state.seen || {};
+  const pool = rng.shuffle([...new Set(done)].filter(hasTemplate)).sort((a, b) => (seen[a] || '').localeCompare(seen[b] || ''));
+  for (const t of pool) if (picks.length < 2 && !picks.includes(t)) picks.push(t);
   return picks;
 }
 

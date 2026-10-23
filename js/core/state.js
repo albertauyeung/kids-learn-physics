@@ -18,7 +18,8 @@ function fresh() {
     sessions: {}, // sessionId -> { completions, bestAccuracy, perfect, lastDate }
     concepts: {}, // concept -> { correct, total }
     predictions: {}, // stepKey -> { correct, date, text }
-    mistakes: [], // [{ templateId, date }]
+    mistakes: [], // [{ templateId, date, right: [dates] }]
+    seen: {}, // templateId -> date last answered (for spaced warm-ups)
     achievements: {}, // id -> date
     skins: { owned: ['classic'], active: 'classic' },
     notices: [],
@@ -195,12 +196,22 @@ export function recordAnswer({ correct, concepts = [], templateId, combo, calc, 
     if (correct) k.correct++;
   }
   if (templateId) {
+    const now = dateStr();
+    state.seen[templateId] = now;
+    const m = state.mistakes.find((x) => x.templateId === templateId);
     if (!correct) {
-      if (!state.mistakes.some((m) => m.templateId === templateId)) state.mistakes.push({ templateId, date: dateStr() });
+      // A new or repeated mistake must now be answered right first time on two different days.
+      if (m) {
+        m.date = now;
+        m.right = [];
+      } else {
+        state.mistakes.push({ templateId, date: now, right: [] });
+      }
       state.mistakes = state.mistakes.slice(-40);
-    } else if (!retry) {
-      // Only a later, first-try success clears a mistake from the review list.
-      state.mistakes = state.mistakes.filter((m) => m.templateId !== templateId);
+    } else if (!retry && m) {
+      m.right = Array.isArray(m.right) ? m.right : [];
+      if (!m.right.includes(now)) m.right.push(now);
+      if (m.right.length >= 2) state.mistakes = state.mistakes.filter((x) => x !== m);
     }
   }
   if (combo >= 8) unlock('combo10'); // id kept so saved achievements still match
@@ -332,7 +343,7 @@ export const QUESTS = [
   { id: 'correct10', text: 'Answer 10 questions correctly', metric: 'correct', target: 10, reward: 4 },
   { id: 'perfect1', text: 'Finish a session with no mistakes', metric: 'perfect', target: 1, reward: 4 },
   { id: 'sessions2', text: 'Complete 2 sessions', metric: 'sessions', target: 2, reward: 3 },
-  { id: 'problems1', text: 'Finish a Calculation Drills or Word Problems session', metric: 'problemSets', target: 1, reward: 4 },
+  { id: 'problems1', text: 'Finish a Drills, Word Problems or Unit Review session', metric: 'problemSets', target: 1, reward: 4 },
   { id: 'nohint3', text: 'Solve 3 calculations without hints', metric: 'noHintCalc', target: 3, reward: 3 },
 ];
 

@@ -108,11 +108,14 @@ function numeric(el, q, ctx) {
       const unitOk = (!q.unitChoices || unit === q.unit) && typedOk;
       const correct = numOk && unitOk;
       const ans = `<b>${fmt(q.answer)}${q.unit ? ' ' + q.unit : ''}</b>`;
+      // A predictable wrong answer gets a message about that specific mistake.
+      const known = !correct && v != null && (q.errors || []).find((e) =>
+        Number.isFinite(e.value) && !closeEnough(e.value, q.answer, q.tolerance) && closeEnough(v, e.value, q.tolerance));
       let html;
       if (correct) html = q.solution ? `<div class="sol">${q.solution}</div>` : '';
       else if (numOk && !typedOk) html = `You wrote <b>${typed}</b>, but this answer is in <b>${q.unit}</b>.${q.solution ? `<div class="sol">${q.solution}</div>` : ''}`;
       else if (numOk && !unitOk) html = `The number is right, but the unit should be <b>${q.unit}</b>.${q.solution ? `<div class="sol">${q.solution}</div>` : ''}`;
-      else html = `Correct answer: ${ans}${q.solution ? `<div class="sol">${q.solution}</div>` : ''}`;
+      else html = `${known ? `<div class="mistake">${known.msg}</div>` : ''}Correct answer: ${ans}${q.solution ? `<div class="sol">${q.solution}</div>` : ''}`;
       return { correct, html };
     },
   };
@@ -140,6 +143,9 @@ function mcq(el, q, ctx) {
   el.append(header(q), h('div', { class: 'q-prompt', html: q.prompt }), list);
   return {
     usedHint: false,
+    lockNeutral() {
+      list.querySelectorAll('.choice').forEach((b) => (b.disabled = true));
+    },
     lock() {
       list.querySelectorAll('.choice').forEach((b) => {
         b.disabled = true;

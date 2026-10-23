@@ -21,6 +21,7 @@ export function runSession(root, { session, unit, review = [], onFinish, onQuit 
   let destroyWidget = null;
   let skipTimer = null;
   let combo = 0;
+  let pendingReveal = null; // a prediction whose answer is shown once the next sim is done
   const stats = {
     firstTotal: 0, firstCorrect: 0, mistakes: 0, comboBonus: 0, predictBonus: 0,
     puzzleBonus: 0, puzzleSolved: false, achievements: [], bestCombo: 0, skipped: 0,
@@ -140,6 +141,7 @@ export function runSession(root, { session, unit, review = [], onFinish, onQuit 
         done = true;
         setMain('Continue', true, next);
         skipBtn.hidden = true;
+        revealPrediction();
       },
     });
     if (step.goal) {
@@ -149,6 +151,15 @@ export function runSession(root, { session, unit, review = [], onFinish, onQuit 
         skipBtn.onclick = () => { stats.skipped++; next(); };
       }, SKIP_AFTER_MS());
     }
+  }
+
+  function revealPrediction() {
+    if (!pendingReveal) return;
+    const p = pendingReveal;
+    pendingReveal = null;
+    feedback.className = `feedback show ${p.correct ? 'good' : 'predict-miss'}`;
+    feedback.innerHTML = `<b>${p.correct ? 'Your prediction was right! +1 XP' : `Surprise! The answer was: ${p.answer}`}</b>${p.explain ? `<div class="sol">${p.explain}</div>` : ''}`;
+    if (p.correct) sfx.correct();
   }
 
   // ---------- predict ----------
@@ -161,8 +172,19 @@ export function runSession(root, { session, unit, review = [], onFinish, onQuit 
     setMain('Lock in', false, check);
     function check() {
       const res = r.evaluate();
-      r.lock();
+      if (step.revealAfterSim) r.lockNeutral();
+      else r.lock();
       recordPrediction(item.key, res.correct, step.prompt.replace(/<[^>]+>/g, ''));
+      if (step.revealAfterSim) {
+        // Don't give the answer away: the experiment that follows reveals it.
+        if (res.correct) stats.predictBonus += 1;
+        pendingReveal = { correct: res.correct, answer: step.choices[step.answer], explain: step.explain };
+        sfx.select();
+        feedback.className = 'feedback show predict-miss';
+        feedback.innerHTML = '<b>Prediction locked in!</b> Now test it in the next challenge.';
+        setMain('Continue', true, next);
+        return;
+      }
       if (res.correct) {
         stats.predictBonus += 1;
         sfx.correct();

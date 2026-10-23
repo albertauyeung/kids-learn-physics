@@ -1,7 +1,7 @@
 // Small SVG graphs for questions (position–time / distance–time).
 // Returns an SVG string so templates stay plain data + functions.
 
-export function graphSVG({ points, tMax, yMin = 0, yMax, tStep = 1, yStep = 2, yLabel = 'distance (m)', tLabel = 'time (s)', w = 300, h = 200, small = false, color = '#80ff20', labelEvery }) {
+export function graphSVG({ points, tMax, yMin = 0, yMax, tStep = 1, yStep = 2, yLabel = 'distance (m)', tLabel = 'time (s)', w = 300, h = 200, small = false, color = '#80ff20', labelEvery, lines = [] }) {
   const L = small ? 10 : 38, R = 10, T = 10, B = small ? 10 : 30;
   const gx = (t) => L + (t / tMax) * (w - L - R);
   const gy = (y) => h - B - ((y - yMin) / (yMax - yMin)) * (h - T - B);
@@ -16,9 +16,16 @@ export function graphSVG({ points, tMax, yMin = 0, yMax, tStep = 1, yStep = 2, y
     labels += `<text x="${w - R}" y="${h - 2}" text-anchor="end" class="g-axis-label">${tLabel}</text>`;
     labels += `<text x="${L + 4}" y="${T + 10}" class="g-axis-label">${yLabel}</text>`;
   }
-  const path = points.map(([t, y], i) => `${i ? 'L' : 'M'}${gx(t).toFixed(1)},${gy(y).toFixed(1)}`).join(' ');
+  const path = (points || []).map(([t, y], i) => `${i ? 'L' : 'M'}${gx(t).toFixed(1)},${gy(y).toFixed(1)}`).join(' ');
   const axes = `<line x1="${L}" y1="${T}" x2="${L}" y2="${h - B}" class="g-axis"/><line x1="${L}" y1="${gy(Math.max(yMin, 0))}" x2="${w - R}" y2="${gy(Math.max(yMin, 0))}" class="g-axis"/>`;
-  return `<svg class="graph ${small ? 'small' : ''}" viewBox="0 0 ${w} ${h}" role="img"><rect x="0" y="0" width="${w}" height="${h}" class="g-bg"/>${grid}${axes}${labels}<path d="${path}" fill="none" stroke="${color}" stroke-width="${small ? 4 : 3}" stroke-linejoin="round"/></svg>`;
+  // Optional extra lines (e.g. two carts on one graph), each with a colour and a label.
+  const extra = lines.map((l) => {
+    const d = l.points.map(([t, y], i) => `${i ? 'L' : 'M'}${gx(t).toFixed(1)},${gy(y).toFixed(1)}`).join(' ');
+    const [lt, ly] = l.points[l.points.length - 1];
+    return `<path d="${d}" fill="none" stroke="${l.color}" stroke-width="3" stroke-linejoin="round"/>${l.label ? `<text x="${Math.max(L + 12, gx(lt) - 4)}" y="${Math.max(T + 12, gy(ly) - 6)}" text-anchor="end" fill="${l.color}" font-weight="700">${l.label}</text>` : ''}`;
+  }).join('');
+  const main = points ? `<path d="${path}" fill="none" stroke="${color}" stroke-width="${small ? 4 : 3}" stroke-linejoin="round"/>` : '';
+  return `<svg class="graph ${small ? 'small' : ''}" viewBox="0 0 ${w} ${h}" role="img"><rect x="0" y="0" width="${w}" height="${h}" class="g-bg"/>${grid}${axes}${labels}${main}${extra}</svg>`;
 }
 
 // Right-angled triangle with labelled sides (for Pythagoras).

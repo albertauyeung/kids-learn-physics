@@ -1,6 +1,6 @@
 // River crossing seen from above. The boat points straight across; the current pushes it sideways.
 // Actual speed = √(boat² + current²); crossing time = width ÷ boat speed; drift = current × time.
-// params: { mode: 'free' | 'rescue', width, boat, current, rounds, seed }
+// params: { mode: 'free' | 'rescue', width, boat, current, rounds, seed, tasks?: [{ text, check(p, drift) }] }
 
 import { makeStage, loop, arrow, tag, slider, button, controls, readout, taskBanner } from './stage.js';
 import { drawSprite, drawTexture } from '../core/sprites.js';
@@ -22,6 +22,8 @@ export default function river(el, params = {}, api) {
   const mode = params.mode || 'free';
   const rng = makeRng(params.seed ?? randomSeed());
   const totalRounds = params.rounds || 3;
+  const tasks = params.tasks || [];
+  let taskIdx = 0;
   let roundNo = 0;
   let p = mode === 'rescue' ? rescueRound(rng) : { width: params.width || 20, boat: params.boat || 4, current: params.current || 3 };
   let launch = 4;
@@ -65,7 +67,8 @@ export default function river(el, params = {}, api) {
         ['Time to cross = width ÷ boat speed', `${p.width} ÷ ${p.boat} = ${fmt(T(), 2)} s`],
         landed && ['Drift downstream = current × time', `${p.current} × ${fmt(T(), 2)} = ${fmt(p.current * T(), 2)} m`, 'winner'],
       ]);
-      banner.set(landed ? 'Try a faster current or a slower boat — what happens to the drift?' : 'Set the sliders, then press <b>Launch boat</b>.');
+      if (tasks.length && taskIdx < tasks.length) banner.set(`Task ${taskIdx + 1}/${tasks.length}: ${tasks[taskIdx].text} Then launch to check.`);
+      else if (!tasks.length) banner.set(landed ? 'Try a faster current or a slower boat — what happens to the drift?' : 'Set the sliders, then press <b>Launch boat</b>.');
     } else {
       ro.set([
         ['River width', `${p.width} m`],
@@ -97,8 +100,23 @@ export default function river(el, params = {}, api) {
         landed = { x };
         show();
         if (mode === 'free') {
-          sfx.correct();
-          api.done();
+          const drift = p.current * T();
+          if (!tasks.length) {
+            sfx.correct();
+            api.done();
+          } else if (taskIdx < tasks.length && tasks[taskIdx].check(p, drift)) {
+            sfx.correct();
+            taskIdx++;
+            if (taskIdx >= tasks.length) {
+              banner.set('All river tasks done! 🎉', true);
+              api.done();
+            } else {
+              banner.set(`Yes! Task ${taskIdx}/${tasks.length} done. Next: ${tasks[taskIdx].text}`, true);
+            }
+          } else if (taskIdx < tasks.length) {
+            sfx.wrong();
+            banner.set(`Not quite (drift ${fmt(drift, 2)} m, crossing time ${fmt(T(), 2)} s). Task: ${tasks[taskIdx].text}`);
+          }
         } else if (Math.abs(x - p.target) <= 0.5) {
           sfx.correct();
           roundNo++;

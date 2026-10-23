@@ -155,7 +155,10 @@ export function h(tag, attrs = {}, ...children) {
   }
   for (const c of children.flat()) {
     if (c == null || c === false) continue;
-    el.append(c instanceof Node ? c : document.createTextNode(String(c)));
+    // Widgets (sliders, readouts) are objects with an .el element: append the element, never "[object Object]".
+    if (c instanceof Node) el.append(c);
+    else if (c && c.el instanceof Node) el.append(c.el);
+    else el.append(document.createTextNode(String(c)));
   }
   return el;
 }

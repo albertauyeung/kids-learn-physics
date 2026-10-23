@@ -1,7 +1,8 @@
 // Two-leg journey: average speed = total distance ÷ total time (not the average of the speeds!).
-// params: { d1, s1, d2, s2, unitD: 'km', unitT: 'h', vehicle }
+// params: { d1, s1, d2, s2, unitD: 'km', unitT: 'h', vehicle, goal?: 'equal-average' }
+// goal 'equal-average': find legs where the real average equals the average of the two speeds.
 
-import { makeStage, loop, sky, ground, tag, slider, button, controls, readout } from './stage.js';
+import { makeStage, loop, sky, ground, tag, slider, button, controls, readout, taskBanner } from './stage.js';
 import { drawSprite } from '../core/sprites.js';
 import { fmt } from '../core/util.js';
 import { sfx } from '../core/sound.js';
@@ -12,12 +13,17 @@ export default function journey(el, params, api) {
   const W = 480, H = 150;
   const st = makeStage(el, W, H);
   const ro = readout();
+  const banner = p.goal ? taskBanner() : null;
+  if (banner) {
+    el.append(banner.el);
+    banner.set('Challenge: change the legs so that the <b>real average speed</b> equals the <b>average of the two speeds</b> (with two different speeds). Then press Go!');
+  }
   let t = 0, running = false, ran = false;
 
   const mk = (key, label, min, max, unit) => slider({
     label, min, max, step: 1, value: p[key], unit,
     onInput: (v) => { p[key] = v; t = 0; running = false; show(); },
-  });
+  }).el;
   el.append(
     controls(mk('d1', 'Leg 1 distance', 1, 12, uD), mk('s1', 'Leg 1 speed', 1, 12, uS)),
     controls(mk('d2', 'Leg 2 distance', 1, 12, uD), mk('s2', 'Leg 2 speed', 1, 12, uS)),
@@ -48,11 +54,26 @@ export default function journey(el, params, api) {
       if (t >= T) {
         t = T;
         running = false;
-        if (!ran) {
-          ran = true;
-          api.done();
-        }
         sfx.complete();
+        if (!p.goal) {
+          if (!ran) {
+            ran = true;
+            api.done();
+          }
+        } else {
+          const real = (p.d1 + p.d2) / T, half = (p.s1 + p.s2) / 2;
+          if (p.s1 !== p.s2 && Math.abs(real - half) < 1e-9) {
+            banner.set(`Found it! Both legs take ${fmt(t1(), 2)} ${uT}. With <b>equal times</b> the average sits exactly halfway. 🎉`, true);
+            if (!ran) {
+              ran = true;
+              api.done();
+            }
+          } else if (p.s1 === p.s2) {
+            banner.set('Use two <b>different</b> speeds — otherwise it is too easy!');
+          } else {
+            banner.set(`Not yet: the real average is ${fmt(real, 2)} but halfway is ${fmt(half, 2)}. Look at the two leg times — what would need to be equal?`);
+          }
+        }
       }
       show();
     }

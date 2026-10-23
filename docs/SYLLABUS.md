@@ -32,9 +32,10 @@
 | **Lesson** | 5 | Teach one idea with sims + practice |
 | **Problem Set A — Calculation drills** | 1 | Direct use of the unit's equations |
 | **Problem Set B — Word problems** | 1 | Multi-step real-world problems + 1–2 Puzzle Corner problems |
-| **Boss Mission** | 1 | Goal-based sim challenge that combines the whole unit |
+| **Unit Review** | 1 | 10 questions, one per big idea plus earlier units; 80% first time = unit "Mastered" |
+| **Boss Mission** | 1 | Goal-based sim challenge that combines the whole unit (pass mark 60%) |
 
-≈ 8 sessions per unit × 10 units = **80 sessions** (≈ 16 weeks at 5 sessions/week).
+≈ 9–10 sessions per unit × 10 units ≈ **95 sessions** (≈ 19 weeks at 5 sessions/week).
 
 ### Lesson anatomy (≈ 12 min)
 
@@ -52,7 +53,10 @@
 - 7–9 questions at three tiers: 🟢 **Explorer** (one step), 🟡 **Scientist** (two steps / rearranging),
   🔴 **Engineer** (multi-step, quadratics, unit conversions).
 - Each problem is a **parameterised template** → unlimited fresh practice with different numbers.
-- Step-by-step hints (free; they only stop the answer counting for the "no hints" quest); full worked solution after answering.
+- Hints start with a question that makes him think, then name the idea — they never do the arithmetic.
+  Hints are free; they only stop the answer counting for the "no hints" quest. Full worked solution after answering.
+- Predictable wrong answers get a specific message (e.g. "That's the average of the two speeds — the trap!",
+  "Right size, wrong direction", "That's the distance, not the displacement").
 - Answers checked numerically with tolerance **and** units.
 - **Puzzle Corner** ⭐: one or two harder, maths-flavoured challenges per unit for bonus emeralds.
 
@@ -127,8 +131,9 @@ Each unit lists: lessons → problem sets → Boss Mission. Sample problems show
 1. **Speed vs velocity** — direction matters; + and − signs on a line
 2. **Adding velocities** — velocity arrows tip-to-tail on a moving walkway
 3. **Relative motion** — two minecarts, closing speed, "who is moving?"
-4. **Crossing the river** — square roots, then Pythagoras gives the resultant (合成) speed
-5. **Slope = velocity** — reading velocity from the slope (gradient, 斜率) of a position–time graph
+4. **Pythagoras & Square Roots** — squares, √, a² + b² = c², finding a short side
+5. **Crossing the river** — why Pythagoras works for velocities; crossing time doesn't depend on the current
+6. **Slope = velocity** — reading velocity from the slope (gradient, 斜率) of a position–time graph
 
 **Sample problems**
 - 🟢 Walk at 1.5 m/s on a travelator moving at 1 m/s. Speed relative to the ground? → **2.5 m/s**
@@ -139,6 +144,19 @@ Each unit lists: lessons → problem sets → Boss Mission. Sample problems show
 **Boss Mission:** *River Rescue* — the boat always points straight across, so choose the launch point that lets the current carry it to each stranded swimmer. (Choosing a heading needs trigonometry, so it waits for a later unit.)
 
 ---
+
+### Learning design (added after the learning review)
+
+- **Predict → test → explain:** where a prediction is tested by a simulation, its answer is revealed only *after* the experiment.
+- **Misconception questions** with randomised numbers: "higher on the graph = faster", "the graph is a picture of the path",
+  "a stronger current makes crossing slower", "crossing lines = same speed", "from my cart the trees move backwards",
+  "Sam's mistake" (averaging speeds).
+- **Stretch for strong maths:** inverse and unknown-quantity problems (speed needed to reach an average, a chase with a delayed
+  start, finding a cart's speed from where they met), plus the Puzzle Corner.
+- **Spaced retrieval:** each lesson starts with a mistake to fix and the question type practised longest ago; a mistake leaves the
+  review list only after it's answered right first time on **two different days**; problem sets and reviews mix in earlier units.
+- **Simulations that need reasoning:** the Journey Planner challenge (find legs where the trap gives the right answer), River Lab
+  tasks (exact crossing time, drift and speed), the two-race Animal Race.
 
 ### Unit 3 — Acceleration & Motion Graphs
 *Maths power-up: more square roots, area under a graph, quadratics by factorisation*
@@ -342,7 +360,7 @@ Course: Physics
 
 ## 7. Build status
 
-- ✅ Units 1–2 are built and playable (16 sessions). Lessons start with up to 2 warm-up review questions, which the app adds automatically.
+- ✅ Units 1–2 are built and playable (19 sessions, including a Unit Review per unit). Lessons start with up to 2 warm-up review questions, which the app adds automatically.
 - ⏳ Units 3–10 appear on the map as "Coming soon".
 
 ## 8. Suggested build order

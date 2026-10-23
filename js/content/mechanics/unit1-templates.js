@@ -1,7 +1,7 @@
 // Unit 1 — Describing Motion: problem templates.
 import { registerTemplates, until } from '../../engine/templates.js';
 import { graphSVG } from '../../engine/graph-svg.js';
-import { fmt } from '../../core/util.js';
+import { fmt, fmtSigned as fmtS } from '../../core/util.js';
 
 const C = {
   units: 'mech.units',
@@ -33,7 +33,8 @@ registerTemplates([
       const km = r.pick([1.2, 2.5, 3, 4.75, 0.6, 7.2, 0.35, 12]);
       return {
         type: 'numeric', prompt: `Convert <b>${fmt(km)} km</b> into metres.`, answer: km * 1000, unit: 'm',
-        hints: ['1 km = 1000 m', `Multiply by 1000: ${fmt(km)} × 1000`],
+        hints: ['Is a metre bigger or smaller than a kilometre? So should the number get bigger or smaller?', '1 km = 1000 m'],
+        errors: [{ value: km / 1000, msg: 'Metres are smaller than kilometres, so the number should get bigger, not smaller.' }, { value: km * 100, msg: 'Careful: 1 km is 1000 m, not 100 m.' }],
         solution: `${fmt(km)} km × 1000 = <b>${fmt(km * 1000)} m</b>`,
       };
     },
@@ -44,7 +45,8 @@ registerTemplates([
       const cm = r.pick([150, 250, 75, 320, 5, 1000, 45, 180]);
       return {
         type: 'numeric', prompt: `A block is 100 cm tall. How many <b>metres</b> is <b>${cm} cm</b>?`, answer: cm / 100, unit: 'm',
-        hints: ['1 m = 100 cm', `Divide by 100: ${cm} ÷ 100`],
+        hints: ['Is a metre bigger or smaller than a centimetre? So should the number get bigger or smaller?', '1 m = 100 cm'],
+        errors: [{ value: cm * 100, msg: 'Metres are bigger than centimetres, so the number should get smaller.' }, { value: cm / 1000, msg: 'Careful: 1 m is 100 cm, not 1000.' }],
         solution: `${cm} cm ÷ 100 = <b>${fmt(cm / 100)} m</b>`,
       };
     },
@@ -55,7 +57,8 @@ registerTemplates([
       const mm = r.pick([30, 85, 12, 7, 25, 64]);
       return {
         type: 'numeric', prompt: `An emerald is <b>${mm} mm</b> wide. How many <b>centimetres</b> is that?`, answer: mm / 10, unit: 'cm',
-        hints: ['1 cm = 10 mm', `Divide by 10`],
+        hints: ['How many millimetres fit into one centimetre?', '1 cm = 10 mm, so the number gets smaller.'],
+        errors: [{ value: mm * 10, msg: 'Centimetres are bigger than millimetres, so the number should get smaller.' }],
         solution: `${mm} mm ÷ 10 = <b>${fmt(mm / 10)} cm</b>`,
       };
     },
@@ -63,10 +66,11 @@ registerTemplates([
   {
     id: 'u1.min-to-s', concepts: [C.units], tier: 'explorer',
     generate(r) {
-      const m = r.int(2, 12);
+      // Real timings from the blocky game: a full day–night cycle is 20 min (10 min day, 1.5 min sunset, 7 min night, 1.5 min sunrise).
+      const [what, m] = r.pick([['a full day–night cycle', 20], ['the daytime', 10], ['the night', 7], ['a sunset', 1.5]]);
       return {
-        type: 'numeric', prompt: `A day–night cycle in a blocky game lasts <b>${m} minutes</b>. How many <b>seconds</b> is that?`,
-        answer: m * 60, unit: 's', hints: ['1 minute = 60 seconds'], solution: `${m} × 60 = <b>${m * 60} s</b>`,
+        type: 'numeric', prompt: `In the blocky game, <b>${what}</b> lasts <b>${fmt(m)} minutes</b>. How many <b>seconds</b> is that?`,
+        answer: m * 60, unit: 's', hints: ['How many seconds are in one minute?'], errors: [{ value: m * 100, msg: 'A minute has 60 seconds, not 100.' }], solution: `${fmt(m)} × 60 = <b>${fmt(m * 60)} s</b>`,
       };
     },
   },
@@ -76,7 +80,8 @@ registerTemplates([
       const s = r.pick([0.2, 0.15, 0.25, 0.3, 1.5, 0.05]);
       return {
         type: 'numeric', prompt: `A sprinter reacts to the starting gun in <b>${fmt(s)} s</b>. How many <b>milliseconds</b> is that?`,
-        answer: s * 1000, unit: 'ms', hints: ['1 s = 1000 ms', `Multiply by 1000`],
+        answer: s * 1000, unit: 'ms', hints: ['A millisecond is a thousandth of a second. Will the number get bigger or smaller?', '1 s = 1000 ms'],
+        errors: [{ value: s / 1000, msg: 'Milliseconds are tiny, so there are lots of them — the number should get bigger.' }, { value: s * 100, msg: 'Careful: 1 s is 1000 ms, not 100.' }],
         solution: `${fmt(s)} × 1000 = <b>${fmt(s * 1000)} ms</b>`,
       };
     },
@@ -87,7 +92,8 @@ registerTemplates([
       const hr = r.pick([1.5, 2, 0.5, 2.5, 0.25, 0.75]);
       return {
         type: 'numeric', prompt: `A train ride takes <b>${fmt(hr)} hours</b>. How many <b>minutes</b> is that?`, answer: hr * 60, unit: 'min',
-        hints: ['1 hour = 60 minutes', `${fmt(hr)} × 60`], solution: `${fmt(hr)} × 60 = <b>${fmt(hr * 60)} min</b>`,
+        hints: ['How many minutes are in one hour?', 'Multiply the hours by 60.'], errors: [{ value: hr * 100, msg: 'An hour has 60 minutes, not 100 — time doesn\'t work in tens!' }],
+        solution: `${fmt(hr)} × 60 = <b>${fmt(hr * 60)} min</b>`,
       };
     },
   },
@@ -116,7 +122,8 @@ registerTemplates([
       const b = until(r, (rr) => rr.int(1, 9), (x) => x !== a);
       return {
         type: 'numeric', prompt: `Pip walks <b>${a} m right</b>, then <b>${b} m left</b>. What <b>distance</b> did he walk in total?`,
-        answer: a + b, unit: 'm', hints: ['Distance counts every step, whichever way you go.'],
+        answer: a + b, unit: 'm', hints: ['Does distance care which way you walk?'],
+        errors: [{ value: Math.abs(a - b), msg: 'That\'s how far from the start he ended up (his displacement). Distance counts every step.' }],
         solution: `Distance = ${a} + ${b} = <b>${a + b} m</b>`,
       };
     },
@@ -129,7 +136,8 @@ registerTemplates([
       return {
         type: 'numeric', signed: true,
         prompt: `Pip walks <b>${a} m right</b>, then <b>${b} m left</b>. What is his <b>displacement</b> from the start? <br><small>Use + for right and − for left (use the ± button if needed).</small>`,
-        answer: a - b, unit: 'm', hints: ['Right is +, left is −.', `Displacement = +${a} − ${b}`],
+        answer: a - b, unit: 'm', hints: ['Where does Pip end up compared with where he started?', 'Start at 0. Right is +, left is −.'],
+        errors: [{ value: a + b, msg: 'That\'s the distance he walked. Displacement only cares where he ended up.' }, { value: b - a, msg: 'Right size, wrong direction — which side of the start did he finish on?' }],
         solution: `Displacement = +${a} − ${b} = <b>${a - b > 0 ? '+' : ''}${fmt(a - b)} m</b> (${a - b > 0 ? 'right of' : 'left of'} the start)`,
       };
     },
@@ -166,7 +174,8 @@ registerTemplates([
       return {
         type: 'numeric', prompt: `${who[0][0].toUpperCase() + who[0].slice(1)} travels <b>${s * t} m</b> in <b>${t} s</b>. What is the speed?`,
         answer: s, unit: 'm/s', unitChoices: SPEED_UNITS,
-        hints: ['speed = distance ÷ time', `${s * t} ÷ ${t}`], solution: `speed = ${s * t} ÷ ${t} = <b>${s} m/s</b>`,
+        hints: ['How many metres does it cover in ONE second?', 'speed = distance ÷ time'], errors: [{ value: s * t * t, msg: 'You multiplied. Speed is distance ÷ time.' }],
+        solution: `speed = ${s * t} ÷ ${t} = <b>${s} m/s</b>`,
       };
     },
   },
@@ -178,7 +187,8 @@ registerTemplates([
       return {
         type: 'numeric', prompt: `A minecart rolls at <b>${fmt(s)} m/s</b> for <b>${t} s</b>. How far does it go?`,
         answer: s * t, unit: 'm', unitChoices: SPEED_UNITS,
-        hints: ['distance = speed × time', `${fmt(s)} × ${t}`], solution: `distance = ${fmt(s)} × ${t} = <b>${fmt(s * t)} m</b>`,
+        hints: ['It goes this far every second. How far in all those seconds?', 'distance = speed × time'], errors: [{ value: s / t, msg: 'Dividing gives a tiny distance. Distance = speed × time.' }],
+        solution: `distance = ${fmt(s)} × ${t} = <b>${fmt(s * t)} m</b>`,
       };
     },
   },
@@ -190,7 +200,8 @@ registerTemplates([
       return {
         type: 'numeric', prompt: `A horse gallops <b>${fmt(s * t)} m</b> at <b>${fmt(s)} m/s</b>. How long does it take?`,
         answer: t, unit: 's', unitChoices: SPEED_UNITS,
-        hints: ['time = distance ÷ speed', `${fmt(s * t)} ÷ ${fmt(s)}`], solution: `time = ${fmt(s * t)} ÷ ${fmt(s)} = <b>${t} s</b>`,
+        hints: ['It covers this many metres every second. How many seconds to cover the whole distance?', 'time = distance ÷ speed'], errors: [{ value: s * t * s, msg: 'You multiplied. Time = distance ÷ speed.' }],
+        solution: `time = ${fmt(s * t)} ÷ ${fmt(s)} = <b>${t} s</b>`,
       };
     },
   },
@@ -202,7 +213,8 @@ registerTemplates([
       return {
         type: 'numeric', prompt: `A train travels <b>${fmt(s * t)} km</b> in <b>${fmt(t)} hours</b>. What is its average speed?`,
         answer: s, unit: 'km/h', unitChoices: KMH_UNITS,
-        hints: ['speed = distance ÷ time', `${fmt(s * t)} ÷ ${fmt(t)}`], solution: `${fmt(s * t)} ÷ ${fmt(t)} = <b>${s} km/h</b>`,
+        hints: ['How many kilometres does the train cover in ONE hour?', 'speed = distance ÷ time'], errors: [{ value: s * t * t, msg: 'You multiplied. Speed = distance ÷ time.' }],
+        solution: `${fmt(s * t)} ÷ ${fmt(t)} = <b>${s} km/h</b>`,
       };
     },
   },
@@ -249,7 +261,8 @@ registerTemplates([
       return {
         type: 'numeric', prompt: `A cyclist rides <b>${v.d1} km in ${v.t1} h</b>, then <b>${v.d2} km in ${v.t2} h</b>. What is the average speed for the whole trip?`,
         answer: D / T, unit: 'km/h', unitChoices: KMH_UNITS,
-        hints: ['Average speed = total distance ÷ total time', `Total distance = ${v.d1} + ${v.d2}; total time = ${v.t1} + ${v.t2}`],
+        hints: ['What is the total distance? And the total time?', 'average speed = total distance ÷ total time'],
+        errors: [{ value: (v.s1 + v.s2) / 2, msg: 'That\'s the average of the two speeds — but the legs took different times. Use total distance ÷ total time.' }],
         solution: `(${v.d1} + ${v.d2}) ÷ (${v.t1} + ${v.t2}) = ${D} ÷ ${T} = <b>${fmt(D / T)} km/h</b>`,
       };
     },
@@ -266,7 +279,8 @@ registerTemplates([
         type: 'numeric',
         prompt: `Pip walks <b>${v.d1} km at ${v.s1} km/h</b>, then <b>${v.d2} km at ${v.s2} km/h</b>. What is his average speed for the whole walk?`,
         answer: D / T, unit: 'km/h', unitChoices: KMH_UNITS,
-        hints: ['First find the time for each part: time = distance ÷ speed.', `Times: ${v.d1} ÷ ${v.s1} and ${v.d2} ÷ ${v.s2}`, 'Then: total distance ÷ total time'],
+        hints: ['Which part of the walk took longer?', 'Find the time for each part: time = distance ÷ speed.', 'Then average speed = total distance ÷ total time.'],
+        errors: [{ value: (v.s1 + v.s2) / 2, msg: 'That\'s the average of the two speeds — the trap! Which part took longer?' }],
         solution: `Times: ${fmt(v.t1)} h + ${fmt(v.t2)} h = ${fmt(T)} h. Average = ${D} ÷ ${fmt(T)} = <b>${fmt(D / T)} km/h</b> (not ${fmt((v.s1 + v.s2) / 2)}!)`,
       };
     },
@@ -277,7 +291,8 @@ registerTemplates([
       const k = r.pick([18, 36, 54, 72, 90, 108, 144]);
       return {
         type: 'numeric', prompt: `Convert <b>${k} km/h</b> into m/s.`, answer: k / 3.6, unit: 'm/s',
-        hints: ['1 km/h = 1000 m ÷ 3600 s', 'So divide km/h by 3.6 to get m/s'],
+        hints: ['For the same speed, is the number in m/s bigger or smaller than in km/h?', '1 km/h = 1000 m ÷ 3600 s, so divide by 3.6.'],
+        errors: [{ value: k * 3.6, msg: 'For the same speed, the m/s number is smaller than the km/h number — divide by 3.6.' }],
         solution: `${k} ÷ 3.6 = <b>${fmt(k / 3.6)} m/s</b>`,
       };
     },
@@ -288,7 +303,8 @@ registerTemplates([
       const m = r.pick([5, 10, 15, 20, 25, 30, 2.5]);
       return {
         type: 'numeric', prompt: `Convert <b>${fmt(m)} m/s</b> into km/h.`, answer: m * 3.6, unit: 'km/h',
-        hints: ['To go from m/s to km/h, multiply by 3.6'],
+        hints: ['For the same speed, is the number in km/h bigger or smaller than in m/s?', 'Multiply by 3.6.'],
+        errors: [{ value: m / 3.6, msg: 'The km/h number should be bigger — multiply by 3.6.' }],
         solution: `${fmt(m)} × 3.6 = <b>${fmt(m * 3.6)} km/h</b>`,
       };
     },
@@ -309,16 +325,19 @@ registerTemplates([
   {
     id: 'u1.graph-speed', concepts: [C.graph, C.speed], tier: 'scientist',
     generate(r) {
-      const t = r.pick([4, 5, 8, 10]);
-      const s = r.pick([1, 2, 3]);
-      const d = s * t;
+      const v = until(r, (rr) => {
+        const t = rr.pick([4, 5, 8, 10]), s = rr.pick([1, 2, 3]), d0 = rr.pick([0, 0, 2, 4, 5, 6, 10]);
+        return { t, s, d0, d: d0 + s * t };
+      }, (x) => x.d <= 30 && x.d0 % yAxis(x.d).yStep === 0 && x.d % yAxis(x.d).yStep === 0);
+      const { t, s, d0, d } = v;
       const ax = yAxis(d);
       return {
         type: 'numeric',
-        prompt: `This graph shows Pip walking. What is his speed?${graphSVG({ points: [[0, 0], [t, d]], tMax: t, ...ax })}`,
+        prompt: `This graph shows Pip walking${d0 ? ` (he starts ${d0} m from the gate)` : ''}. What is his speed?${graphSVG({ points: [[0, d0], [t, d]], tMax: t, ...ax })}`,
         answer: s, unit: 'm/s', unitChoices: SPEED_UNITS,
-        hints: ['Read the distance at the end and the time at the end.', `speed = ${d} m ÷ ${t} s`],
-        solution: `speed = ${d} ÷ ${t} = <b>${s} m/s</b>`,
+        hints: ['How much did the distance change, and how long did that take?', 'speed = change in distance ÷ change in time'],
+        errors: [{ value: d / t, msg: 'You used the end value. He didn\'t start at 0 m — use how much the distance changed.' }],
+        solution: `speed = (${d} − ${d0}) ÷ ${t} = <b>${s} m/s</b>`,
       };
     },
   },
@@ -332,7 +351,8 @@ registerTemplates([
       return {
         type: 'numeric',
         prompt: `How many seconds did Pip stand still for?${graphSVG({ points: [[0, 0], [t1, d1], [t1 + stopFor, d1], [t3, d3]], tMax: t3, ...ax })}`,
-        answer: stopFor, unit: 's', hints: ['Standing still = a flat line (distance not changing).'],
+        answer: stopFor, unit: 's', hints: ['What does a flat line on a distance–time graph mean?'],
+        errors: [{ value: t1 + stopFor, msg: 'That\'s the time when he started moving again. How long was the line flat?' }, { value: t1, msg: 'That\'s when he stopped. How long did he stay stopped?' }],
         solution: `The line is flat from ${t1} s to ${t1 + stopFor} s: <b>${stopFor} s</b>`,
       };
     },
@@ -370,7 +390,8 @@ registerTemplates([
       const d = s * t * 60;
       return {
         type: 'numeric', prompt: `Pip's house is <b>${fmt(d)} m</b> from the village library. He walks at <b>${fmt(s)} m/s</b>. How many <b>minutes</b> does the walk take?`,
-        answer: t, unit: 'min', hints: ['time = distance ÷ speed gives seconds', `Work out ${fmt(d)} ÷ ${fmt(s)} to get the seconds`, 'Then divide by 60 to get minutes'],
+        answer: t, unit: 'min', hints: ['Which formula gives the time? What unit will your answer be in first?', 'time = distance ÷ speed gives seconds — then turn seconds into minutes.'],
+        errors: [{ value: d / s, msg: 'That\'s the time in seconds. The question asks for minutes.' }],
         solution: `${fmt(d)} ÷ ${fmt(s)} = ${fmt(d / s)} s = <b>${t} min</b>`,
       };
     },
@@ -382,7 +403,8 @@ registerTemplates([
       return {
         type: 'numeric',
         prompt: `Light from lightning reaches you almost instantly, but sound travels at about <b>340 m/s</b>. You hear the thunder <b>${t} s</b> after the flash. How far away was the lightning?`,
-        answer: 340 * t, unit: 'm', hints: ['distance = speed × time', `340 × ${t}`],
+        answer: 340 * t, unit: 'm', hints: ['The sound travels for that many seconds. How far does it go each second?', 'distance = speed × time'],
+        errors: [{ value: 340 / t, msg: 'Distance = speed × time — multiply.' }],
         solution: `340 × ${t} = <b>${fmt(340 * t)} m</b> — about ${fmt((340 * t) / 1000, 1)} km away.`,
       };
     },
@@ -397,7 +419,8 @@ registerTemplates([
         type: 'numeric',
         prompt: `Pip cycles <b>${d} km</b> to his friend's village at <b>${s1} km/h</b>, then comes back the same way at <b>${s2} km/h</b>. What is his average speed for the whole round trip?`,
         answer: (2 * d) / T, unit: 'km/h', unitChoices: KMH_UNITS,
-        hints: ['Careful — it is NOT just the average of the two speeds!', `Time there = ${d} ÷ ${s1}; time back = ${d} ÷ ${s2}`, 'Average = total distance ÷ total time'],
+        hints: ['Which way took longer: there or back?', 'Find the time there and the time back.', 'average speed = total distance ÷ total time'],
+        errors: [{ value: (s1 + s2) / 2, msg: 'That\'s the average of the two speeds — the trap! The slower trip takes longer, so it counts more.' }],
         solution: `Times: ${fmt(d / s1)} h + ${fmt(d / s2)} h = ${fmt(T)} h. Average = ${2 * d} ÷ ${fmt(T)} = <b>${fmt((2 * d) / T)} km/h</b>`,
       };
     },
@@ -409,7 +432,8 @@ registerTemplates([
       return {
         type: 'numeric',
         prompt: `A cheetah can sprint at <b>${s} m/s</b>. A car on the motorway drives at 100 km/h. Convert the cheetah's speed to km/h so you can compare.`,
-        answer: s * 3.6, unit: 'km/h', hints: ['m/s → km/h: multiply by 3.6'],
+        answer: s * 3.6, unit: 'km/h', hints: ['For the same speed, is the km/h number bigger or smaller than the m/s number?', 'Multiply by 3.6.'],
+        errors: [{ value: s / 3.6, msg: 'The km/h number should be bigger — multiply by 3.6.' }],
         solution: `${s} × 3.6 = <b>${fmt(s * 3.6)} km/h</b> — ${s * 3.6 > 100 ? 'faster than' : 'slower than'} the car!`,
       };
     },
@@ -421,7 +445,8 @@ registerTemplates([
       const d = (v.s * v.t) / 60;
       return {
         type: 'numeric', prompt: `A bus travels <b>${d} km</b> at an average speed of <b>${v.s} km/h</b>. How many <b>minutes</b> does the trip take?`,
-        answer: v.t, unit: 'min', hints: ['time = distance ÷ speed gives hours', 'Then × 60 to turn hours into minutes'],
+        answer: v.t, unit: 'min', hints: ['How long does the trip take in hours? How many minutes is that?', 'time = distance ÷ speed gives hours.'],
+        errors: [{ value: d / v.s, msg: 'That\'s the time in hours. The question asks for minutes.' }],
         solution: `time = ${d} ÷ ${v.s} × 60 = <b>${v.t} min</b>`,
       };
     },
@@ -435,6 +460,7 @@ registerTemplates([
         type: 'numeric',
         prompt: `A snail wants to climb a <b>${H} m</b> wall. Every day it climbs <b>${up} m</b> up, but every night it slides <b>${down} m</b> back down. On which day does it first reach the top?`,
         answer: day, unit: 'days', hints: [`Each full day + night it gains ${up - down} m.`, `Careful: on the last day it reaches the top before sliding back!`],
+        errors: [{ value: Math.ceil(H / (up - down)), msg: 'Careful — on the last day it reaches the top before it can slide back.' }],
         solution: `After ${day - 1} days and nights it is at ${(day - 1) * (up - down)} m. On day ${day} it climbs ${up} m to ${(day - 1) * (up - down) + up} m ≥ ${H} m. Answer: <b>day ${day}</b>.`,
       };
     },
@@ -447,6 +473,115 @@ registerTemplates([
         prompt: 'A minecart travels the <b>first half</b> of a track at <b>30 km/h</b>. How fast must it go on the second half so that its <b>average</b> speed for the whole track is <b>60 km/h</b>?',
         choices: ['90 km/h', '120 km/h', '60 km/h', 'It is impossible!'], answer: 3, keepOrder: true,
         explain: 'Say the track is 60 km. To average 60 km/h it must finish in 1 hour. But the first 30 km at 30 km/h already takes 1 hour — no time is left! The second half would need infinite speed.',
+      };
+    },
+  },
+
+  // ---------- Deeper understanding & stretch (added after the learning review) ----------
+  {
+    id: 'u1.chain-convert', concepts: [C.units], tier: 'scientist',
+    generate(r) {
+      const km = r.pick([0.5, 1.2, 2.4, 3, 0.75, 0.04]);
+      return {
+        type: 'numeric', prompt: `A minecart track is <b>${fmt(km)} km</b> long. How many <b>centimetres</b> is that?`,
+        answer: km * 100000, unit: 'cm',
+        hints: ['Go one step at a time: km → m, then m → cm.', '1 km = 1000 m and 1 m = 100 cm.'],
+        errors: [{ value: km * 1000, msg: 'That\'s in metres — now turn the metres into centimetres.' }, { value: km * 100, msg: 'You only did one step. km → m first, then m → cm.' }],
+        solution: `${fmt(km)} km = ${fmt(km * 1000)} m = ${fmt(km * 1000)} × 100 = <b>${fmt(km * 100000)} cm</b>`,
+      };
+    },
+  },
+  {
+    id: 'u1.estimate-mcq', concepts: [C.units, C.speed], tier: 'explorer',
+    generate(r) {
+      const q = r.pick([
+        { p: 'About how fast does a person <b>walk</b>?', c: ['about 1.5 m/s', 'about 15 m/s', 'about 150 m/s', 'about 0.01 m/s'], e: '1.5 m/s is about 5 km/h — a normal walking pace. 15 m/s would be faster than an Olympic sprinter!' },
+        { p: 'About how long does it take to <b>walk 1 km</b>?', c: ['about 12 minutes', 'about 12 seconds', 'about 12 hours', 'about 1 minute'], e: 'At about 1.4 m/s, 1000 m takes about 700 s — roughly 12 minutes.' },
+        { p: 'About how fast does a car drive <b>through a town</b>?', c: ['about 50 km/h', 'about 5 km/h', 'about 500 km/h', 'about 5000 km/h'], e: '50 km/h is a common town speed limit. 5 km/h is walking pace; 500 km/h is faster than the fastest trains.' },
+        { p: 'About how tall is a <b>two-storey house</b>?', c: ['about 8 m', 'about 8 cm', 'about 80 m', 'about 8 km'], e: 'Each storey is about 3–4 m, so two storeys is about 8 m — 8 blocks!' },
+      ]);
+      return { type: 'mcq', prompt: q.p, choices: q.c, answer: 0, explain: q.e };
+    },
+  },
+  {
+    id: 'u1.disp-three', concepts: [C.disp], tier: 'scientist',
+    generate(r) {
+      const v = until(r, (rr) => ({ a: rr.int(3, 9), b: rr.int(4, 14), c: rr.int(1, 6) }), (x) => x.b > x.a && x.a - x.b + x.c !== 0);
+      const disp = v.a - v.b + v.c;
+      return {
+        type: 'numeric', signed: true,
+        prompt: `Pip walks <b>${v.a} m right</b>, then <b>${v.b} m left</b>, then <b>${v.c} m right</b>. What is his <b>displacement</b>?<br><small>Use + for right and − for left.</small>`,
+        answer: disp, unit: 'm',
+        hints: ['Imagine a number line. Where is Pip after each walk?', 'Start at 0. Right is +, left is −.'],
+        errors: [{ value: v.a + v.b + v.c, msg: 'That\'s the distance he walked. Displacement only cares where he ended up.' }, { value: -disp, msg: 'Right size, wrong direction — which side of the start did he finish on?' }],
+        solution: `0 → +${v.a} → ${fmtS(v.a - v.b)} → <b>${fmtS(disp)} m</b>. (He walked a distance of ${v.a + v.b + v.c} m.)`,
+      };
+    },
+  },
+  {
+    id: 'u1.graph-height-mcq', concepts: [C.graph, C.speed], tier: 'scientist',
+    generate(r) {
+      // The higher line is the SLOWER one: speed is about steepness, not height.
+      const highFirst = r.chance(0.5);
+      const high = [[0, 14], [10, 18]], steep = [[0, 0], [10, 12]];
+      const g = (pts, label) => `<div class="graph-pair"><b>${label}</b>${graphSVG({ points: pts, tMax: 10, yMax: 20, small: true, w: 140, h: 100, tStep: 2, yStep: 4 })}</div>`;
+      return {
+        type: 'mcq', keepOrder: true,
+        prompt: `Two runners on the same axes. Who is running <b>faster</b>?<div class="graph-row">${g(highFirst ? high : steep, 'A')}${g(highFirst ? steep : high, 'B')}</div>`,
+        choices: ['A', 'B', 'They have the same speed'], answer: highFirst ? 1 : 0,
+        explain: 'Speed is how <b>steep</b> the line is, not how high it is. The higher runner started further away but only gained 4 m in 10 s; the other gained 12 m.',
+      };
+    },
+  },
+  {
+    id: 'u1.graph-story-mcq', concepts: [C.graph], tier: 'explorer',
+    generate(r) {
+      const g = (pts) => graphSVG({ points: pts, tMax: 10, yMax: 10, small: true, w: 160, h: 110, tStep: 2, yStep: 2 });
+      const upThenFlat = r.chance(0.5);
+      return {
+        type: 'mcq',
+        prompt: `This distance–time graph tells the story of Pip's walk. What is he doing?<div class="graph-row">${g(upThenFlat ? [[0, 0], [5, 8], [10, 8]] : [[0, 2], [5, 2], [10, 9]])}</div>`,
+        choices: upThenFlat
+          ? ['Walking, then standing still', 'Climbing a hill, then walking on flat ground', 'Speeding up, then going at a steady speed', 'Standing still, then walking']
+          : ['Standing still, then walking', 'Walking on flat ground, then climbing a hill', 'Walking, then standing still', 'Going downhill, then uphill'],
+        answer: 0,
+        explain: 'A distance–time graph is not a picture of the path! Going up means moving away; a flat line means standing still.',
+      };
+    },
+  },
+  {
+    id: 'u1.spot-bug-avg', concepts: [C.avg], tier: 'scientist',
+    generate(r) {
+      const [s1, s2] = r.pick([[6, 2], [3, 6], [4, 12], [10, 15], [6, 12]]);
+      const d = lcm(s1, s2);
+      return {
+        type: 'mcq',
+        prompt: `Sam says: <i>"Pip walks ${d} km at ${s1} km/h and then ${d} km at ${s2} km/h, so his average speed is (${s1} + ${s2}) ÷ 2 = ${fmt((s1 + s2) / 2)} km/h."</i> What did Sam do wrong?`,
+        choices: [
+          `He averaged the speeds, but Pip spent longer on the slower part`,
+          `He should have added the speeds: ${s1 + s2} km/h`,
+          `He should have multiplied: ${s1 * s2} km/h`,
+          'Nothing — Sam is right',
+        ],
+        answer: 0,
+        explain: `The times are ${fmt(d / s1)} h and ${fmt(d / s2)} h, so the average is ${2 * d} ÷ ${fmt(d / s1 + d / s2)} = ${fmt((2 * d) / (d / s1 + d / s2))} km/h. The slower part lasts longer, so it pulls the average down.`,
+      };
+    },
+  },
+  {
+    id: 'u1.avg-inverse', concepts: [C.avg], tier: 'engineer',
+    generate(r) {
+      // s1 is the slow first part; the second part must be s2 to average A over equal distances.
+      const [s1, s2] = r.pick([[2, 6], [3, 6], [4, 12], [10, 15], [6, 12], [20, 30]]);
+      const A = (2 * s1 * s2) / (s1 + s2);
+      const d = lcm(s1, s2) * r.int(1, 2);
+      return {
+        type: 'numeric',
+        prompt: `Pip walks <b>${d} km at ${s1} km/h</b>. How fast must he go for the <b>next ${d} km</b> so that his average speed for the whole ${2 * d} km is <b>${fmt(A)} km/h</b>?`,
+        answer: s2, unit: 'km/h',
+        hints: ['How long should the whole walk take at the average speed?', 'How much of that time has the first part already used?', 'Speed for the second part = distance ÷ time left.'],
+        errors: [{ value: 2 * A - s1, msg: 'That would only work if both parts took the same TIME — but they are the same DISTANCE. Work with the times.' }],
+        solution: `Whole walk: ${2 * d} ÷ ${fmt(A)} = ${fmt((2 * d) / A)} h. First part: ${d} ÷ ${s1} = ${fmt(d / s1)} h. Time left: ${fmt((2 * d) / A - d / s1)} h, so speed = ${d} ÷ ${fmt((2 * d) / A - d / s1)} = <b>${s2} km/h</b>`,
       };
     },
   },

@@ -5,7 +5,7 @@ Each 10–15 minute session mixes interactive simulations, predictions, worked e
 calculation/word problems. Duolingo-style XP, streaks, emeralds, quests and achievements keep it fun.
 
 **Now playable:** Mechanics Unit 1 (Describing Motion) and Unit 2 (Velocity & Relative Motion).
-That's 16 sessions: 5 lessons, 2 problem sets and 1 Boss Mission per unit. The full 10-unit plan is in
+That's 19 sessions: per unit, 5–6 lessons, 2 problem sets, a Unit Review and a Boss Mission. The full 10-unit plan is in
 [`docs/SYLLABUS.md`](docs/SYLLABUS.md).
 
 ## Run it

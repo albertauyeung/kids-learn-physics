@@ -5,7 +5,7 @@
 //   { id, concepts: [...], tier: 'explorer' | 'scientist' | 'engineer', puzzle?, achievement?,
 //     generate(rng) => question }
 // Question shapes (also usable inline in content):
-//   { type: 'numeric', prompt, answer, unit?, unitChoices?, tolerance?, hints?, solution? }
+//   { type: 'numeric', prompt, answer, unit?, unitChoices?, tolerance?, hints?, solution?, errors?: [{ value, msg }] }
 //   { type: 'mcq', prompt, choices: [html], answer: index, explain?, keepOrder? }
 //   { type: 'equation', prompt, lhs, tiles: [...], answers: [[...]], explain? }
 

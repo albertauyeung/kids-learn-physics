@@ -45,11 +45,15 @@ test('two missed days need two freezes', () => {
   assert.equal(S.state.streak.freezes, 1, 'freeze is not wasted when it cannot save the streak');
 });
 
-test('mistakes stay until answered right on a first try', () => {
+test('mistakes leave review only after first-try successes on two different days', () => {
   S.recordAnswer({ correct: false, templateId: 't1', combo: 0 });
-  S.recordAnswer({ correct: true, templateId: 't1', combo: 1, retry: true });
+  S.recordAnswer({ correct: true, templateId: 't1', combo: 1, retry: true }); // retry: doesn't count
   assert.equal(S.state.mistakes.length, 1);
-  S.recordAnswer({ correct: true, templateId: 't1', combo: 1 });
+  S.recordAnswer({ correct: true, templateId: 't1', combo: 1 }); // day 1
+  S.recordAnswer({ correct: true, templateId: 't1', combo: 1 }); // same day again: still 1 day
+  assert.equal(S.state.mistakes.length, 1);
+  S.state.mistakes[0].right = [addDays(today, -1)]; // pretend day 1 was yesterday
+  S.recordAnswer({ correct: true, templateId: 't1', combo: 1 }); // day 2
   assert.equal(S.state.mistakes.length, 0);
 });
 
@@ -71,13 +75,15 @@ test('a tab left open overnight still uses freezes when the next session finishe
   assert.equal(S.state.streak.freezes, 1);
 });
 
-test('a question answered wrong several times leaves review after one first-try success', () => {
+test('a question answered wrong several times has one review entry, and a new mistake restarts the count', () => {
   S.recordAnswer({ correct: false, templateId: 't2', combo: 0 });
   S.recordAnswer({ correct: false, templateId: 't2', combo: 0, retry: true });
   S.recordAnswer({ correct: false, templateId: 't2', combo: 0, retry: true });
   assert.equal(S.state.mistakes.length, 1, 'no duplicates');
   S.recordAnswer({ correct: true, templateId: 't2', combo: 1 });
-  assert.equal(S.state.mistakes.length, 0);
+  assert.equal(S.state.mistakes[0].right.length, 1);
+  S.recordAnswer({ correct: false, templateId: 't2', combo: 0 });
+  assert.equal(S.state.mistakes[0].right.length, 0, 'a new mistake restarts the count');
 });
 
 test('practice runs are not counted as course sessions', () => {
