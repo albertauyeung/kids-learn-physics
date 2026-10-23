@@ -430,6 +430,7 @@ canvas.stage { width: 100%; display: block; border: 3px solid #000; background: 
 .eq-tile.placed:disabled, .unit-chip.on:disabled, .choice:disabled { color: var(--ink); opacity: 1; }
 .sorter-slot { cursor: pointer; }
 .sorter-slot.empty { cursor: default; }
+.sorter-slot:disabled { color: var(--ink); cursor: default; }
 
 /* SVG graphs */
 svg.graph { width: 100%; max-width: 420px; display: block; margin: 10px auto 0; border: 3px solid #000; font-family: var(--font); font-size: 12px; }
