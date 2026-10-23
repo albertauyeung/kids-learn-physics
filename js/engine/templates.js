@@ -20,6 +20,10 @@ export function registerTemplates(list) {
   }
 }
 
+export function hasTemplate(id) {
+  return registry.has(id);
+}
+
 export function getTemplate(id) {
   const t = registry.get(id);
   if (!t) throw new Error(`Unknown template: ${id}`);

@@ -23,7 +23,7 @@ export function runSession(root, { session, unit, review = [], onFinish, onQuit 
   let combo = 0;
   const stats = {
     firstTotal: 0, firstCorrect: 0, mistakes: 0, comboBonus: 0, predictBonus: 0,
-    puzzleBonus: 0, puzzleSolved: false, achievements: [], bestCombo: 0,
+    puzzleBonus: 0, puzzleSolved: false, achievements: [], bestCombo: 0, skipped: 0,
   };
 
   // ---------- layout ----------
@@ -40,15 +40,21 @@ export function runSession(root, { session, unit, review = [], onFinish, onQuit 
   root.append(wrap);
 
   let onMain = () => {};
-  mainBtn.addEventListener('click', () => onMain());
+  let switchedAt = 0;
+  // A double tap must not also press the *next* button (skipping feedback or a card).
+  const press = () => {
+    if (performance.now() - switchedAt < (window.__KLP_TAP_GUARD_MS ?? 450)) return; // overridable for automated tests
+    onMain();
+  };
+  mainBtn.addEventListener('click', press);
   // Enter = press the main button. Skip it when focus is on another button, whose own
   // Enter-click would otherwise fire as well (choices and unit chips are safe to repeat).
   const keyHandler = (e) => {
     if (e.key !== 'Enter' || e.repeat || mainBtn.disabled || modal) return;
     const a = document.activeElement;
-    if (a?.tagName === 'BUTTON' && !a.matches('.choice, .unit-chip')) return;
+    if (a?.tagName === 'BUTTON' && !a.matches('.choice.on, .unit-chip.on')) return;
     e.preventDefault();
-    onMain();
+    press();
   };
   window.addEventListener('keydown', keyHandler);
 
@@ -56,6 +62,7 @@ export function runSession(root, { session, unit, review = [], onFinish, onQuit 
     mainBtn.textContent = label;
     mainBtn.disabled = !enabled;
     mainBtn.className = `mc-btn big ${cls}`;
+    if (onMain !== fn) switchedAt = performance.now();
     onMain = fn;
   }
 
@@ -74,6 +81,7 @@ export function runSession(root, { session, unit, review = [], onFinish, onQuit 
   }
 
   function show() {
+    switchedAt = performance.now(); // new step: ignore a tap left over from the previous one
     cleanup();
     progress();
     stage.innerHTML = '';
@@ -138,7 +146,7 @@ export function runSession(root, { session, unit, review = [], onFinish, onQuit 
       skipTimer = setTimeout(() => {
         if (done) return;
         skipBtn.hidden = false;
-        skipBtn.onclick = () => next();
+        skipBtn.onclick = () => { stats.skipped++; next(); };
       }, SKIP_AFTER_MS());
     }
   }
@@ -172,9 +180,16 @@ export function runSession(root, { session, unit, review = [], onFinish, onQuit 
   // ---------- questions ----------
   function showQuestion(item) {
     const { step } = item;
-    const q = step.type === 'q'
-      ? { ...instantiate(step.t, item.seed ?? hashKey(item.key) + item.attempt * 7919), review: step.review }
-      : { ...step, seed: hashKey(item.key) + item.attempt };
+    let q;
+    try {
+      q = step.type === 'q'
+        ? { ...instantiate(step.t, item.seed ?? hashKey(item.key) + item.attempt * 7919), review: step.review }
+        : { ...step, seed: hashKey(item.key) + item.attempt };
+    } catch (err) {
+      console.warn('Skipping a question that could not be built:', err);
+      idx++;
+      return show();
+    }
     const card = h('div', { class: 'card q-card' });
     stage.append(card);
     const r = renderQuestion(card, q, { setReady: (v) => setMain('Check', v, check) });

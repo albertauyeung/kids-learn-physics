@@ -6,6 +6,7 @@ import { sfx, setSoundEnabled } from './core/sound.js';
 import { spriteImg, blockImg, textureURL } from './core/sprites.js';
 import { course, playableUnits, findSession, sessionTemplates } from './content/course.js';
 import { runSession } from './engine/runner.js';
+import { hasTemplate } from './engine/templates.js';
 
 const app = document.getElementById('app');
 let teardown = null;
@@ -17,10 +18,20 @@ setSoundEnabled(S.state.settings.sound);
 applyTextures();
 S.onChange(() => renderTopbar());
 window.addEventListener('hashchange', route);
-// iPad Safari often keeps the page alive for days: re-check the streak when it comes back.
+// iPad Safari often keeps the page alive for days: re-check the streak when it comes back,
+// and pick up progress saved by another tab meanwhile.
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') S.refreshStreak();
+  if (document.visibilityState !== 'visible') return;
+  if (S.reloadIfChanged() && !inSession()) route();
+  S.refreshStreak();
 });
+window.addEventListener('storage', (e) => {
+  if (e.key === 'klp.save.v1' && S.reloadIfChanged() && !inSession()) route();
+});
+
+function inSession() {
+  return /^#\/(session|practice)/.test(location.hash) && !!document.querySelector('.runner');
+}
 route();
 
 function applyTextures() {
@@ -40,7 +51,15 @@ function route() {
   window.scrollTo({ top: 0 });
   if (!S.state.profile.name) return onboarding();
   const [, page, arg] = (location.hash || '#/learn').split('/');
-  if (page === 'session' && arg) return sessionScreen(decodeURIComponent(arg));
+  if (page === 'session' && arg) {
+    let id = arg;
+    try {
+      id = decodeURIComponent(arg);
+    } catch {
+      return go('#/learn');
+    }
+    return sessionScreen(id);
+  }
   if (page === 'practice') return sessionScreen('practice');
   shell(page || 'learn');
 }
@@ -236,8 +255,9 @@ function findNext(units) {
   return null;
 }
 
+// Ids from older versions of the content may no longer exist; skip them.
 function uniqueMistakes() {
-  return [...new Set(S.state.mistakes.map((m) => m.templateId))];
+  return [...new Set(S.state.mistakes.map((m) => m.templateId))].filter(hasTemplate);
 }
 
 // ---------- session ----------
@@ -266,6 +286,9 @@ function sessionScreen(id) {
     session, unit, review,
     onQuit: () => go('#/learn'),
     onFinish: (result) => {
+      // Results replace the session in history, so reloading doesn't restart it.
+      history.replaceState(null, '', '#/learn');
+      if (session.type === 'boss' && (result.accuracy < BOSS_PASS || result.skipped > 0)) return bossRetryScreen(session, result);
       const rewards = S.completeSession(session, unit, result);
       resultsScreen(session, result, rewards);
     },
@@ -280,7 +303,7 @@ function warmupReview(units, current) {
   const rng = makeRng(randomSeed());
   const picks = [];
   for (const m of rng.shuffle(uniqueMistakes())) if (picks.length < 1) picks.push(m);
-  for (const t of rng.shuffle([...new Set(done)])) if (picks.length < 2 && !picks.includes(t)) picks.push(t);
+  for (const t of rng.shuffle([...new Set(done)].filter(hasTemplate))) if (picks.length < 2 && !picks.includes(t)) picks.push(t);
   return picks;
 }
 
@@ -357,6 +380,31 @@ function resultButtons(session) {
   return row;
 }
 
+const BOSS_PASS = 0.6;
+
+// A boss only counts as beaten if the mission was completed (not skipped) and
+// at least 60% of its questions were right first time.
+function bossRetryScreen(session, result) {
+  teardown?.();
+  teardown = null;
+  app.innerHTML = '';
+  sfx.wrong();
+  const why = result.skipped > 0
+    ? 'You skipped the mission, so the boss is still standing.'
+    : `You got ${Math.round(result.accuracy * 100)}% of the questions right — you need ${BOSS_PASS * 100}% to win.`;
+  app.append(h('div', { class: 'results' },
+    h('div', { class: 'results-art' }, spriteImg('hero', { scale: 6 })),
+    h('h1', { class: 'title-big' }, 'The boss survived!'),
+    h('div', { class: 'results-sub' }, session.title),
+    h('p', { class: 'lead' }, why),
+    h('p', {}, 'Take another look at the lessons, then try again. You can do it!'),
+    h('div', { class: 'foot-row center' },
+      h('button', { class: 'mc-btn', type: 'button', onClick: () => go('#/learn') }, 'Map'),
+      h('button', { class: 'mc-btn big green', type: 'button', onClick: () => go(`#/session/${session.id}`) }, 'Try again ▶'),
+    ),
+  ));
+}
+
 function resultTile(label, value, icon, cls) {
   return h('div', { class: `result-tile ${cls}` }, h('div', { class: 'rt-label' }, label), h('div', { class: 'rt-value' }, spriteImg(icon, { scale: 3, cls: 'rt-icon' }), value));
 }
@@ -429,10 +477,14 @@ function shopScreen(main) {
   render();
 }
 
+let lastPurchase = 0;
+
 function buyButton(id, price, after) {
   return h('button', {
     class: 'mc-btn small green', type: 'button', disabled: S.state.emeralds < price,
     onClick: () => {
+      if (performance.now() - lastPurchase < 600) return; // a double tap buys once
+      lastPurchase = performance.now();
       const r = S.buy(id);
       if (r.ok) {
         sfx.coin();

@@ -88,8 +88,10 @@ export function parseNumber(input) {
   let s = String(input).trim().replace(/[,\s]+(?=\d{3}\b)/g, '').replace(/−|–/g, '-');
   s = s.replace(/\s*(km\/h|m\/s|[a-z]+)\.?$/i, ''); // "350 m", "12 km/h", "4 days" → just the number
   if (s === '') return null;
+  if (/^-?\d+,\d{1,2}$/.test(s)) s = s.replace(',', '.'); // decimal comma: "0,5" → 0.5
   const mixed = s.match(/^(-?)(\d+)\s+(\d+)\/(\d+)$/);
   if (mixed) {
+    if (Number(mixed[4]) === 0) return null;
     const v = Number(mixed[2]) + Number(mixed[3]) / Number(mixed[4]);
     return mixed[1] ? -v : v;
   }
@@ -98,10 +100,17 @@ export function parseNumber(input) {
     const d = Number(frac[2]);
     return d === 0 ? null : Number(frac[1]) / d;
   }
+  if (/\d\s+\d/.test(s)) return null; // "1 2" is not a number
   s = s.replace(/\s+/g, '');
   if (!/^[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?$/i.test(s)) return null;
   const v = Number(s);
   return Number.isFinite(v) ? v : null;
+}
+
+// The unit typed after a number, if any: "3000 km" → "km".
+export function typedUnit(input) {
+  const m = String(input ?? '').trim().match(/(km\/h|m\/s|[a-z]+)\.?$/i);
+  return m && /\d/.test(input) ? m[1] : null;
 }
 
 export function closeEnough(value, answer, tolerance) {

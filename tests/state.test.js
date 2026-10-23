@@ -99,3 +99,56 @@ test('old saves missing nested fields load with defaults filled in', () => {
     delete globalThis.localStorage;
   }
 });
+
+// ---------- Robustness against other tabs and damaged saves ----------
+function fakeStorage(initial = {}) {
+  const store = { ...initial };
+  globalThis.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => (store[k] = String(v)), removeItem: (k) => delete store[k] };
+  return store;
+}
+
+test('damaged saves (null or wrong-typed fields) fall back to defaults', () => {
+  fakeStorage({ 'klp.save.v1': JSON.stringify({ profile: { name: 'T', dailyGoal: 'x' }, daily: null, sessions: null, mistakes: [null, { templateId: 'a' }, 5], skins: { owned: null }, xp: '7' }) });
+  try {
+    S.load();
+    assert.equal(S.state.profile.name, 'T');
+    assert.equal(S.state.profile.dailyGoal, 20);
+    assert.deepEqual(S.state.daily, {});
+    assert.deepEqual(S.state.sessions, {});
+    assert.deepEqual(S.state.mistakes.map((m) => m.templateId), ['a']);
+    assert.deepEqual(S.state.skins.owned, ['classic']);
+    assert.equal(S.state.xp, 0);
+    assert.doesNotThrow(() => { S.todaysQuests(); S.streakCalendar(14); S.levelInfo(); });
+  } finally {
+    delete globalThis.localStorage;
+  }
+});
+
+test('a stale tab picks up progress saved by another tab instead of overwriting it', () => {
+  const store = fakeStorage();
+  try {
+    S.load();
+    S.update((s) => (s.profile.name = 'Tab'));
+    // another tab finishes a lesson and saves
+    const other = JSON.parse(store['klp.save.v1']);
+    other.xp = 10;
+    other.sessions['mech.u1.l1'] = { completions: 1, bestAccuracy: 1, perfect: true, lastDate: today };
+    store['klp.save.v1'] = JSON.stringify(other);
+    // this tab changes a setting: the other tab's lesson must survive
+    S.update((s) => (s.settings.sound = false));
+    const saved = JSON.parse(store['klp.save.v1']);
+    assert.equal(saved.xp, 10);
+    assert.ok(saved.sessions['mech.u1.l1']);
+    assert.equal(saved.settings.sound, false);
+  } finally {
+    delete globalThis.localStorage;
+  }
+});
+
+test('rewards scale with accuracy', () => {
+  const full = S.completeSession({ id: 'a', type: 'lesson' }, null, { ...result, accuracy: 1, perfect: false });
+  const none = S.completeSession({ id: 'b', type: 'lesson' }, null, { ...result, accuracy: 0, perfect: false });
+  assert.equal(full.xp, 10);
+  assert.equal(none.xp, 5);
+  assert.ok(none.emeralds < full.emeralds);
+});

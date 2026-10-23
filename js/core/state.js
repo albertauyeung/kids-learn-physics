@@ -37,16 +37,33 @@ function emit() {
   for (const fn of listeners) fn(state);
 }
 
+let lastRaw = null; // the save as last read or written by this tab
+
+const kind = (v) => (v === null ? 'null' : Array.isArray(v) ? 'array' : typeof v);
+
+// Keep only fields whose type matches the defaults, so a damaged or older save can't crash a screen.
+function sanitize(saved) {
+  const base = fresh();
+  if (kind(saved) !== 'object') return base;
+  for (const [k, def] of Object.entries(base)) {
+    const v = saved[k];
+    if (kind(v) !== kind(def)) continue;
+    if (kind(def) === 'object' && ['profile', 'settings', 'streak', 'skins'].includes(k)) {
+      // one level deeper: older saves gain new fields, wrong-typed fields fall back
+      for (const [kk, dd] of Object.entries(def)) if (kind(v[kk]) === kind(dd)) def[kk] = v[kk];
+    } else {
+      base[k] = v;
+    }
+  }
+  base.mistakes = base.mistakes.filter((m) => m && typeof m.templateId === 'string');
+  return base;
+}
+
 export function load() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) {
-      const saved = JSON.parse(raw);
-      const base = fresh();
-      state = Object.assign(base, saved);
-      // Merge nested objects one level deeper so saves from older versions gain new fields.
-      for (const k of ['profile', 'settings', 'streak', 'skins']) state[k] = { ...fresh()[k], ...(saved[k] || {}) };
-    }
+    lastRaw = raw;
+    state = raw ? sanitize(JSON.parse(raw)) : fresh();
   } catch {
     state = fresh();
   }
@@ -54,9 +71,26 @@ export function load() {
   return state;
 }
 
+// Another tab (or an old iPad tab) may have saved since we last looked: pick up its progress
+// instead of overwriting it. Returns true if the state was reloaded.
+export function reloadIfChanged() {
+  let raw = null;
+  try {
+    raw = localStorage.getItem(KEY);
+  } catch {
+    return false;
+  }
+  if (raw === lastRaw) return false;
+  load();
+  emit();
+  return true;
+}
+
 export function persist() {
   try {
-    localStorage.setItem(KEY, JSON.stringify(state));
+    const raw = JSON.stringify(state);
+    localStorage.setItem(KEY, raw);
+    lastRaw = raw;
   } catch {
     /* storage unavailable: progress lives only in memory */
   }
@@ -69,6 +103,7 @@ export function resetAll() {
 }
 
 export function update(fn) {
+  reloadIfChanged();
   fn(state);
   persist();
 }
@@ -148,6 +183,7 @@ export function streakCalendar(days = 7) {
 
 // ---------- Answers ----------
 export function recordAnswer({ correct, concepts = [], templateId, combo, calc, usedHint, retry = false }) {
+  reloadIfChanged();
   const d = today();
   d.answered++;
   if (correct) d.correct++;
@@ -172,6 +208,7 @@ export function recordAnswer({ correct, concepts = [], templateId, combo, calc, 
 }
 
 export function recordPrediction(key, correct, text) {
+  reloadIfChanged();
   state.predictions[key] = { correct, date: dateStr(), text };
   const good = Object.values(state.predictions).filter((p) => p.correct).length;
   if (good >= 5) unlock('predictor');
@@ -183,16 +220,18 @@ const BASE_XP = { lesson: 10, problems: 20, boss: 50 };
 const PERFECT_XP = { lesson: 5, problems: 10, boss: 20 };
 
 export function completeSession(session, unit, result) {
+  reloadIfChanged();
   const before = levelInfo();
   const d = today();
-  let xp = (BASE_XP[session.type] || 10) + result.comboBonus + result.predictBonus;
+  const scale = 0.5 + 0.5 * Math.max(0, Math.min(1, result.accuracy));
+  let xp = Math.round((BASE_XP[session.type] || 10) * scale) + result.comboBonus + result.predictBonus;
   if (result.perfect) xp += PERFECT_XP[session.type] || 5;
   const potion = state.potion > 0;
   if (potion) {
     xp *= 2;
     state.potion--;
   }
-  let emeralds = 2 + (result.perfect ? 2 : 0) + (session.type === 'boss' ? 5 : 0) + result.puzzleBonus;
+  let emeralds = (result.accuracy >= 0.5 ? 2 : 1) + (result.perfect ? 2 : 0) + (session.type === 'boss' ? 5 : 0) + result.puzzleBonus;
 
   state.xp += xp;
   d.xp += xp;
@@ -310,6 +349,7 @@ export function todaysQuests() {
 }
 
 export function claimQuest(id) {
+  reloadIfChanged();
   const q = todaysQuests().find((x) => x.id === id);
   if (!q || !q.done || q.claimed) return 0;
   today().claimed[id] = true;
@@ -337,6 +377,7 @@ export const SHOP_ITEMS = {
 };
 
 export function buy(itemId) {
+  reloadIfChanged();
   if (SKINS[itemId]) {
     const skin = SKINS[itemId];
     if (state.skins.owned.includes(itemId)) {

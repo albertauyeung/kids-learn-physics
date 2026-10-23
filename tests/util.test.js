@@ -40,3 +40,16 @@ test('parseNumber ignores a typed unit', () => {
   assert.equal(parseNumber('day 8'), null);
   assert.equal(parseNumber('m'), null);
 });
+
+test('parseNumber edge cases from break-testing', async () => {
+  const { typedUnit } = await import('../js/core/util.js');
+  assert.equal(parseNumber('0,5'), 0.5);
+  assert.equal(parseNumber('12,34'), 12.34);
+  assert.equal(parseNumber('1,200'), 1200);
+  assert.equal(parseNumber('4 1/0'), null);
+  assert.equal(parseNumber('1 2'), null);
+  assert.equal(parseNumber('12 000'), 12000);
+  assert.equal(typedUnit('3000 km'), 'km');
+  assert.equal(typedUnit('12 m/s'), 'm/s');
+  assert.equal(typedUnit('3000'), null);
+});

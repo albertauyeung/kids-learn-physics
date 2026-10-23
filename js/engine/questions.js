@@ -1,7 +1,7 @@
 // Question renderers. Each returns { evaluate() → { correct, html }, lock(), usedHint }.
 // ctx.setReady(bool) enables the CHECK button.
 
-import { h, fmt, parseNumber, closeEnough, makeRng } from '../core/util.js';
+import { h, fmt, parseNumber, closeEnough, makeRng, typedUnit } from '../core/util.js';
 import { sfx } from '../core/sound.js';
 
 export function renderQuestion(el, q, ctx) {
@@ -103,11 +103,14 @@ function numeric(el, q, ctx) {
     evaluate() {
       const v = parseNumber(input.value);
       const numOk = v != null && closeEnough(v, q.answer, q.tolerance);
-      const unitOk = !q.unitChoices || unit === q.unit;
+      const typed = typedUnit(input.value);
+      const typedOk = !typed || !q.unit || typed.toLowerCase() === q.unit.toLowerCase();
+      const unitOk = (!q.unitChoices || unit === q.unit) && typedOk;
       const correct = numOk && unitOk;
       const ans = `<b>${fmt(q.answer)}${q.unit ? ' ' + q.unit : ''}</b>`;
       let html;
       if (correct) html = q.solution ? `<div class="sol">${q.solution}</div>` : '';
+      else if (numOk && !typedOk) html = `You wrote <b>${typed}</b>, but this answer is in <b>${q.unit}</b>.${q.solution ? `<div class="sol">${q.solution}</div>` : ''}`;
       else if (numOk && !unitOk) html = `The number is right, but the unit should be <b>${q.unit}</b>.${q.solution ? `<div class="sol">${q.solution}</div>` : ''}`;
       else html = `Correct answer: ${ans}${q.solution ? `<div class="sol">${q.solution}</div>` : ''}`;
       return { correct, html };
