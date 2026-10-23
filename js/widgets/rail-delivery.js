@@ -2,7 +2,7 @@
 // station exactly on schedule. Speed = distance ÷ time for each leg.
 // params: { rounds: 3, seed }
 
-import { makeStage, loop, sky, ground, text, tag, slider, button, controls, taskBanner } from './stage.js';
+import { makeStage, loop, sky, ground, text, tag, slider, button, controls, readout, taskBanner } from './stage.js';
 import { drawSprite, drawTexture } from '../core/sprites.js';
 import { fmt, makeRng, randomSeed } from '../core/util.js';
 import { sfx } from '../core/sound.js';
@@ -33,7 +33,8 @@ export default function railDelivery(el, params = {}, api) {
   const st = makeStage(el, W, H);
   const sliderBox = controls();
   const goBtn = button('▶ Send the minecart', () => go(), 'green');
-  el.append(sliderBox, controls(goBtn));
+  const legTable = readout();
+  el.append(sliderBox, controls(goBtn), legTable.el);
 
   let t = 0, running = false, result = null;
 
@@ -49,6 +50,10 @@ export default function railDelivery(el, params = {}, api) {
     });
     t = 0; result = null; running = false;
     const sched = legs.map((l, i) => `Station ${String.fromCharCode(66 + i)} at <b>${l.arrive} s</b>`).join(', ');
+    legTable.set(legs.map((l, i) => [
+      `Leg ${i + 1}: ${String.fromCharCode(65 + i)} → ${String.fromCharCode(66 + i)}`,
+      `${l.distance} m · arrive at ${l.arrive} s`,
+    ]));
     banner.set(`Delivery ${roundNo + 1}/${totalRounds}: leave A at 0 s and arrive at ${sched}. Set each leg's speed!`);
   }
 
