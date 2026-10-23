@@ -1,7 +1,7 @@
 // Question renderers. Each returns { evaluate() → { correct, html }, lock(), usedHint }.
 // ctx.setReady(bool) enables the CHECK button.
 
-import { h, fmt, parseNumber, closeEnough, makeRng, typedUnit } from '../core/util.js';
+import { h, fmt, parseNumber, closeEnough, makeRng, typedUnit, sameUnit } from '../core/util.js';
 import { sfx } from '../core/sound.js';
 
 export function renderQuestion(el, q, ctx) {
@@ -104,7 +104,7 @@ function numeric(el, q, ctx) {
       const v = parseNumber(input.value);
       const numOk = v != null && closeEnough(v, q.answer, q.tolerance);
       const typed = typedUnit(input.value);
-      const typedOk = !typed || !q.unit || typed.toLowerCase() === q.unit.toLowerCase();
+      const typedOk = !typed || !q.unit || sameUnit(typed, q.unit);
       const unitOk = (!q.unitChoices || unit === q.unit) && typedOk;
       const correct = numOk && unitOk;
       const ans = `<b>${fmt(q.answer)}${q.unit ? ' ' + q.unit : ''}</b>`;

@@ -43,7 +43,7 @@ export default function twoCarts(el, params = {}, api) {
       met && ['They met at', `${fmt(met.x, 2)} m from A's start`, 'winner'],
     ]);
     const goal = flag != null
-      ? `Choose speeds so the carts ${mode === 'meet' ? 'meet' : 'catch up'} exactly at the <b>flag (${flag} m)</b>.`
+      ? `Choose speeds so ${mode === 'meet' ? 'the carts meet' : 'A catches B'} exactly at the <b>flag (${flag} m)</b>.`
       : `Press Go and watch the carts ${mode === 'meet' ? 'meet' : 'catch up'}.`;
     if (!met) banner.set(goal);
   }

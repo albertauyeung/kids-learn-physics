@@ -62,7 +62,7 @@ export default {
                  <p>To combine two motions, put the arrows <b>tip-to-tail</b>. The arrow from the very start to the very end is the total.</p>`,
         },
         {
-          type: 'predict', prompt: 'Pip walks at 1.5 m/s on a moving walkway that goes 1 m/s in the same direction. How fast is he going compared to the ground?',
+          type: 'predict', prompt: 'Pip walks at 1.5 m/s on a moving walkway that goes 1 m/s in the same direction. How fast is he going compared with the ground?',
           choices: ['0.5 m/s', '1.5 m/s', '2.5 m/s', '1 m/s'], answer: 2, keepOrder: true,
           explain: 'Both arrows point the same way, so they add: 1.5 + 1 = 2.5 m/s.',
         },
@@ -71,8 +71,8 @@ export default {
           html: 'Use the sliders to complete each task. Hold it for a moment to score!',
           params: {
             tasks: [
-              { text: 'Make Pip move at <b>+4 m/s</b> compared to the ground.', check: (w, k) => w + k === 4 },
-              { text: 'Make Pip <b>stand still</b> compared to the ground while the walkway is moving.', check: (w, k) => w !== 0 && w + k === 0 },
+              { text: 'Make Pip move at <b>+4 m/s</b> compared with the ground.', check: (w, k) => w + k === 4 },
+              { text: 'Make Pip <b>stand still</b> compared with the ground while the walkway is moving.', check: (w, k) => w !== 0 && w + k === 0 },
               { text: 'Make the walkway go <b>right</b>, but Pip go <b>left</b> overall.', check: (w, k) => w > 0 && w + k < 0 },
             ],
           },

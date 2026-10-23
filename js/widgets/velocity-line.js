@@ -9,7 +9,7 @@ import { sfx } from '../core/sound.js';
 export default function velocityLine(el, params = {}, api) {
   const tasks = params.tasks || [];
   let taskIdx = 0;
-  const W = 480, H = 180, MIN = -20, MAX = 20;
+  const W = 480, H = 180, MIN = -25, MAX = 25; // ±6 m/s for 4 s = ±24 m stays on screen
   const banner = taskBanner();
   el.append(banner.el);
   const st = makeStage(el, W, H);

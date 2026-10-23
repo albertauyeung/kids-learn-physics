@@ -1,4 +1,4 @@
-# Kids Learn Physics — Syllabus & Product Plan
+# Block Physics — Syllabus & Product Plan
 
 **Learner profile:** age 10, comfortable with arithmetic, fractions, decimals, simple algebra
 (solving for one unknown), and factorisation. Loves maths puzzles and physics ideas.
@@ -40,19 +40,19 @@
 
 | Min | Step | Example |
 |---|---|---|
-| 0–1 | **Warm-up review** — 2 spaced-repetition questions from earlier lessons | "Convert 36 km/h to m/s" |
+| 0–1 | **Warm-up review** — up to 2 questions from earlier lessons (mistakes first), added automatically | "Convert 36 km/h to m/s" |
 | 1–2 | **Hook & Predict** — a question asked *before* seeing the answer | "Which lands first: the dropped ball or the fired ball?" |
 | 2–6 | **Explore** — interactive sim with sliders / drag / draw | Cannon sim with slow-mo and strobe |
 | 6–8 | **Explain & Build the equation** — short comic + drag-the-tiles equation builder | `h = ½ g t²` |
-| 8–12 | **Practice** — 4–6 mixed questions (MCQ, numeric with units, drag-and-drop) | |
+| 8–12 | **Practice** — 6–8 mixed questions (MCQ, numeric with units, equation tiles) | |
 | 12 | **Wrap-up** — XP, streak flame, combo bonus, concept card unlocked | |
 
 ### Problem sets (≈ 12–15 min)
 
-- 6–8 questions at three tiers: 🟢 **Explorer** (one step), 🟡 **Scientist** (two steps / rearranging),
+- 7–9 questions at three tiers: 🟢 **Explorer** (one step), 🟡 **Scientist** (two steps / rearranging),
   🔴 **Engineer** (multi-step, quadratics, unit conversions).
 - Each problem is a **parameterised template** → unlimited fresh practice with different numbers.
-- Step-by-step hints (cost a little XP bonus, never block progress); full worked solution after answering.
+- Step-by-step hints (free; they only stop the answer counting for the "no hints" quest); full worked solution after answering.
 - Answers checked numerically with tolerance **and** units.
 - **Puzzle Corner** ⭐: one or two harder, maths-flavoured challenges per unit for bonus emeralds.
 
@@ -81,20 +81,21 @@
 
 | Feature | Design |
 |---|---|
-| **XP** | Lesson 10 XP, perfect lesson +5, problem set 20 XP, Boss Mission 50 XP |
-| **Daily goal** | Choose 20 / 30 / 50 XP per day; ring fills up on the home screen |
-| **Streak 🔥** | ≥ 1 session per day keeps the streak; milestones at 7 / 30 / 100 / 365 days |
-| **Streak Freeze** | Bought with gems; protects one missed day |
-| **Gems (currency: emeralds)** | Earned from quests, perfect lessons, Puzzle Corner; spent on freezes, XP potions and cosmetics (skins for Pip) |
-| **Combo bonus** | 5 correct in a row → ×2 XP on the next question; 10 in a row → "On Fire" animation |
-| **Lesson crowns** | Each lesson can be levelled up: Explorer → Scientist → Engineer → Legendary (timed, no hints) |
-| **Daily quests** | E.g. "Get 3 perfect answers", "Finish a word problem without hints", "Hit a target first try" |
-| **Achievements** | *Galileo* (predicted free fall correctly), *Sharpshooter*, *Newton's Apprentice*, *Puzzle Master* |
+| **XP** | Lesson 10, problem set 20, Boss Mission 50 — scaled by accuracy (50–100%). Perfect bonus +5 / +10 / +20 |
+| **Daily goal** | Choose 10 / 20 / 30 / 50 XP per day (about 10 / 15 / 25 / 40 minutes); a bar fills up on the home screen |
+| **Streak 🔥** | ≥ 1 session per day keeps the streak; achievements at 3 / 7 / 30 days |
+| **Streak Freeze** | Bought with emeralds (hold up to 2); each one protects one missed day |
+| **Emeralds** | 2 per session (+2 perfect, +5 boss, +5 daily goal, +5 per Puzzle Corner); spent on freezes, XP potions and skins for Pip |
+| **Combo bonus** | From 5 correct in a row, each correct answer gives +1 XP; 8 in a row unlocks *On Fire* |
+| **Session badges** | Replaying a session upgrades its badge: iron → gold → diamond (★ for a perfect run) |
+| **Daily quests** | 3 a day, e.g. "Earn 20 XP", "Get 5 answers right in a row", "Solve 3 calculations without hints" |
+| **Achievements** | 13, e.g. *Galileo* (5 correct predictions), *Puzzle Master*, *Von Neumann*, *Motion Master*, *River Captain* |
+| **Boss pass mark** | The mission must be completed (not skipped) and ≥ 60% of the questions right first time |
 | **Skill decay & review** | Old lessons "crack" after some days; reviewing them restores them and gives XP (spaced repetition) |
 | **Mistake bank** | Wrong answers come back later as review questions |
-| **Leagues (optional)** | Family league or "beat your own last week" — no strangers |
-| **No hearts lockout** | Mistakes never block learning. Optional **Challenge Mode** (3 lives) gives double XP |
-| **Parent dashboard** | Time spent, accuracy per concept, misconceptions still active, streak history |
+| **Leagues (not built yet)** | Family league or "beat your own last week" — no strangers |
+| **No hearts lockout** | Mistakes never block learning (Challenge Mode with 3 lives is a later idea) |
+| **Parent corner** | Accuracy per concept, surprising predictions, 14-day history; grown-up settings behind a maths gate |
 
 ---
 
@@ -107,7 +108,7 @@ Each unit lists: lessons → problem sets → Boss Mission. Sample problems show
 
 1. **Measuring the world** — SI units, prefixes (km, cm, mm, ms), size-sorting game
 2. **Distance vs displacement** (位移) — number-line walker; path vs straight line
-3. **Speed** — `speed = distance ÷ time`; race sim (snail, runner, cheetah, car)
+3. **Speed** — `speed = distance ÷ time`; race sim (minecart vs Pip, then turtle, chicken, Pip and horse)
 4. **Average speed** — multi-leg journeys; trap: average speed ≠ average of speeds
 5. **Distance–time graphs** — Motion Mapper; steeper = faster; flat = stopped
 
@@ -124,16 +125,16 @@ Each unit lists: lessons → problem sets → Boss Mission. Sample problems show
 *Maths power-up: negative numbers as direction, Pythagoras (3-4-5 triangles), first square roots*
 
 1. **Speed vs velocity** — direction matters; + and − signs on a line
-2. **Arrows** — velocity as an arrow (vector, 向量); adding velocities on a travelator
-3. **Relative motion** — two trains, closing speed, "who is moving?"
-4. **Right-angle velocities** — river crossing; Pythagoras gives the resultant (合成) speed
+2. **Adding velocities** — velocity arrows tip-to-tail on a moving walkway
+3. **Relative motion** — two minecarts, closing speed, "who is moving?"
+4. **Crossing the river** — square roots, then Pythagoras gives the resultant (合成) speed
 5. **Slope = velocity** — reading velocity from the slope (gradient, 斜率) of a position–time graph
 
 **Sample problems**
 - 🟢 Walk at 1.5 m/s on a travelator moving at 1 m/s. Speed relative to the ground? → **2.5 m/s**
 - 🟡 Two cars 300 m apart drive towards each other at 20 m/s and 10 m/s. When do they meet? → **10 s**
 - 🔴 A boat heads straight across a 40 m river at 4 m/s; the river flows at 3 m/s. Actual speed, crossing time, and drift downstream? → **5 m/s, 10 s, 30 m**
-- ⭐ *Puzzle Corner (the von Neumann fly):* Two trains 100 km apart approach at 50 km/h each. A fly zooms between them at 75 km/h until they meet. Total distance flown? → **75 km**
+- ⭐ *Puzzle Corner (the von Neumann bee):* Two trains 100 km apart approach at 50 km/h each. A bee zooms between them at 75 km/h until they meet. Total distance flown? → **75 km**
 
 **Boss Mission:** *River Rescue* — the boat always points straight across, so choose the launch point that lets the current carry it to each stranded swimmer. (Choosing a heading needs trigonometry, so it waits for a later unit.)
 

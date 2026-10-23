@@ -68,6 +68,7 @@ body {
 #app { margin: 0 auto; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
 
 img.sprite, .sprite, img { image-rendering: pixelated; }
+.all-done { font-weight: 700; color: var(--good-ink); max-width: 320px; text-align: right; }
 .boot { margin: 30vh auto 0; text-align: center; font-size: 22px; color: #e7e0f0; }
 
 h1, h2, .unit-title, .screen-title, .section-title { font-family: var(--font-pixel); font-weight: 600; }

@@ -121,7 +121,7 @@ export function today() {
 }
 
 // ---------- Levels ----------
-// Level L is reached at 5·L·(L+1) XP: 10, 30, 60, 100, 150, ...
+// Internal level L is reached at 5·L·(L+1) XP (10, 30, 60, 100, ...); players see L + 1, starting at level 1.
 export function xpForLevel(L) {
   return 5 * L * (L + 1);
 }
@@ -297,7 +297,7 @@ export const ACHIEVEMENTS = {
   combo10: { name: 'On Fire', desc: 'Get 8 answers right in a row', icon: 'xporb' },
   predictor: { name: 'Galileo', desc: 'Make 5 correct predictions', icon: 'flag' },
   puzzle: { name: 'Puzzle Master', desc: 'Solve a Puzzle Corner problem', icon: 'chest' },
-  vonneumann: { name: 'Von Neumann', desc: 'Solve the fly-and-trains puzzle', icon: 'bee' },
+  vonneumann: { name: 'Von Neumann', desc: 'Solve the bee-and-trains puzzle', icon: 'bee' },
   unit1: { name: 'Motion Master', desc: 'Beat the Unit 1 Boss Mission', icon: 'minecart' },
   unit2: { name: 'River Captain', desc: 'Beat the Unit 2 Boss Mission', icon: 'boat' },
   level5: { name: 'Level 5', desc: 'Reach level 5', icon: 'xporb' },
@@ -332,7 +332,7 @@ export const QUESTS = [
   { id: 'correct10', text: 'Answer 10 questions correctly', metric: 'correct', target: 10, reward: 4 },
   { id: 'perfect1', text: 'Finish a session with no mistakes', metric: 'perfect', target: 1, reward: 4 },
   { id: 'sessions2', text: 'Complete 2 sessions', metric: 'sessions', target: 2, reward: 3 },
-  { id: 'problems1', text: 'Complete a problem set', metric: 'problemSets', target: 1, reward: 4 },
+  { id: 'problems1', text: 'Finish a Calculation Drills or Word Problems session', metric: 'problemSets', target: 1, reward: 4 },
   { id: 'nohint3', text: 'Solve 3 calculations without hints', metric: 'noHintCalc', target: 3, reward: 3 },
 ];
 

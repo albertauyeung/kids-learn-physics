@@ -103,7 +103,7 @@ export default {
       id: 'mech.u1.l3', type: 'lesson', title: 'Speed', icon: 'grass',
       steps: [
         {
-          type: 'predict', prompt: 'Race time! The <b>minecart</b> (8 m/s) races <b>40 m</b>. Pip sprints (5 m/s) but only needs to run <b>20 m</b>. Who finishes first?',
+          type: 'predict', prompt: 'Race time! The <b>minecart</b> (8 metres per second, written 8 m/s) races <b>40 m</b>. Pip sprints (5 m/s) but only needs to run <b>20 m</b>. Who finishes first?',
           choices: ['The minecart', 'Pip', 'It is a tie'], answer: 1, keepOrder: true,
           explain: 'The minecart needs 40 ÷ 8 = 5 s. Pip needs 20 ÷ 5 = 4 s. Faster doesn\'t always mean first!',
         },
@@ -211,7 +211,7 @@ export default {
           type: 'info', title: 'Speed from a graph',
           html: `<p>Pick a straight piece of the line. Read how much the distance changed and how much time passed:</p>
                  <p class="eq">speed = change in distance ÷ change in time</p>
-                 <p>In the target graph above, Pip went 8 m in the first 4 s: <b>2 m/s</b>. Then he stopped for 3 s. Then 10 m in 3 s ≈ 3.3 m/s.</p>`,
+                 <p>In the Match the Graph challenge, Pip went 8 m in the first 4 s: <b>2 m/s</b>. Then he stopped for 3 s. Then 10 m in 3 s ≈ 3.3 m/s.</p>`,
         },
         { type: 'q', t: 'u1.graph-still-mcq' },
         { type: 'q', t: 'u1.graph-faster-mcq' },

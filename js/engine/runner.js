@@ -240,7 +240,7 @@ export function runSession(root, { session, unit, review = [], onFinish, onQuit 
     cleanup();
     window.removeEventListener('keydown', keyHandler);
     const accuracy = stats.firstTotal ? stats.firstCorrect / stats.firstTotal : 1;
-    onFinish({ ...stats, accuracy, perfect: stats.mistakes === 0 });
+    onFinish({ ...stats, accuracy, perfect: stats.mistakes === 0 && stats.skipped === 0 });
   }
 
   let modal = null;

@@ -57,7 +57,7 @@ export default function walker(el, params = {}, api) {
         api.done();
       } else {
         banner.set(`Nice! ${goal.replace(/^Task.*?:/, 'Done:')} — next task coming...`, true);
-        setTimeout(() => { reset(); }, 1200);
+        setTimeout(() => { if (alive) reset(); }, 1200);
       }
     } else {
       banner.set(goal + (dist > t.distance ? ' <span class="bad-text">(too far — press Reset)</span>' : ''));
@@ -70,6 +70,7 @@ export default function walker(el, params = {}, api) {
     if (e.key === 'ArrowRight') step(1);
   }
 
+  let alive = true;
   const stop = loop((dt, t) => {
     shown += (pos - shown) * Math.min(1, dt * 12);
     const { ctx } = st;
@@ -95,6 +96,7 @@ export default function walker(el, params = {}, api) {
 
   update();
   return () => {
+    alive = false;
     stop();
     window.removeEventListener('keydown', onKey);
   };

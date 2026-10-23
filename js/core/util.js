@@ -107,6 +107,30 @@ export function parseNumber(input) {
   return Number.isFinite(v) ? v : null;
 }
 
+// Words a child might type for a unit, mapped to the symbol the app uses.
+const UNIT_ALIASES = {
+  s: ['s', 'sec', 'secs', 'second', 'seconds'],
+  min: ['min', 'mins', 'minute', 'minutes'],
+  h: ['h', 'hr', 'hrs', 'hour', 'hours'],
+  ms: ['ms', 'millisecond', 'milliseconds'],
+  m: ['m', 'metre', 'metres', 'meter', 'meters'],
+  cm: ['cm', 'centimetre', 'centimetres', 'centimeter', 'centimeters'],
+  mm: ['mm', 'millimetre', 'millimetres', 'millimeter', 'millimeters'],
+  km: ['km', 'kilometre', 'kilometres', 'kilometer', 'kilometers'],
+  'm/s': ['m/s', 'mps'],
+  'km/h': ['km/h', 'kmh', 'kph'],
+  days: ['day', 'days'],
+};
+
+export function sameUnit(a, b) {
+  const norm = (u) => {
+    const x = String(u).toLowerCase();
+    for (const [k, list] of Object.entries(UNIT_ALIASES)) if (list.includes(x)) return k;
+    return x;
+  };
+  return norm(a) === norm(b);
+}
+
 // The unit typed after a number, if any: "3000 km" → "km".
 export function typedUnit(input) {
   const m = String(input ?? '').trim().match(/(km\/h|m\/s|[a-z]+)\.?$/i);

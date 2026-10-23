@@ -82,7 +82,8 @@ export default function railDelivery(el, params = {}, api) {
         return;
       }
       banner.set('Delivered right on time! Next delivery...', true);
-      setTimeout(() => { legs = makeRound(rng); setupRound(); }, 1400);
+      setTimeout(() => {
+        if (!alive) return; legs = makeRound(rng); setupRound(); }, 1400);
       result = 'ok';
     } else {
       sfx.wrong();
@@ -96,6 +97,7 @@ export default function railDelivery(el, params = {}, api) {
     }
   }
 
+  let alive = true;
   const stop = loop((dt, now) => {
     const arr = plannedArrivals();
     const total = arr[arr.length - 1];
@@ -141,5 +143,8 @@ export default function railDelivery(el, params = {}, api) {
   });
 
   setupRound();
-  return stop;
+  return () => {
+    alive = false;
+    stop();
+  };
 }

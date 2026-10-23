@@ -24,7 +24,7 @@ export default function travelator(el, params = {}, api) {
     ro.set([
       ['Walkway', `${fmtSigned(ww)} m/s`],
       ['Pip (relative to walkway)', `${fmtSigned(wk)} m/s`],
-      ['Pip relative to the ground', `${fmtSigned(ww)} + (${fmtSigned(wk)}) = ${fmtSigned(ww + wk)} m/s`, 'winner'],
+      ['Pip compared with the ground', `${fmtSigned(ww)} + (${fmtSigned(wk)}) = ${fmtSigned(ww + wk)} m/s`, 'winner'],
     ]);
     if (tasks.length && taskIdx < tasks.length) banner.set(`Task ${taskIdx + 1}/${tasks.length}: ${tasks[taskIdx].text}`);
     else if (!tasks.length) banner.set('Play with both sliders. Watch the yellow arrow: it is the two arrows added tip-to-tail.');

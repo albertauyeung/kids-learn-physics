@@ -13,7 +13,7 @@ export default function sorter(el, params, api) {
 
   const pool = h('div', { class: 'sorter-pool' });
   const row = h('div', { class: 'sorter-row' });
-  const msg = h('div', { class: 'sorter-msg' }, params.prompt || 'Tap a placed item to take it back.');
+  const msg = h('div', { class: 'sorter-msg' }, params.prompt || 'Tap the lengths in order, shortest first. Tap a placed one to take it back.');
   const reset = h('button', { class: 'mc-btn small', type: 'button', onClick: () => { if (solved) return; chosen = []; render(); } }, 'Reset');
   el.append(h('div', { class: 'sorter' }, msg, h('div', { class: 'sorter-label' }, 'Your order:'), row, h('div', { class: 'sorter-label' }, 'Items:'), pool, reset));
 

@@ -21,7 +21,7 @@ const nice = (x, dp = 1) => Math.abs(x * 10 ** dp - Math.round(x * 10 ** dp)) < 
 // Grid spacing chosen so that the end value `max` sits exactly on a gridline.
 function yAxis(max) {
   const yStep = max <= 12 ? 1 : max % 5 === 0 ? 5 : 2;
-  const labelEvery = yStep === 5 ? 5 : yStep * 2;
+  const labelEvery = yStep === 5 ? 5 : yStep === 1 && max % 2 ? 1 : yStep * 2; // odd small ends get their own label
   return { yStep, labelEvery, yMax: Math.ceil(max / labelEvery) * labelEvery };
 }
 
@@ -128,7 +128,7 @@ registerTemplates([
       const b = until(r, (rr) => rr.int(1, 12), (x) => x !== a);
       return {
         type: 'numeric', signed: true,
-        prompt: `Pip walks <b>${a} m right</b>, then <b>${b} m left</b>. What is his <b>displacement</b> from the start? <br><small>Use + for right and − for left (type a minus sign if needed).</small>`,
+        prompt: `Pip walks <b>${a} m right</b>, then <b>${b} m left</b>. What is his <b>displacement</b> from the start? <br><small>Use + for right and − for left (use the ± button if needed).</small>`,
         answer: a - b, unit: 'm', hints: ['Right is +, left is −.', `Displacement = +${a} − ${b}`],
         solution: `Displacement = +${a} − ${b} = <b>${a - b > 0 ? '+' : ''}${fmt(a - b)} m</b> (${a - b > 0 ? 'right of' : 'left of'} the start)`,
       };
@@ -408,7 +408,7 @@ registerTemplates([
       const s = r.pick([25, 30, 20]);
       return {
         type: 'numeric',
-        prompt: `A cheetah can sprint at <b>${s} m/s</b>. A car on the highway drives at 100 km/h. Convert the cheetah's speed to km/h so you can compare.`,
+        prompt: `A cheetah can sprint at <b>${s} m/s</b>. A car on the motorway drives at 100 km/h. Convert the cheetah's speed to km/h so you can compare.`,
         answer: s * 3.6, unit: 'km/h', hints: ['m/s → km/h: multiply by 3.6'],
         solution: `${s} × 3.6 = <b>${fmt(s * 3.6)} km/h</b> — ${s * 3.6 > 100 ? 'faster than' : 'slower than'} the car!`,
       };
@@ -434,7 +434,7 @@ registerTemplates([
       return {
         type: 'numeric',
         prompt: `A snail wants to climb a <b>${H} m</b> wall. Every day it climbs <b>${up} m</b> up, but every night it slides <b>${down} m</b> back down. On which day does it first reach the top?`,
-        answer: day, unit: 'day', hints: [`Each full day + night it gains ${up - down} m.`, `Careful: on the last day it reaches the top before sliding back!`],
+        answer: day, unit: 'days', hints: [`Each full day + night it gains ${up - down} m.`, `Careful: on the last day it reaches the top before sliding back!`],
         solution: `After ${day - 1} days and nights it is at ${(day - 1) * (up - down)} m. On day ${day} it climbs ${up} m to ${(day - 1) * (up - down) + up} m ≥ ${H} m. Answer: <b>day ${day}</b>.`,
       };
     },

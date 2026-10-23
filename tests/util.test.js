@@ -53,3 +53,13 @@ test('parseNumber edge cases from break-testing', async () => {
   assert.equal(typedUnit('12 m/s'), 'm/s');
   assert.equal(typedUnit('3000'), null);
 });
+
+test('typed unit words match the answer unit', async () => {
+  const { sameUnit, typedUnit } = await import('../js/core/util.js');
+  for (const [typed, unit] of [['9 days', 'days'], ['8 day', 'days'], ['540 seconds', 's'], ['15 minutes', 'min'], ['15 mins', 'min'],
+    ['1700 metres', 'm'], ['2 hours', 'h'], ['3 km', 'km'], ['12 m/s', 'm/s'], ['90 kmh', 'km/h']]) {
+    assert.ok(sameUnit(typedUnit(typed), unit), `${typed} should match ${unit}`);
+  }
+  assert.ok(!sameUnit('km', 'm'));
+  assert.ok(!sameUnit('s', 'min'));
+});

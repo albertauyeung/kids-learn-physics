@@ -72,7 +72,7 @@ export default function journey(el, params, api) {
     tag(ctx, `Leg 2: ${p.d2} ${uD} @ ${p.s2} ${uS}`, (xOf(p.d1) + xOf(D)) / 2, 135, { size: 10 });
     const pos = t <= t1() ? p.s1 * t : p.d1 + p.s2 * (t - t1());
     const bob = running ? Math.sin(now * 16) * 1.2 : 0;
-    drawSprite(ctx, p.vehicle || 'hero', xOf(Math.min(pos, D)), 111 + bob, p.vehicle ? 3 : 3);
+    drawSprite(ctx, p.vehicle || 'hero', xOf(Math.min(pos, D)), 111 + bob, 3);
     tag(ctx, `time: ${fmt(t, 2)} ${uT}`, W - 60, 18);
   });
 

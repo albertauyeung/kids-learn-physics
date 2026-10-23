@@ -86,6 +86,7 @@ export default function river(el, params = {}, api) {
   const xOf = (m) => 20 + m * sc();
 
   const banks = { canvas: Object.assign(document.createElement('canvas'), { width: W, height: H }), key: '' };
+  let alive = true;
   const stop = loop((dt, now) => {
     if (running) {
       t += dt * Math.max(1, T() / 4);
@@ -106,7 +107,8 @@ export default function river(el, params = {}, api) {
             api.done();
           } else {
             banner.set(`Rescued! You drifted ${fmt(p.current * T())} m. Next rescue...`, true);
-            setTimeout(() => { p = rescueRound(rng); buildControls(); reset(); }, 1500);
+            setTimeout(() => {
+        if (!alive) return; p = rescueRound(rng); buildControls(); reset(); }, 1500);
           }
         } else {
           sfx.wrong();
@@ -182,5 +184,8 @@ export default function river(el, params = {}, api) {
 
   buildControls();
   show();
-  return stop;
+  return () => {
+    alive = false;
+    stop();
+  };
 }

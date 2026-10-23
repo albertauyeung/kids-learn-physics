@@ -29,8 +29,9 @@ window.addEventListener('storage', (e) => {
   if (e.key === 'klp.save.v1' && S.reloadIfChanged() && !inSession()) route();
 });
 
+// Don't re-render under a child who is mid-session or looking at their results.
 function inSession() {
-  return /^#\/(session|practice)/.test(location.hash) && !!document.querySelector('.runner');
+  return !!document.querySelector('.runner, .results');
 }
 route();
 
@@ -162,8 +163,9 @@ function onboarding() {
 // ---------- learn: the map ----------
 function learnScreen(main) {
   const st = S.state;
-  for (const n of st.notices.splice(0)) main.append(h('div', { class: 'notice' }, n));
-  if (st.notices.length === 0) S.persist();
+  const notices = st.notices.splice(0);
+  for (const n of notices) main.append(h('div', { class: 'notice' }, n));
+  if (notices.length) S.persist();
 
   const d = S.today();
   const goalPct = Math.min(1, d.xp / st.profile.dailyGoal);
@@ -177,11 +179,11 @@ function learnScreen(main) {
           h('div', { class: 'greet' }, `Hi ${st.profile.name}!`),
           h('div', { class: 'goal-text' }, d.xp >= st.profile.dailyGoal ? 'Daily goal complete! 🎉' : `Daily goal: ${d.xp} / ${st.profile.dailyGoal} XP`),
         ),
-        nextSession ? h('button', { class: 'mc-btn green', type: 'button', onClick: () => go(`#/session/${nextSession.id}`) }, d.sessions ? 'Continue ▶' : 'Start ▶') : '',
+        nextSession ? h('button', { class: 'mc-btn green', type: 'button', onClick: () => go(`#/session/${nextSession.id}`) }, d.sessions ? 'Continue ▶' : 'Start ▶') : h('div', { class: 'all-done' }, "You've finished every unit so far! 🎉 Replay any session to level up its badge."),
       ),
       h('div', { class: 'goal-bar' }, h('div', { class: 'goal-fill', style: { width: `${goalPct * 100}%` } })),
       calendarRow(),
-      st.mistakes.length
+      uniqueMistakes().length
         ? h('button', { class: 'mc-btn small blue practice-btn', type: 'button', onClick: () => go('#/practice') }, `↻ Practise your mistakes (${uniqueMistakes().length})`)
         : '',
     ),
@@ -224,7 +226,7 @@ function learnScreen(main) {
     main.append(section);
   });
 
-  main.append(h('p', { class: 'footnote' }, 'More units coming soon: Waves, Light, Electricity & Space tracks will appear here too.'));
+  main.append(h('p', { class: 'footnote' }, 'More topics coming soon: Waves, Light, Electricity and Space will appear here too.'));
 }
 
 function crown(rec) {
@@ -284,7 +286,7 @@ function sessionScreen(id) {
   const review = session.type === 'lesson' && id !== 'practice' ? warmupReview(units, session) : [];
   const destroy = runSession(app, {
     session, unit, review,
-    onQuit: () => go('#/learn'),
+    onQuit: () => { announceUnlocks(); go('#/learn'); },
     onFinish: (result) => {
       // Results replace the session in history, so reloading doesn't restart it.
       history.replaceState(null, '', '#/learn');
@@ -313,7 +315,7 @@ function resultsScreen(session, result, rewards) {
   teardown = null;
   app.innerHTML = '';
   sfx.complete();
-  const title = session.type === 'boss' ? 'BOSS DEFEATED!' : session.type === 'problems' ? 'Problem set complete!' : 'Lesson complete!';
+  const title = session.type === 'boss' ? 'BOSS DEFEATED!' : session.id === 'practice' ? 'Review complete!' : session.type === 'problems' ? 'Problems complete!' : 'Lesson complete!';
   const xpEl = h('b', {}, '+0');
   const tiles = h('div', { class: 'result-tiles' },
     resultTile('Total XP', xpEl, 'xporb', 'xp'),
@@ -329,7 +331,7 @@ function resultsScreen(session, result, rewards) {
   if (rewards.levelUp) extras.append(h('div', { class: 'pill levelup' }, `LEVEL UP! You are now level ${rewards.levelUp}`));
   for (const a of rewards.newAchievements) {
     const def = S.ACHIEVEMENTS[a];
-    if (def) extras.append(h('div', { class: 'pill ach-pill' }, spriteImg(def.icon === 'diamond' ? 'diamond' : def.icon, { scale: 2, cls: 'pill-icon' }), `Achievement: ${def.name}`));
+    if (def) extras.append(h('div', { class: 'pill ach-pill' }, spriteImg(def.icon, { scale: 2, cls: 'pill-icon' }), `Achievement: ${def.name}`));
   }
 
   app.append(h('div', { class: 'results' },
@@ -385,13 +387,14 @@ const BOSS_PASS = 0.6;
 // A boss only counts as beaten if the mission was completed (not skipped) and
 // at least 60% of its questions were right first time.
 function bossRetryScreen(session, result) {
+  announceUnlocks();
   teardown?.();
   teardown = null;
   app.innerHTML = '';
   sfx.wrong();
   const why = result.skipped > 0
     ? 'You skipped the mission, so the boss is still standing.'
-    : `You got ${Math.round(result.accuracy * 100)}% of the questions right — you need ${BOSS_PASS * 100}% to win.`;
+    : `You got ${Math.round(result.accuracy * 100)}% of the questions right first time — you need ${BOSS_PASS * 100}% to win.`;
   app.append(h('div', { class: 'results' },
     h('div', { class: 'results-art' }, spriteImg('hero', { scale: 6 })),
     h('h1', { class: 'title-big' }, 'The boss survived!'),
@@ -519,7 +522,7 @@ function profileScreen(main) {
     h('div', { class: 'stat-grid' },
       statBox('Current streak', days(st.streak.count)),
       statBox('Best streak', days(st.streak.best)),
-      statBox('Sessions done', sessionsDone),
+      statBox('Lessons & missions done', sessionsDone),
       statBox('Accuracy', answered ? `${Math.round((correct / answered) * 100)}%` : '—'),
     ),
   );
@@ -616,6 +619,11 @@ function statBox(label, value) {
 function toggle(label, value, onChange) {
   const input = h('input', { type: 'checkbox', checked: value, onChange: (e) => onChange(e.target.checked) });
   return h('label', { class: 'setting' }, h('span', {}, label), input);
+}
+
+// Achievements earned during a session that didn't reach the results screen.
+function announceUnlocks() {
+  for (const a of S.takeUnlocks()) if (S.ACHIEVEMENTS[a]) setTimeout(() => toast(`Achievement: ${S.ACHIEVEMENTS[a].name}`), 300);
 }
 
 // ---------- toast ----------

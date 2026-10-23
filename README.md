@@ -23,7 +23,8 @@ Go to **Settings → Pages → Build and deployment**. Choose **Deploy from a br
 `/ (root)` folder, then save. The site appears at `https://<user>.github.io/kids-learn-physics/`.
 
 Progress is saved in the browser's local storage, so each device or browser keeps its own progress.
-To jump to any session, go to **Profile → Settings** and turn on "Unlock all sessions (parent mode)".
+To jump to any session, go to **Profile → Settings**, answer the grown-ups' maths question under
+**Parent settings**, then turn on "Unlock all sessions".
 
 ## How it's organised
 

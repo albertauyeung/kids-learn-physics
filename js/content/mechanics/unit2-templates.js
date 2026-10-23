@@ -88,7 +88,7 @@ registerTemplates([
       const v = until(r, (rr) => ({ w: rr.pick([1, 1.5, 2, 3]), k: rr.pick([1, 2, 2.5, 3, 4]) }), (x) => x.w !== x.k);
       return {
         type: 'numeric', signed: true,
-        prompt: `A walkway moves <b>right at ${fmt(v.w)} m/s</b>. Pip walks <b>left at ${fmt(v.k)} m/s</b> on it. What is Pip's velocity relative to the ground?${SIGN_NOTE}`,
+        prompt: `A walkway moves <b>right at ${fmt(v.w)} m/s</b>. Pip walks <b>left at ${fmt(v.k)} m/s</b> on it. What is Pip's velocity compared with the ground?${SIGN_NOTE}`,
         answer: v.w - v.k, unit: 'm/s', hints: ['Right is +, left is −.', `Ground velocity = (+${fmt(v.w)}) + (−${fmt(v.k)})`],
         solution: `+${fmt(v.w)} − ${fmt(v.k)} = <b>${fmtSigned(v.w - v.k)} m/s</b> (${v.w > v.k ? 'he still drifts right' : 'he moves left'})`,
       };
@@ -130,7 +130,7 @@ registerTemplates([
       return {
         type: 'numeric',
         prompt: `Cart A and cart B start <b>${gap} m</b> apart and roll towards each other. A goes <b>${v1} m/s</b>, B goes <b>${v2} m/s</b>. <b>How far from A's start</b> do they meet?`,
-        answer: v1 * t, unit: 'm', hints: ['First find when they meet: gap ÷ (v₁ + v₂).', 'Then: how far does A travel in that time?'],
+        answer: v1 * t, unit: 'm', hints: ['First find when they meet: gap ÷ (A\'s speed + B\'s speed).', 'Then: how far does A travel in that time?'],
         solution: `They meet after ${gap} ÷ ${v1 + v2} = ${t} s. A travels ${v1} × ${t} = <b>${v1 * t} m</b>`,
       };
     },
@@ -192,7 +192,7 @@ registerTemplates([
       const [a, b, c] = r.pick(EASY_TRIPLES);
       return {
         type: 'numeric',
-        prompt: `Pip walks <b>${a} blocks east</b>, then <b>${b} blocks north</b>. How far is he from his start in a straight line (the size of his displacement)? (1 block = 1 m)`,
+        prompt: `Pip walks <b>${a} blocks east</b>, then <b>${b} blocks north</b>. How far is he from his start in a straight line? (1 block = 1 m)`,
         answer: c, unit: 'm', hints: ['East and north make a right angle → Pythagoras!', `√(${a}² + ${b}²)`],
         solution: `√(${a * a} + ${b * b}) = √${c * c} = <b>${c} m</b> (he walked a distance of ${a + b} m)`,
       };
