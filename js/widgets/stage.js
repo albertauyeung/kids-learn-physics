@@ -1,27 +1,34 @@
-// Shared helpers for canvas simulations: a crisp pixel stage, an animation loop,
-// scenery, arrows, labels and Minecraft-style controls.
+// Shared helpers for canvas simulations: a high-resolution stage (crisp pixel-art sprites,
+// smooth readable text), an animation loop, scenery, arrows, labels and controls.
 
 import { h, fmt } from '../core/util.js';
 import { drawTexture } from '../core/sprites.js';
 
-export const FONT = '"Pixelify Sans", "VT323", monospace';
+export const FONT = '"Nunito", "Segoe UI", system-ui, sans-serif';
 
 // A canvas with a fixed logical size (w × h) that scales to its container width.
 export function makeStage(parent, w, hgt) {
   const canvas = h('canvas', { class: 'stage' });
-  const k = Math.min(3, Math.max(2, Math.ceil(window.devicePixelRatio || 1)));
-  canvas.width = w * k;
-  canvas.height = hgt * k;
   canvas.style.aspectRatio = `${w} / ${hgt}`;
   parent.append(canvas);
   const ctx = canvas.getContext('2d');
-  ctx.scale(k, k);
-  ctx.imageSmoothingEnabled = false;
-  // Scale canvas text up when the stage is shown small (phones), so labels stay readable.
-  ctx.__fs = 1;
+  // Match the backing store to the real on-screen size × device pixel ratio (Retina iPads,
+  // laptops), so text and arrows are sharp. Sprites stay crisp via imageSmoothingEnabled = false.
+  // Canvas text is also scaled up a little when the stage is shown small, so labels stay readable.
+  ctx.__fs = 1.15;
+  const setScale = (k) => {
+    canvas.width = Math.round(w * k);
+    canvas.height = Math.round(hgt * k);
+    ctx.setTransform(k, 0, 0, k, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+  };
+  setScale(2);
   const fit = () => {
     const shown = canvas.getBoundingClientRect().width;
-    if (shown > 0) ctx.__fs = Math.min(2, Math.max(1, (w / shown) * 1.15));
+    if (shown <= 0) return;
+    const k = Math.min(4, Math.max(1, (shown * (window.devicePixelRatio || 1)) / w));
+    if (Math.abs(canvas.width - w * k) > 2) setScale(k);
+    ctx.__fs = Math.min(2, Math.max(1.15, (w / shown) * 1.2));
   };
   if (window.ResizeObserver) new ResizeObserver(fit).observe(canvas);
   requestAnimationFrame(fit);
@@ -72,7 +79,7 @@ export function ground(ctx, y, w, size = 16, hgt = null, top = 'grass') {
 export function text(ctx, str, x, y, { size = 12, color = '#fff', align = 'left', shadow = true, baseline = 'alphabetic', bold = false } = {}) {
   size *= ctx.__fs || 1;
   ctx.save();
-  ctx.font = `${bold ? '700 ' : ''}${size}px ${FONT}`;
+  ctx.font = `${bold ? '800' : '700'} ${size}px ${FONT}`;
   ctx.textAlign = align;
   ctx.textBaseline = baseline;
   if (shadow) {
@@ -89,7 +96,7 @@ export function tag(ctx, str, x, y, { size = 11, color = '#fff', bg = 'rgba(20,1
   size *= ctx.__fs || 1;
   if (y - size < 2) y = size + 2;
   ctx.save();
-  ctx.font = `${size}px ${FONT}`;
+  ctx.font = `700 ${size}px ${FONT}`;
   const tw = ctx.measureText(str).width;
   const pad = 3;
   let left = x - tw / 2 - pad;

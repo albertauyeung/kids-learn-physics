@@ -1,8 +1,9 @@
 /* Block Physics — blocky, pixel-game inspired theme */
 
 :root {
-  --font: 'Pixelify Sans', 'VT323', ui-monospace, monospace;
-  --font-title: 'Press Start 2P', 'Pixelify Sans', monospace;
+  --font: 'Nunito', 'Segoe UI', system-ui, -apple-system, sans-serif; /* smooth, for all reading */
+  --font-pixel: 'Pixelify Sans', 'Nunito', sans-serif; /* blocky, for short headings only */
+  --font-title: 'Press Start 2P', 'Pixelify Sans', monospace; /* logo & badges */
 
   --sky: #79a6ff;
   --grass: #5b8731;
@@ -54,19 +55,21 @@ html, body { margin: 0; padding: 0; }
 body {
   font-family: var(--font);
   font-size: 18px;
-  line-height: 1.4;
+  line-height: 1.5;
   color: #fff;
   background-color: var(--bg);
   background-image: linear-gradient(rgba(20, 14, 10, 0.55), rgba(20, 14, 10, 0.55)), var(--tex-dirt);
   background-size: auto, 64px 64px;
-  image-rendering: pixelated;
   min-height: 100vh;
-  -webkit-font-smoothing: none;
+  -webkit-font-smoothing: antialiased;
 }
 
 #app { max-width: 1100px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
 
 img.sprite, .sprite, img { image-rendering: pixelated; }
+
+h1, h2, .unit-title, .screen-title, .section-title { font-family: var(--font-pixel); font-weight: 600; }
+b, strong { font-weight: 800; }
 
 h1, h2, h3 { margin: 0 0 8px; line-height: 1.2; }
 p { margin: 0 0 10px; }
@@ -89,9 +92,9 @@ small { font-size: 14px; }
 .mc-btn {
   font-family: var(--font);
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 800;
   color: #fff;
-  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.55);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
   background: var(--btn);
   border: 3px solid #000;
   box-shadow: inset 3px 3px 0 var(--btn-hi), inset -3px -4px 0 var(--btn-lo);
@@ -319,7 +322,7 @@ a.node:hover .node-block { transform: translateY(-3px); }
 .sim-intro { margin-bottom: 8px; }
 .sim-box { margin-top: 8px; }
 
-canvas.stage { width: 100%; display: block; border: 3px solid #000; background: #79a6ff; image-rendering: pixelated; touch-action: manipulation; }
+canvas.stage { width: 100%; display: block; border: 3px solid #000; background: #79a6ff; touch-action: manipulation; }
 
 .sim-controls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin: 10px 0; }
 .slider { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 10px; flex: 1 1 200px; background: #b0b0b0; border: 2px solid #555; padding: 6px 10px; margin: 6px 0; }

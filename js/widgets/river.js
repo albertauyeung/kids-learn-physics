@@ -65,7 +65,7 @@ export default function river(el, params = {}, api) {
         ['Time to cross = width ÷ boat speed', `${p.width} ÷ ${p.boat} = ${fmt(T(), 2)} s`],
         landed && ['Drift downstream = current × time', `${p.current} × ${fmt(T(), 2)} = ${fmt(p.current * T(), 2)} m`, 'winner'],
       ]);
-      banner.set('The boat always points straight across. Change the sliders and launch!');
+      banner.set(landed ? 'Try a faster current or a slower boat — what happens to the drift?' : 'Set the sliders, then press <b>Launch boat</b>.');
     } else {
       ro.set([
         ['River width', `${p.width} m`],
