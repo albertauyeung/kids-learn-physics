@@ -135,6 +135,16 @@ export default {
                  ${triangleSVG({ a: 4, b: 3, aLabel: '4', bLabel: '3', cLabel: '5' })}
                  <p>Check: 3² + 4² = 9 + 16 = 25 = 5². So c = 5. This "3-4-5 triangle" is famous — builders have used it for thousands of years to make perfect corners!</p>`,
         },
+        {
+          type: 'info', title: 'Square roots',
+          html: `<p>To get from c² back to c we need a <b>square root</b>, written <b>√</b>. It asks: <i>which number times itself gives this?</i></p>
+                 <p class="eq">√25 = 5 because 5 × 5 = 25</p>
+                 <table class="mini-table squares">
+                   <tr><td>1² = 1</td><td>2² = 4</td><td>3² = 9</td><td>4² = 16</td><td>5² = 25</td><td>6² = 36</td><td>7² = 49</td></tr>
+                   <tr><td>8² = 64</td><td>9² = 81</td><td>10² = 100</td><td>11² = 121</td><td>12² = 144</td><td>13² = 169</td><td>15² = 225</td></tr>
+                 </table>
+                 <p class="tip">Learning these squares makes Pythagoras questions much faster!</p>`,
+        },
         { type: 'q', t: 'u2.pyth-hyp' },
         { type: 'q', t: 'u2.pyth-walk' },
         {
@@ -185,7 +195,6 @@ export default {
           html: 'Match this graph: walk out, wait, then walk back!',
           params: { duration: 10, track: [0, 20], target: [[0, 2], [4, 14], [6, 14], [10, 4]], tolerance: 1.6 },
         },
-        { type: 'q', t: 'u2.slope-left-mcq' },
         { type: 'q', t: 'u2.slope-read' },
         { type: 'q', t: 'u2.slope-read' },
         { type: 'q', t: 'u2.slope-segment' },
@@ -203,6 +212,7 @@ export default {
         { type: 'q', t: 'u2.pyth-hyp' },
         { type: 'q', t: 'u2.pyth-leg' },
         { type: 'q', t: 'u2.slope-read' },
+        { type: 'q', t: 'u2.slope-left-mcq' },
       ],
     },
     {

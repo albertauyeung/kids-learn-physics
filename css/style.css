@@ -75,6 +75,7 @@ h1, h2, h3 { margin: 0 0 8px; line-height: 1.2; }
 p { margin: 0 0 10px; }
 small { font-size: 14px; }
 .muted { color: #c9c0d6; }
+.card .muted { color: var(--ink-soft); }
 
 /* ---------- Bevelled panels (inventory-style) ---------- */
 .card {
@@ -402,6 +403,7 @@ canvas.stage { width: 100%; display: block; border: 3px solid #000; background: 
 .text-input { width: 100%; font-size: 20px; }
 .select { font-size: 18px; width: auto; }
 .num-input:focus, .text-input:focus { outline: 3px solid var(--gold); }
+.sign-btn { min-width: 52px; font-size: 22px; }
 .unit-box { display: flex; flex-wrap: wrap; gap: 6px; }
 .unit-fixed { font-size: 22px; font-weight: 700; }
 .unit-chip { font-family: var(--font); font-size: 18px; padding: 6px 12px; border: 3px solid #000; background: #fff; cursor: pointer; box-shadow: inset -2px -3px 0 #b9b9b9; }
@@ -502,7 +504,7 @@ svg.graph .g-axis-label { fill: #aaa; font-size: 11px; }
 .owned { color: var(--green); font-weight: 700; }
 .skin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
 .skin { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 0; text-align: center; }
-.skin img { height: 96px; }
+.skin > img { height: 96px; }
 .skin.active { box-shadow: inset 3px 3px 0 var(--panel-hi), inset -3px -3px 0 var(--panel-lo), 0 0 0 4px var(--gold); }
 .profile-head { display: flex; gap: 16px; align-items: center; }
 .profile-head img { height: 96px; }

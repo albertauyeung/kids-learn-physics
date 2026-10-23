@@ -65,14 +65,24 @@ function numeric(el, q, ctx) {
     : null;
 
   input.addEventListener('input', ready);
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') ctx.submit?.();
-  });
+
+  // iPad number keyboards can lack a minus key, so signed answers get a ± button.
+  const signBtn = q.signed
+    ? h('button', {
+        class: 'mc-btn small sign-btn', type: 'button', 'aria-label': 'Change sign',
+        onClick: () => {
+          const v = input.value.trim().replace(/^[−–]/, '-');
+          input.value = v.startsWith('-') ? v.slice(1) : `-${v.replace(/^\+/, '')}`;
+          sfx.click();
+          ready();
+        },
+      }, '±')
+    : null;
 
   el.append(
     header(q),
     h('div', { class: 'q-prompt', html: q.prompt }),
-    h('div', { class: 'num-row' }, input, unitBox),
+    h('div', { class: 'num-row' }, signBtn, input, unitBox),
     q.unitChoices ? h('div', { class: 'unit-note' }, 'Pick the unit too!') : '',
     hintBtn ? h('div', { class: 'hint-row' }, hintBtn) : '',
     hintBox,
@@ -88,6 +98,7 @@ function numeric(el, q, ctx) {
       input.disabled = true;
       unitBox.querySelectorAll('button').forEach((b) => (b.disabled = true));
       if (hintBtn) hintBtn.disabled = true;
+      if (signBtn) signBtn.disabled = true;
     },
     evaluate() {
       const v = parseNumber(input.value);

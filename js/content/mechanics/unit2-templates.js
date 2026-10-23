@@ -11,24 +11,33 @@ const C = {
   slope: 'mech.slope',
 };
 
+const gcd = (a, b) => (b ? gcd(b, a % b) : a);
+const lcm = (a, b) => (a * b) / gcd(a, b);
+
 const SIGN_NOTE = '<br><small>Use + for right and − for left.</small>';
-const TRIPLES = [[3, 4, 5], [6, 8, 10], [5, 12, 13], [8, 15, 17], [9, 12, 15], [12, 16, 20], [7, 24, 25]];
+// Easy triples have hypotenuses whose squares (25, 100, 169) appear in the lesson's table of squares.
+const EASY_TRIPLES = [[3, 4, 5], [4, 3, 5], [6, 8, 10], [8, 6, 10], [5, 12, 13]];
+const TRIPLES = [...EASY_TRIPLES, [8, 15, 17], [9, 12, 15], [12, 16, 20], [7, 24, 25]];
 
 registerTemplates([
   // ---------- Lesson 1: speed vs velocity ----------
   {
     id: 'u2.vel-avg', concepts: [C.vel], tier: 'scientist',
     generate(r) {
-      const t = r.int(2, 5), net = t * r.int(1, 3), b = r.int(1, 6), a = net + b;
-      const flip = r.chance(0.4);
-      const [d1, d2] = flip ? ['left', 'right'] : ['right', 'left'];
-      const v = flip ? -net / t : net / t;
+      // The longer leg may come first or second, and either direction may come first,
+      // so the sign of the answer can't be guessed from the wording.
+      const t = r.int(2, 5), net = t * r.int(1, 3), short = r.int(1, 6);
+      const [a, b] = r.chance(0.5) ? [net + short, short] : [short, net + short];
+      const s1 = r.chance(0.5) ? 1 : -1; // +1: first leg goes right
+      const [d1, d2] = s1 > 0 ? ['right', 'left'] : ['left', 'right'];
+      const disp = s1 * (a - b);
+      const v = disp / t;
       return {
-        type: 'numeric',
+        type: 'numeric', signed: true,
         prompt: `Pip walks <b>${a} m ${d1}</b>, then <b>${b} m ${d2}</b>. The whole walk takes <b>${t} s</b>. What is his <b>average velocity</b>?${SIGN_NOTE}`,
         answer: v, unit: 'm/s',
-        hints: ['average velocity = displacement ÷ time', `Displacement = ${flip ? '−' : '+'}${a} ${flip ? '+' : '−'} ${b} = ${fmtSigned(flip ? -net : net)} m`],
-        solution: `Displacement = ${fmtSigned(flip ? -net : net)} m. Velocity = ${fmtSigned(flip ? -net : net)} ÷ ${t} = <b>${fmtSigned(v)} m/s</b>`,
+        hints: ['average velocity = displacement ÷ time', `Displacement = ${s1 > 0 ? '+' : '−'}${a} ${s1 > 0 ? '−' : '+'} ${b} = ${fmtSigned(disp)} m`],
+        solution: `Displacement = ${fmtSigned(disp)} m. Velocity = ${fmtSigned(disp)} ÷ ${t} = <b>${fmtSigned(v)} m/s</b>`,
       };
     },
   },
@@ -78,7 +87,7 @@ registerTemplates([
     generate(r) {
       const v = until(r, (rr) => ({ w: rr.pick([1, 1.5, 2, 3]), k: rr.pick([1, 2, 2.5, 3, 4]) }), (x) => x.w !== x.k);
       return {
-        type: 'numeric',
+        type: 'numeric', signed: true,
         prompt: `A walkway moves <b>right at ${fmt(v.w)} m/s</b>. Pip walks <b>left at ${fmt(v.k)} m/s</b> on it. What is Pip's velocity relative to the ground?${SIGN_NOTE}`,
         answer: v.w - v.k, unit: 'm/s', hints: ['Right is +, left is −.', `Ground velocity = (+${fmt(v.w)}) + (−${fmt(v.k)})`],
         solution: `+${fmt(v.w)} − ${fmt(v.k)} = <b>${fmtSigned(v.w - v.k)} m/s</b> (${v.w > v.k ? 'he still drifts right' : 'he moves left'})`,
@@ -114,7 +123,7 @@ registerTemplates([
     },
   },
   {
-    id: 'u2.rel-meetpos', concepts: [C.rel], tier: 'engineer',
+    id: 'u2.rel-meetpos', concepts: [C.rel], tier: 'scientist',
     generate(r) {
       const v1 = r.int(2, 8), v2 = r.int(1, 7), t = r.int(2, 8);
       const gap = (v1 + v2) * t;
@@ -156,11 +165,11 @@ registerTemplates([
   {
     id: 'u2.pyth-hyp', concepts: [C.pyth], tier: 'scientist',
     generate(r) {
-      const [a, b, c] = r.pick(TRIPLES);
+      const [a, b, c] = r.pick(EASY_TRIPLES);
       return {
         type: 'numeric',
         prompt: `Find the longest side (the hypotenuse) of this right-angled triangle.${triangleSVG({ a, b, aLabel: `${a} m`, bLabel: `${b} m`, cLabel: '?' })}`,
-        answer: c, unit: 'm', hints: ['a² + b² = c²', `${a}² + ${b}² = ${a * a} + ${b * b} = ${c * c}`, `c = √${c * c}`],
+        answer: c, unit: 'm', hints: ['a² + b² = c²', `${a}² + ${b}² = ${a * a} + ${b * b}`, 'c is the number that, times itself, gives that total (its square root √)'],
         solution: `${a}² + ${b}² = ${a * a + b * b}, and √${c * c} = <b>${c} m</b>`,
       };
     },
@@ -180,7 +189,7 @@ registerTemplates([
   {
     id: 'u2.pyth-walk', concepts: [C.pyth, C.vel], tier: 'scientist',
     generate(r) {
-      const [a, b, c] = r.pick(TRIPLES.slice(0, 5));
+      const [a, b, c] = r.pick(EASY_TRIPLES);
       return {
         type: 'numeric',
         prompt: `Pip walks <b>${a} blocks east</b>, then <b>${b} blocks north</b>. How far is he from his start in a straight line (the size of his displacement)? (1 block = 1 m)`,
@@ -214,7 +223,7 @@ registerTemplates([
     },
   },
   {
-    id: 'u2.river-drift', concepts: [C.add], tier: 'engineer',
+    id: 'u2.river-drift', concepts: [C.add], tier: 'scientist',
     generate(r) {
       const b = r.pick([2, 3, 4, 5]), t = r.int(3, 8), c = r.pick([1, 2, 3]);
       return {
@@ -234,8 +243,8 @@ registerTemplates([
       const p0 = v < 0 ? -v * t + r.int(0, 4) : r.int(0, 4);
       const p1 = p0 + v * t;
       return {
-        type: 'numeric',
-        prompt: `This position–time graph shows a minecart. What is its velocity?${SIGN_NOTE}${graphSVG({ points: [[0, p0], [t, p1]], tMax: t, yMax: 20, yStep: 2, labelEvery: 4, yLabel: 'position (m)' })}`,
+        type: 'numeric', signed: true,
+        prompt: `This position–time graph shows a minecart. What is its velocity?${SIGN_NOTE}${graphSVG({ points: [[0, p0], [t, p1]], tMax: t, yMax: 20, yStep: 1, labelEvery: 2, yLabel: 'position (m)' })}`,
         answer: v, unit: 'm/s', hints: ['velocity = change in position ÷ change in time', `(${p1} − ${p0}) ÷ ${t}`],
         solution: `(${p1} − ${p0}) ÷ ${t} = ${fmtSigned(p1 - p0)} ÷ ${t} = <b>${fmtSigned(v)} m/s</b>`,
       };
@@ -250,8 +259,8 @@ registerTemplates([
         return { t1, x1, t2, t3, vv, x3: x1 + vv * (t3 - t2) };
       }, (x) => x.x3 >= 0 && x.x3 <= 20);
       return {
-        type: 'numeric',
-        prompt: `What is Pip's velocity between <b>${v.t2} s</b> and <b>${v.t3} s</b>?${SIGN_NOTE}${graphSVG({ points: [[0, 0], [v.t1, v.x1], [v.t2, v.x1], [v.t3, v.x3]], tMax: v.t3, yMax: 20, yStep: 2, labelEvery: 4, yLabel: 'position (m)' })}`,
+        type: 'numeric', signed: true,
+        prompt: `What is Pip's velocity between <b>${v.t2} s</b> and <b>${v.t3} s</b>?${SIGN_NOTE}${graphSVG({ points: [[0, 0], [v.t1, v.x1], [v.t2, v.x1], [v.t3, v.x3]], tMax: v.t3, yMax: 20, yStep: 1, labelEvery: 2, yLabel: 'position (m)' })}`,
         answer: v.vv, unit: 'm/s', hints: ['Look only at the last piece of the line.', `(${v.x3} − ${v.x1}) ÷ (${v.t3} − ${v.t2})`],
         solution: `(${v.x3} − ${v.x1}) ÷ (${v.t3} − ${v.t2}) = <b>${fmtSigned(v.vv)} m/s</b>`,
       };
@@ -277,7 +286,7 @@ registerTemplates([
       const gap = (v1 + v2) * t;
       return {
         type: 'numeric',
-        prompt: `Two horses are <b>${gap} m</b> apart and gallop towards each other at <b>${v1} m/s</b> and <b>${v2} m/s</b>. After how many seconds do they meet?`,
+        prompt: `Two cars are <b>${gap} m</b> apart and drive towards each other at <b>${v1} m/s</b> and <b>${v2} m/s</b>. After how many seconds do they meet?`,
         answer: t, unit: 's', hints: ['Closing speed = sum of speeds'], solution: `${gap} ÷ (${v1} + ${v2}) = <b>${t} s</b>`,
       };
     },
@@ -287,12 +296,13 @@ registerTemplates([
     generate(r) {
       const [t1, t2] = r.pick([[60, 30], [30, 20], [12, 6], [20, 30], [40, 60], [90, 45], [60, 40]]);
       const t = (t1 * t2) / (t1 + t2);
+      const L = lcm(t1, t2);
       return {
         type: 'numeric',
         prompt: `Pip can walk up a <b>stopped</b> escalator in <b>${t1} s</b>. If he just stands on the <b>moving</b> escalator, it carries him up in <b>${t2} s</b>. How long does it take if he <b>walks up the moving escalator</b>?`,
         answer: t, unit: 's',
         hints: [`Each second, walking covers 1/${t1} of the escalator, and the escalator covers 1/${t2}.`, `Together: 1/${t1} + 1/${t2} of the escalator per second.`, 'Time = 1 ÷ (that fraction)'],
-        solution: `1/${t1} + 1/${t2} = ${t1 + t2}/${t1 * t2} = 1/${fmt(t)} per second, so it takes <b>${fmt(t)} s</b>`,
+        solution: `Use a common denominator of ${L}: ${L / t1}/${L} + ${L / t2}/${L} = ${L / t1 + L / t2}/${L} = 1/${fmt(t)} of the escalator per second, so it takes <b>${fmt(t)} s</b>`,
       };
     },
   },

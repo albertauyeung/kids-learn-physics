@@ -62,3 +62,42 @@ test('Pythagoras triples and puzzle answers are right', () => {
   // classic von Neumann numbers: 100 km apart, 50 km/h each, bee 75 km/h → 75 km
   assert.equal(75 * (100 / (50 + 50)), 75);
 });
+
+// Regression checks from the content review.
+const many = (id, n = 1500) => Array.from({ length: n }, (_, i) => instantiate(id, i + 1));
+
+test('average-speed trap: the "(not X!)" text never contradicts the answer', () => {
+  for (const q of many('u1.avg-speeds')) {
+    const m = q.solution.match(/<b>([\d.]+) km\/h<\/b> \(not ([\d.]+)!\)/);
+    assert.ok(m && m[1] !== m[2], q.solution);
+  }
+});
+
+test('every plotted graph point sits on a gridline (readable without guessing)', () => {
+  for (const id of ['u1.graph-speed', 'u1.graph-stop', 'u2.slope-read', 'u2.slope-segment']) {
+    for (const q of many(id, 800)) {
+      const gridYs = new Set([...q.prompt.matchAll(/<line x1="[\d.]+" y1="([\d.]+)" x2="[\d.]+" y2="\1" class="g-grid"\/>/g)].map((m) => Number(m[1]).toFixed(1)));
+      const gridXs = new Set([...q.prompt.matchAll(/<line x1="([\d.]+)" y1="[\d.]+" x2="\1" y2="[\d.]+" class="g-grid"\/>/g)].map((m) => Number(m[1]).toFixed(1)));
+      const pts = [...q.prompt.match(/<path d="([^"]+)"/)[1].matchAll(/[ML]([\d.]+),([\d.]+)/g)];
+      assert.ok(gridYs.size > 2 && pts.length >= 2, id);
+      for (const [, x, y] of pts) {
+        assert.ok(gridXs.has(Number(x).toFixed(1)), `${id}: x=${x} off grid`);
+        assert.ok(gridYs.has(Number(y).toFixed(1)), `${id}: y=${y} off grid in ${q.solution}`);
+      }
+    }
+  }
+});
+
+test('average velocity answers are not predictable from the first direction', () => {
+  let sameSign = 0;
+  const qs = many('u2.vel-avg', 1000);
+  for (const q of qs) {
+    const firstRight = /m right<\/b>, then/.test(q.prompt);
+    if ((q.answer > 0) === firstRight) sameSign++;
+  }
+  assert.ok(sameSign > 300 && sameSign < 700, `sign matches first direction in ${sameSign}/1000`);
+});
+
+test('Pythagoras lesson questions only need squares from the lesson table', () => {
+  for (const id of ['u2.pyth-hyp', 'u2.pyth-walk']) for (const q of many(id, 300)) assert.ok([5, 10, 13].includes(q.answer), `${id}: ${q.answer}`);
+});

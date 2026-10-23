@@ -31,7 +31,7 @@
 |---|---|---|
 | **Lesson** | 5 | Teach one idea with sims + practice |
 | **Problem Set A — Calculation drills** | 1 | Direct use of the unit's equations |
-| **Problem Set B — Word problems** | 1 | Multi-step real-world problems + 1 Puzzle Corner |
+| **Problem Set B — Word problems** | 1 | Multi-step real-world problems + 1–2 Puzzle Corner problems |
 | **Boss Mission** | 1 | Goal-based sim challenge that combines the whole unit |
 
 ≈ 8 sessions per unit × 10 units = **80 sessions** (≈ 16 weeks at 5 sessions/week).
@@ -54,7 +54,7 @@
 - Each problem is a **parameterised template** → unlimited fresh practice with different numbers.
 - Step-by-step hints (cost a little XP bonus, never block progress); full worked solution after answering.
 - Answers checked numerically with tolerance **and** units.
-- **Puzzle Corner** ⭐: one harder, maths-flavoured challenge per unit for bonus gems.
+- **Puzzle Corner** ⭐: one or two harder, maths-flavoured challenges per unit for bonus emeralds.
 
 ---
 
@@ -85,7 +85,7 @@
 | **Daily goal** | Choose 20 / 30 / 50 XP per day; ring fills up on the home screen |
 | **Streak 🔥** | ≥ 1 session per day keeps the streak; milestones at 7 / 30 / 100 / 365 days |
 | **Streak Freeze** | Bought with gems; protects one missed day |
-| **Gems (currency: "Quarks")** | Earned from quests, perfect lessons, Puzzle Corner; spent on freezes and cosmetics (rocket / cannon / car skins, avatar outfits) |
+| **Gems (currency: emeralds)** | Earned from quests, perfect lessons, Puzzle Corner; spent on freezes, XP potions and cosmetics (skins for Pip) |
 | **Combo bonus** | 5 correct in a row → ×2 XP on the next question; 10 in a row → "On Fire" animation |
 | **Lesson crowns** | Each lesson can be levelled up: Explorer → Scientist → Engineer → Legendary (timed, no hints) |
 | **Daily quests** | E.g. "Get 3 perfect answers", "Finish a word problem without hints", "Hit a target first try" |
@@ -105,7 +105,7 @@ Each unit lists: lessons → problem sets → Boss Mission. Sample problems show
 ### Unit 1 — Describing Motion
 *Maths power-up: unit conversion, rearranging `d = s × t`*
 
-1. **Measuring the world** — SI units, prefixes (km, cm, ms), unit conversion conveyor game
+1. **Measuring the world** — SI units, prefixes (km, cm, mm, ms), size-sorting game
 2. **Distance vs displacement** (位移) — number-line walker; path vs straight line
 3. **Speed** — `speed = distance ÷ time`; race sim (snail, runner, cheetah, car)
 4. **Average speed** — multi-leg journeys; trap: average speed ≠ average of speeds
@@ -116,12 +116,12 @@ Each unit lists: lessons → problem sets → Boss Mission. Sample problems show
 - 🟡 Convert 72 km/h to m/s. → **20 m/s**
 - 🔴 Walk 3 km at 6 km/h, then 3 km at 2 km/h. Average speed? → **3 km/h** (not 4!)
 
-**Boss Mission:** *Delivery Drone* — plan a route with timed legs to arrive exactly on time.
+**Boss Mission:** *Railway Delivery* — set the minecart's speed on each leg to reach every station exactly on time.
 
 ---
 
 ### Unit 2 — Velocity & Relative Motion
-*Maths power-up: negative numbers as direction, Pythagoras (3-4-5 triangles)*
+*Maths power-up: negative numbers as direction, Pythagoras (3-4-5 triangles), first square roots*
 
 1. **Speed vs velocity** — direction matters; + and − signs on a line
 2. **Arrows** — velocity as an arrow (vector, 向量); adding velocities on a travelator
@@ -135,12 +135,12 @@ Each unit lists: lessons → problem sets → Boss Mission. Sample problems show
 - 🔴 A boat heads straight across a 40 m river at 4 m/s; the river flows at 3 m/s. Actual speed, crossing time, and drift downstream? → **5 m/s, 10 s, 30 m**
 - ⭐ *Puzzle Corner (the von Neumann fly):* Two trains 100 km apart approach at 50 km/h each. A fly zooms between them at 75 km/h until they meet. Total distance flown? → **75 km**
 
-**Boss Mission:** *River Rescue* — choose the boat heading to reach a stranded swimmer.
+**Boss Mission:** *River Rescue* — the boat always points straight across, so choose the launch point that lets the current carry it to each stranded swimmer. (Choosing a heading needs trigonometry, so it waits for a later unit.)
 
 ---
 
 ### Unit 3 — Acceleration & Motion Graphs
-*Maths power-up: squares & square roots, area under a graph, quadratics by factorisation*
+*Maths power-up: more square roots, area under a graph, quadratics by factorisation*
 
 1. **What is acceleration?** — `a = (v − u) ÷ t`; car dashboard sim
 2. **Slowing down** — negative acceleration (deceleration, 減速); braking sim
@@ -339,7 +339,12 @@ Course: Physics
 
 ---
 
-## 7. Suggested build order
+## 7. Build status
+
+- ✅ Units 1–2 are built and playable (16 sessions). Lessons start with up to 2 warm-up review questions, which the app adds automatically.
+- ⏳ Units 3–10 appear on the map as "Coming soon".
+
+## 8. Suggested build order
 
 1. **MVP:** Units 1–3 + gamification core (XP, streak, daily goal) + Problem Set engine
 2. **Unit 6 Castle Siege** prototype early: it is the most exciting and stress-tests the sim engine

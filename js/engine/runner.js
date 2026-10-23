@@ -41,11 +41,14 @@ export function runSession(root, { session, unit, review = [], onFinish, onQuit 
 
   let onMain = () => {};
   mainBtn.addEventListener('click', () => onMain());
+  // Enter = press the main button. Skip it when focus is on another button, whose own
+  // Enter-click would otherwise fire as well (choices and unit chips are safe to repeat).
   const keyHandler = (e) => {
-    if (e.key === 'Enter' && !mainBtn.disabled && document.activeElement?.tagName !== 'BUTTON') {
-      e.preventDefault();
-      onMain();
-    }
+    if (e.key !== 'Enter' || e.repeat || mainBtn.disabled) return;
+    const a = document.activeElement;
+    if (a?.tagName === 'BUTTON' && !a.matches('.choice, .unit-chip')) return;
+    e.preventDefault();
+    onMain();
   };
   window.addEventListener('keydown', keyHandler);
 
@@ -174,7 +177,7 @@ export function runSession(root, { session, unit, review = [], onFinish, onQuit 
       : { ...step, seed: hashKey(item.key) + item.attempt };
     const card = h('div', { class: 'card q-card' });
     stage.append(card);
-    const r = renderQuestion(card, q, { setReady: (v) => setMain('Check', v, check), submit: () => !mainBtn.disabled && onMain() });
+    const r = renderQuestion(card, q, { setReady: (v) => setMain('Check', v, check) });
     setMain('Check', false, check);
 
     function check() {
@@ -210,7 +213,7 @@ export function runSession(root, { session, unit, review = [], onFinish, onQuit 
       }
       recordAnswer({
         correct: res.correct, concepts: q.concepts || step.concepts || [], templateId: q.templateId,
-        combo, calc: !!r.calc, usedHint: r.usedHint,
+        combo, calc: !!r.calc, usedHint: r.usedHint, retry: item.attempt > 0,
       });
       progress();
       setMain('Continue', true, next, res.correct ? 'green' : 'red');

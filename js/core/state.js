@@ -141,7 +141,7 @@ export function streakCalendar(days = 7) {
 }
 
 // ---------- Answers ----------
-export function recordAnswer({ correct, concepts = [], templateId, combo, calc, usedHint }) {
+export function recordAnswer({ correct, concepts = [], templateId, combo, calc, usedHint, retry = false }) {
   const d = today();
   d.answered++;
   if (correct) d.correct++;
@@ -156,7 +156,8 @@ export function recordAnswer({ correct, concepts = [], templateId, combo, calc, 
     if (!correct) {
       state.mistakes.push({ templateId, date: dateStr() });
       state.mistakes = state.mistakes.slice(-40);
-    } else {
+    } else if (!retry) {
+      // Only a later, first-try success clears a mistake from the review list.
       const i = state.mistakes.findIndex((m) => m.templateId === templateId);
       if (i >= 0) state.mistakes.splice(i, 1);
     }

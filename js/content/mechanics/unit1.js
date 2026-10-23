@@ -25,7 +25,7 @@ export default {
         {
           type: 'predict', prompt: 'How tall do you think Pip is, in metres?',
           choices: ['0.18 m', '1.8 m', '18 m', '180 m'], answer: 1, keepOrder: true,
-          explain: 'Pip is a bit shorter than 2 blocks — about 1.8 m, like a tall adult. 18 m would be taller than a 5-storey building!',
+          explain: 'Pip is a bit shorter than 2 blocks — about 1.8 m, like a tall adult. 18 m would be as tall as a 6-storey building!',
         },
         {
           type: 'info', title: 'Prefixes: kilo, centi, milli',
@@ -34,6 +34,7 @@ export default {
                    <tr><td><b>kilo</b>metre (km)</td><td>1 km = 1000 m</td></tr>
                    <tr><td><b>centi</b>metre (cm)</td><td>1 m = 100 cm</td></tr>
                    <tr><td><b>milli</b>metre (mm)</td><td>1 m = 1000 mm, 1 cm = 10 mm</td></tr>
+                   <tr><td><b>milli</b>second (ms)</td><td>1 s = 1000 ms</td></tr>
                  </table>
                  <p>Time works differently: <b>1 min = 60 s</b> and <b>1 h = 60 min = 3600 s</b>.</p>
                  <p class="tip">To go to a <b>smaller</b> unit, multiply. To go to a <b>bigger</b> unit, divide.</p>`,
@@ -57,6 +58,7 @@ export default {
         { type: 'q', t: 'u1.min-to-s' },
         { type: 'q', t: 'u1.unit-choice' },
         { type: 'q', t: 'u1.mm-to-cm' },
+        { type: 'q', t: 'u1.s-to-ms' },
       ],
     },
     // ------------------------------------------------------------------

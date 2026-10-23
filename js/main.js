@@ -123,6 +123,7 @@ function onboarding() {
       start,
     ),
   ));
+  name.addEventListener('keydown', (e) => { if (e.key === 'Enter') start.click(); });
   name.focus();
 }
 
@@ -348,7 +349,7 @@ function questsScreen(main) {
     main.append(h('div', { class: 'card' },
       h('h2', {}, 'Your progress'),
       h('p', {}, `Level ${lv.level} · ${S.state.xp} XP total · ${lv.need - lv.into} XP to level ${lv.level + 1}`),
-      h('p', {}, `Best streak: ${S.state.streak.best} days · Streak freezes: ${S.state.streak.freezes}`),
+      h('p', {}, `Best streak: ${days(S.state.streak.best)} · Streak freezes: ${S.state.streak.freezes}`),
     ));
   };
   render();
@@ -360,7 +361,7 @@ function shopScreen(main) {
     main.innerHTML = '';
     main.append(
       h('h1', { class: 'screen-title' }, 'Shop'),
-      h('div', { class: 'wallet' }, spriteImg('emerald', { scale: 4 }), h('b', {}, `${S.state.emeralds} emeralds`)),
+      h('div', {}, h('div', { class: 'wallet' }, spriteImg('emerald', { scale: 4 }), h('b', {}, `${S.state.emeralds} emeralds`))),
       h('h2', { class: 'section-title' }, 'Power-ups'),
     );
     for (const [id, item] of Object.entries(S.SHOP_ITEMS)) {
@@ -425,8 +426,8 @@ function profileScreen(main) {
       ),
     ),
     h('div', { class: 'stat-grid' },
-      statBox('Current streak', `${st.streak.count} days`),
-      statBox('Best streak', `${st.streak.best} days`),
+      statBox('Current streak', days(st.streak.count)),
+      statBox('Best streak', days(st.streak.best)),
       statBox('Sessions done', sessionsDone),
       statBox('Accuracy', answered ? `${Math.round((correct / answered) * 100)}%` : '—'),
     ),
@@ -480,6 +481,10 @@ function profileScreen(main) {
       onClick: () => { if (confirm('Reset ALL progress? This cannot be undone.')) { S.resetAll(); go('#/learn'); } },
     }, 'Reset progress'),
   ));
+}
+
+function days(n) {
+  return `${n} ${n === 1 ? 'day' : 'days'}`;
 }
 
 function statBox(label, value) {

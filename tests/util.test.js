@@ -32,3 +32,11 @@ test('fmt removes float noise', () => {
   assert.equal(fmt(350.00000000000006), '350');
   assert.equal(fmt(-2), '−2');
 });
+
+test('parseNumber ignores a typed unit', () => {
+  assert.equal(parseNumber('350 m'), 350);
+  assert.equal(parseNumber('12km/h'), 12);
+  assert.equal(parseNumber('-3 m/s'), -3);
+  assert.equal(parseNumber('day 8'), null);
+  assert.equal(parseNumber('m'), null);
+});

@@ -86,6 +86,7 @@ export function fmtSigned(n, maxDp = 4) {
 export function parseNumber(input) {
   if (input == null) return null;
   let s = String(input).trim().replace(/[,\s]+(?=\d{3}\b)/g, '').replace(/−|–/g, '-');
+  s = s.replace(/\s*(km\/h|m\/s|[a-z]+)\.?$/i, ''); // "350 m", "12 km/h", "4 days" → just the number
   if (s === '') return null;
   const mixed = s.match(/^(-?)(\d+)\s+(\d+)\/(\d+)$/);
   if (mixed) {

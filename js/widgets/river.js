@@ -77,11 +77,13 @@ export default function river(el, params = {}, api) {
   }
 
   // Geometry: river runs left→right; boat crosses bottom→top.
-  const s = (W - 40) / XMAX;
-  const riverPx = () => Math.min(200, p.width * s * 0.9);
+  // Free mode widens the view so a big drift never leaves the screen.
+  const viewMax = () => (mode === 'free' ? Math.max(XMAX, Math.ceil((8 + p.current * T()) / 8) * 8) : XMAX);
+  const sc = () => (W - 40) / viewMax();
+  const riverPx = () => Math.min(200, p.width * sc() * 0.9);
   const sy = () => riverPx() / p.width; // vertical px per metre
   const bankBottom = () => (H + riverPx()) / 2;
-  const xOf = (m) => 20 + m * s;
+  const xOf = (m) => 20 + m * sc();
 
   const stop = loop((dt, now) => {
     if (running) {
@@ -122,7 +124,7 @@ export default function river(el, params = {}, api) {
     ctx.fillStyle = '#3f76e4';
     ctx.fillRect(0, top, W, riverPx());
     ctx.fillStyle = 'rgba(255,255,255,0.18)';
-    const off = (now * p.current * s) % 40;
+    const off = (now * p.current * sc()) % 40;
     for (let y = top + 6; y < bankBottom() - 4; y += 14) {
       for (let x = -40 + off + ((y * 7) % 40); x < W; x += 40) ctx.fillRect(Math.round(x), Math.round(y), 14, 2);
     }
@@ -158,9 +160,10 @@ export default function river(el, params = {}, api) {
     }
     // ruler on far bank
     ctx.fillStyle = '#fff';
-    for (let m = 0; m <= XMAX; m += 4) {
+    const labelStep = Math.max(8, Math.ceil(viewMax() / 6 / 8) * 8);
+    for (let m = 0; m <= viewMax(); m += 4) {
       ctx.fillRect(Math.round(xOf(m)), top - 2, 1, 4);
-      if (m % 8 === 0) tag(ctx, String(m), xOf(m), 12, { size: 9, bg: 'rgba(0,0,0,0.4)' });
+      if (m % labelStep === 0) tag(ctx, String(m), xOf(m), 12, { size: 9, bg: 'rgba(0,0,0,0.4)' });
     }
     tag(ctx, `t = ${fmt(t, 1)} s`, W - 40, H - 8);
     if (landed) tag(ctx, `landed at ${fmt(landed.x, 2)} m`, xOf(landed.x), top + 26, { color: '#fcee4b' });

@@ -18,9 +18,10 @@ const gcd = (a, b) => (b ? gcd(b, a % b) : a);
 const lcm = (a, b) => (a * b) / gcd(a, b);
 const nice = (x, dp = 1) => Math.abs(x * 10 ** dp - Math.round(x * 10 ** dp)) < 1e-9;
 
+// Grid spacing chosen so that the end value `max` sits exactly on a gridline.
 function yAxis(max) {
-  const yStep = max <= 12 ? 2 : max <= 30 ? 5 : 10;
-  const labelEvery = yStep * 2;
+  const yStep = max <= 12 ? 1 : max % 5 === 0 ? 5 : 2;
+  const labelEvery = yStep === 5 ? 5 : yStep * 2;
   return { yStep, labelEvery, yMax: Math.ceil(max / labelEvery) * labelEvery };
 }
 
@@ -51,7 +52,7 @@ registerTemplates([
   {
     id: 'u1.mm-to-cm', concepts: [C.units], tier: 'explorer',
     generate(r) {
-      const mm = r.pick([30, 85, 120, 7, 250, 64]);
+      const mm = r.pick([30, 85, 12, 7, 25, 64]);
       return {
         type: 'numeric', prompt: `An emerald is <b>${mm} mm</b> wide. How many <b>centimetres</b> is that?`, answer: mm / 10, unit: 'cm',
         hints: ['1 cm = 10 mm', `Divide by 10`],
@@ -64,8 +65,19 @@ registerTemplates([
     generate(r) {
       const m = r.int(2, 12);
       return {
-        type: 'numeric', prompt: `A day–night cycle in a blocky game lasts about 20 minutes. How many <b>seconds</b> are in <b>${m} minutes</b>?`,
+        type: 'numeric', prompt: `A day–night cycle in a blocky game lasts <b>${m} minutes</b>. How many <b>seconds</b> is that?`,
         answer: m * 60, unit: 's', hints: ['1 minute = 60 seconds'], solution: `${m} × 60 = <b>${m * 60} s</b>`,
+      };
+    },
+  },
+  {
+    id: 'u1.s-to-ms', concepts: [C.units], tier: 'explorer',
+    generate(r) {
+      const s = r.pick([0.2, 0.15, 0.25, 0.3, 1.5, 0.05]);
+      return {
+        type: 'numeric', prompt: `A sprinter reacts to the starting gun in <b>${fmt(s)} s</b>. How many <b>milliseconds</b> is that?`,
+        answer: s * 1000, unit: 'ms', hints: ['1 s = 1000 ms', `Multiply by 1000`],
+        solution: `${fmt(s)} × 1000 = <b>${fmt(s * 1000)} ms</b>`,
       };
     },
   },
@@ -86,7 +98,7 @@ registerTemplates([
         { q: 'the distance between two villages', a: 3 },
         { q: 'the length of a pencil', a: 1 },
         { q: 'the thickness of a coin', a: 0 },
-        { q: 'the height of a door', a: 2 },
+        { q: 'the length of a football pitch', a: 2 },
       ]);
       return {
         type: 'mcq', keepOrder: true, prompt: `Which unit is best for measuring <b>${s.q}</b>?`,
@@ -115,7 +127,7 @@ registerTemplates([
       const a = r.int(3, 9);
       const b = until(r, (rr) => rr.int(1, 12), (x) => x !== a);
       return {
-        type: 'numeric',
+        type: 'numeric', signed: true,
         prompt: `Pip walks <b>${a} m right</b>, then <b>${b} m left</b>. What is his <b>displacement</b> from the start? <br><small>Use + for right and − for left (type a minus sign if needed).</small>`,
         answer: a - b, unit: 'm', hints: ['Right is +, left is −.', `Displacement = +${a} − ${b}`],
         solution: `Displacement = +${a} − ${b} = <b>${a - b > 0 ? '+' : ''}${fmt(a - b)} m</b> (${a - b > 0 ? 'right of' : 'left of'} the start)`,
@@ -152,7 +164,7 @@ registerTemplates([
       const s = r.int(...who[1]);
       const t = r.int(2, 10);
       return {
-        type: 'numeric', prompt: `${who[0][0].toUpperCase() + who[0].slice(1)} travels <b>${s * t} m</b> in <b>${t} s</b>. What is its speed?`,
+        type: 'numeric', prompt: `${who[0][0].toUpperCase() + who[0].slice(1)} travels <b>${s * t} m</b> in <b>${t} s</b>. What is the speed?`,
         answer: s, unit: 'm/s', unitChoices: SPEED_UNITS,
         hints: ['speed = distance ÷ time', `${s * t} ÷ ${t}`], solution: `speed = ${s * t} ÷ ${t} = <b>${s} m/s</b>`,
       };
@@ -173,7 +185,7 @@ registerTemplates([
   {
     id: 'u1.speed-time', concepts: [C.speed], tier: 'scientist',
     generate(r) {
-      const s = r.pick([2, 4, 5, 8, 10, 1.5]);
+      const s = r.pick([8, 10, 12, 15, 16]);
       const t = r.int(2, 12);
       return {
         type: 'numeric', prompt: `A horse gallops <b>${fmt(s * t)} m</b> at <b>${fmt(s)} m/s</b>. How long does it take?`,
@@ -248,7 +260,7 @@ registerTemplates([
       const v = until(r, (rr) => {
         const s1 = rr.int(2, 12), s2 = rr.int(2, 12), t1 = rr.pick([0.5, 1, 1.5, 2]), t2 = rr.pick([0.5, 1, 1.5, 2]);
         return { s1, s2, t1, t2, d1: s1 * t1, d2: s2 * t2 };
-      }, (x) => x.s1 !== x.s2 && Number.isInteger(x.d1) && Number.isInteger(x.d2) && nice((x.d1 + x.d2) / (x.t1 + x.t2)));
+      }, (x) => x.s1 !== x.s2 && x.t1 !== x.t2 && Number.isInteger(x.d1) && Number.isInteger(x.d2) && nice((x.d1 + x.d2) / (x.t1 + x.t2)));
       const D = v.d1 + v.d2, T = v.t1 + v.t2;
       return {
         type: 'numeric',
@@ -282,7 +294,7 @@ registerTemplates([
     },
   },
   {
-    id: 'u1.avg-trap-mcq', concepts: [C.avg], tier: 'engineer',
+    id: 'u1.avg-trap-mcq', concepts: [C.avg], tier: 'scientist',
     generate() {
       return {
         type: 'mcq', prompt: 'When is your average speed exactly halfway between your two speeds?',
@@ -316,7 +328,7 @@ registerTemplates([
       const t1 = r.int(2, 4), stopFor = r.int(2, 4), t3 = t1 + stopFor + r.int(2, 3);
       const d1 = r.int(2, 4) * t1;
       const d3 = d1 + r.int(1, 3) * (t3 - t1 - stopFor);
-      const ax = yAxis(d3);
+      const ax = { yStep: 1, labelEvery: 5, yMax: Math.ceil(d3 / 5) * 5 };
       return {
         type: 'numeric',
         prompt: `How many seconds did Pip stand still for?${graphSVG({ points: [[0, 0], [t1, d1], [t1 + stopFor, d1], [t3, d3]], tMax: t3, ...ax })}`,
@@ -358,7 +370,7 @@ registerTemplates([
       const d = s * t * 60;
       return {
         type: 'numeric', prompt: `Pip's house is <b>${fmt(d)} m</b> from the village library. He walks at <b>${fmt(s)} m/s</b>. How many <b>minutes</b> does the walk take?`,
-        answer: t, unit: 'min', hints: ['time = distance ÷ speed gives seconds', `${fmt(d)} ÷ ${fmt(s)} = ${fmt(d / s)} s`, 'Divide by 60 to get minutes'],
+        answer: t, unit: 'min', hints: ['time = distance ÷ speed gives seconds', `Work out ${fmt(d)} ÷ ${fmt(s)} to get the seconds`, 'Then divide by 60 to get minutes'],
         solution: `${fmt(d)} ÷ ${fmt(s)} = ${fmt(d / s)} s = <b>${t} min</b>`,
       };
     },
@@ -409,8 +421,8 @@ registerTemplates([
       const d = (v.s * v.t) / 60;
       return {
         type: 'numeric', prompt: `A bus travels <b>${d} km</b> at an average speed of <b>${v.s} km/h</b>. How many <b>minutes</b> does the trip take?`,
-        answer: v.t, unit: 'min', hints: ['time = distance ÷ speed (in hours)', 'Then × 60 for minutes'],
-        solution: `${d} ÷ ${v.s} = ${fmt(d / v.s)} h = <b>${v.t} min</b>`,
+        answer: v.t, unit: 'min', hints: ['time = distance ÷ speed gives hours', 'Then × 60 to turn hours into minutes'],
+        solution: `time = ${d} ÷ ${v.s} × 60 = <b>${v.t} min</b>`,
       };
     },
   },
