@@ -102,15 +102,16 @@ function todayKey() {
 
 // ---------- onboarding ----------
 function onboarding() {
-  let goal = 30;
+  let goal = 20;
   const name = h('input', { class: 'text-input', maxlength: 20, placeholder: 'Your explorer name', autocomplete: 'off' });
-  const goals = [[20, 'Casual'], [30, 'Regular'], [50, 'Serious'], [80, 'Intense']];
+  // About 12–15 XP per session, so these are roughly 1, 1–2, 2 and 3–4 sessions a day.
+  const goals = [[10, 'Casual', '~10 min'], [20, 'Regular', '~15 min'], [30, 'Serious', '~25 min'], [50, 'Intense', '~40 min']];
   const goalRow = h('div', { class: 'goal-row' });
-  goals.forEach(([xp, label]) => {
+  goals.forEach(([xp, label, mins]) => {
     const b = h('button', {
       class: `choice ${xp === goal ? 'on' : ''}`, type: 'button',
       onClick: () => { goal = xp; goalRow.querySelectorAll('.choice').forEach((x) => x.classList.toggle('on', x === b)); sfx.select(); },
-    }, h('b', {}, label), h('small', {}, `${xp} XP / day`));
+    }, h('b', {}, label), h('small', {}, `${xp} XP / day · ${mins}`));
     goalRow.append(b);
   });
   const start = h('button', {
@@ -480,7 +481,7 @@ function profileScreen(main) {
 
   // Settings
   const goalSel = h('select', { class: 'select', onChange: (e) => S.update((s) => (s.profile.dailyGoal = Number(e.target.value))) },
-    [20, 30, 50, 80].map((x) => h('option', { value: x, selected: st.profile.dailyGoal === x }, `${x} XP / day`)));
+    [...new Set([10, 20, 30, 50, st.profile.dailyGoal])].sort((a, b) => a - b).map((x) => h('option', { value: x, selected: st.profile.dailyGoal === x }, `${x} XP / day`)));
   main.append(h('div', { class: 'card settings' },
     h('h2', {}, 'Settings'),
     toggle('Sound effects', st.settings.sound, (v) => { S.update((s) => (s.settings.sound = v)); setSoundEnabled(v); }),

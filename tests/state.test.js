@@ -56,7 +56,7 @@ test('mistakes stay until answered right on a first try', () => {
 test('XP, perfect bonus, daily goal and levels', () => {
   const r = S.completeSession({ id: 'x.ps', type: 'problems' }, null, result);
   assert.equal(r.xp, 30); // 20 + 10 perfect
-  assert.equal(r.goalReached, true); // default goal 30
+  assert.equal(r.goalReached, true); // default goal 20
   assert.equal(r.emeralds, 1 + 2 + 5);
   assert.equal(S.levelInfo(30).level, 2);
   assert.equal(S.levelInfo(29).level, 1);
@@ -90,7 +90,7 @@ test('old saves missing nested fields load with defaults filled in', () => {
   try {
     S.load();
     assert.equal(S.state.profile.name, 'Old');
-    assert.equal(S.state.profile.dailyGoal, 30);
+    assert.equal(S.state.profile.dailyGoal, 20);
     assert.deepEqual(S.state.streak.frozenDates, []);
     assert.equal(S.state.streak.count, 2);
     assert.doesNotThrow(() => S.streakCalendar(7));

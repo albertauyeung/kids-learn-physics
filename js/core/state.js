@@ -8,7 +8,7 @@ const KEY = 'klp.save.v1';
 function fresh() {
   return {
     version: 1,
-    profile: { name: '', dailyGoal: 30, createdAt: dateStr() },
+    profile: { name: '', dailyGoal: 20, createdAt: dateStr() },
     settings: { sound: true, unlockAll: false },
     xp: 0,
     emeralds: 0,
@@ -167,7 +167,7 @@ export function recordAnswer({ correct, concepts = [], templateId, combo, calc, 
       state.mistakes = state.mistakes.filter((m) => m.templateId !== templateId);
     }
   }
-  if (combo >= 10) unlock('combo10');
+  if (combo >= 8) unlock('combo10'); // id kept so saved achievements still match
   persist();
 }
 
@@ -255,7 +255,7 @@ export const ACHIEVEMENTS = {
   streak3: { name: 'Torch Lit', desc: 'Reach a 3-day streak', icon: 'torch' },
   streak7: { name: 'Week of Fire', desc: 'Reach a 7-day streak', icon: 'torch' },
   streak30: { name: 'Eternal Flame', desc: 'Reach a 30-day streak', icon: 'torch' },
-  combo10: { name: 'On Fire', desc: 'Get 10 answers right in a row', icon: 'xporb' },
+  combo10: { name: 'On Fire', desc: 'Get 8 answers right in a row', icon: 'xporb' },
   predictor: { name: 'Galileo', desc: 'Make 5 correct predictions', icon: 'flag' },
   puzzle: { name: 'Puzzle Master', desc: 'Solve a Puzzle Corner problem', icon: 'chest' },
   vonneumann: { name: 'Von Neumann', desc: 'Solve the fly-and-trains puzzle', icon: 'bee' },
@@ -285,12 +285,12 @@ export function takeUnlocks() {
 }
 
 // ---------- Daily quests ----------
-const QUESTS = [
-  { id: 'xp30', text: 'Earn 30 XP', metric: 'xp', target: 30, reward: 3 },
-  { id: 'xp60', text: 'Earn 60 XP', metric: 'xp', target: 60, reward: 6 },
+export const QUESTS = [
+  { id: 'xp20', text: 'Earn 20 XP', metric: 'xp', target: 20, reward: 3 },
+  { id: 'xp40', text: 'Earn 40 XP', metric: 'xp', target: 40, reward: 6 },
   { id: 'combo5', text: 'Get 5 answers right in a row', metric: 'bestCombo', target: 5, reward: 3 },
-  { id: 'combo10', text: 'Get 10 answers right in a row', metric: 'bestCombo', target: 10, reward: 5 },
-  { id: 'correct15', text: 'Answer 15 questions correctly', metric: 'correct', target: 15, reward: 4 },
+  { id: 'combo8', text: 'Get 8 answers right in a row', metric: 'bestCombo', target: 8, reward: 5 },
+  { id: 'correct10', text: 'Answer 10 questions correctly', metric: 'correct', target: 10, reward: 4 },
   { id: 'perfect1', text: 'Finish a session with no mistakes', metric: 'perfect', target: 1, reward: 4 },
   { id: 'sessions2', text: 'Complete 2 sessions', metric: 'sessions', target: 2, reward: 3 },
   { id: 'problems1', text: 'Complete a problem set', metric: 'problemSets', target: 1, reward: 4 },

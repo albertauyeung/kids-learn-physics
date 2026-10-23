@@ -101,3 +101,13 @@ test('average velocity answers are not predictable from the first direction', ()
 test('Pythagoras lesson questions only need squares from the lesson table', () => {
   for (const id of ['u2.pyth-hyp', 'u2.pyth-walk']) for (const q of many(id, 300)) assert.ok([5, 10, 13].includes(q.answer), `${id}: ${q.answer}`);
 });
+
+test('every "in a row" quest is reachable within a single session', async () => {
+  const { QUESTS } = await import('../js/core/state.js');
+  let maxQ = 0;
+  for (const unit of playableUnits()) for (const s of unit.sessions) {
+    const n = s.steps.filter((x) => ['q', 'mcq', 'numeric', 'equation'].includes(x.type)).length;
+    maxQ = Math.max(maxQ, n);
+  }
+  for (const q of QUESTS.filter((x) => x.metric === 'bestCombo')) assert.ok(q.target <= maxQ, `${q.id} needs ${q.target} in a row; longest session has ${maxQ}`);
+});

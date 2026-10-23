@@ -340,8 +340,8 @@ canvas.stage { width: 100%; display: block; border: 3px solid #000; background: 
 .ro-row.trap b { color: var(--redstone); text-decoration: line-through; }
 .task-banner { background: #3b2a5a; color: #fff; border: 3px solid #000; padding: 8px 12px; margin-bottom: 8px; min-height: 42px; }
 .task-banner.done { background: var(--green); }
-.good-text { color: var(--green); }
-.bad-text { color: var(--red); }
+.good-text { color: var(--good-ink); }
+.bad-text { color: var(--bad-ink); }
 
 /* sorter */
 .sorter-msg { margin-bottom: 8px; }
@@ -360,7 +360,7 @@ canvas.stage { width: 100%; display: block; border: 3px solid #000; background: 
 .q-head { display: flex; gap: 6px; margin-bottom: 6px; }
 .tier { font-size: 13px; padding: 2px 8px; border: 2px solid #000; color: #fff; text-shadow: 1px 1px 0 #000; }
 .tier.explorer { background: #3c8527; }
-.tier.scientist { background: #c99a00; }
+.tier.scientist { background: #8a6400; }
 .tier.engineer { background: #b3312c; }
 .tier.puzzle { background: #7b2fbe; }
 .tier.review { background: #345ec3; }
@@ -411,7 +411,7 @@ canvas.stage { width: 100%; display: block; border: 3px solid #000; background: 
 .unit-chip.on { background: var(--gold); }
 .unit-note { font-size: 14px; color: var(--ink-soft); margin-top: 4px; }
 .hint-row { margin-top: 10px; }
-.hint-btn { background: #c99a00; box-shadow: inset 3px 3px 0 #ffd84d, inset -3px -4px 0 #7a5d00; }
+.hint-btn { background: #8a6400; box-shadow: inset 3px 3px 0 #c99a00, inset -3px -4px 0 #4f3a00; }
 .hint { background: #fff7c2; border: 2px solid #c99a00; padding: 6px 10px; margin-top: 8px; }
 
 .eq-slot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-height: 60px; padding: 8px; background: #1b1527; border: 3px solid #000; margin-bottom: 12px; }
@@ -496,13 +496,13 @@ svg.graph .g-axis-label { fill: #aaa; font-size: 11px; }
 .quest-body { flex: 1; }
 .quest-text { font-weight: 700; }
 .quest.done { background: #d6f5c9; }
-.claimed { font-weight: 700; color: var(--green); }
+.claimed { font-weight: 700; color: var(--good-ink); }
 .wallet { display: inline-flex; align-items: center; gap: 8px; background: #1b1527; border: 3px solid #000; padding: 6px 14px; font-size: 20px; }
 .wallet img { height: 28px; }
 .shop-item { display: flex; align-items: center; gap: 14px; }
 .shop-icon { height: 44px; }
 .shop-body { flex: 1; display: flex; flex-direction: column; }
-.owned { color: var(--green); font-weight: 700; }
+.owned { color: var(--good-ink); font-weight: 700; }
 .skin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
 .skin { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 0; text-align: center; }
 .skin > img { height: 96px; }
@@ -513,7 +513,7 @@ svg.graph .g-axis-label { fill: #aaa; font-size: 11px; }
 .stat-box { margin: 0; display: flex; flex-direction: column; }
 .stat-box b { font-size: 22px; }
 .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
-.ach { background: #3a3a3a; border: 3px solid #000; padding: 8px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; color: #999; }
+.ach { background: #3a3a3a; border: 3px solid #000; padding: 8px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; color: #c8c8c8; }
 .ach.got { background: #345ec3; color: #fff; }
 .ach-icon { height: 28px; filter: grayscale(1) brightness(0.6); }
 .ach.got .ach-icon { filter: none; }

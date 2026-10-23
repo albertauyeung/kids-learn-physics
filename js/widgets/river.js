@@ -85,6 +85,7 @@ export default function river(el, params = {}, api) {
   const bankBottom = () => (H + riverPx()) / 2;
   const xOf = (m) => 20 + m * sc();
 
+  const banks = { canvas: Object.assign(document.createElement('canvas'), { width: W, height: H }), key: '' };
   const stop = loop((dt, now) => {
     if (running) {
       t += dt * Math.max(1, T() / 4);
@@ -115,11 +116,19 @@ export default function river(el, params = {}, api) {
     }
     const { ctx } = st;
     const top = bankBottom() - riverPx();
-    // banks
-    for (let x = 0; x < W; x += 16) {
-      for (let y = 0; y < top; y += 16) drawTexture(ctx, y + 16 >= top ? 'sand' : 'grasstop', x, Math.min(y, top - 16), 16, (x + y) % 5);
-      for (let y = bankBottom(); y < H; y += 16) drawTexture(ctx, y === bankBottom() ? 'sand' : 'grasstop', x, y, 16, (x + y) % 5);
+    // banks: hundreds of tiles, so draw them once per river shape and reuse the image
+    const key = `${top.toFixed(1)}|${bankBottom().toFixed(1)}`;
+    if (banks.key !== key) {
+      const g = banks.canvas.getContext('2d');
+      g.clearRect(0, 0, W, H);
+      for (let x = 0; x < W; x += 16) {
+        for (let y = 0; y < top; y += 16) drawTexture(g, y + 16 >= top ? 'sand' : 'grasstop', x, Math.min(y, top - 16), 16, (x + y) % 5);
+        for (let y = bankBottom(); y < H; y += 16) drawTexture(g, y === bankBottom() ? 'sand' : 'grasstop', x, y, 16, (x + y) % 5);
+      }
+      banks.key = key;
     }
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(banks.canvas, 0, 0, W, H);
     // water with moving stripes
     ctx.fillStyle = '#3f76e4';
     ctx.fillRect(0, top, W, riverPx());

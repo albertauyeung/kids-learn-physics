@@ -35,7 +35,7 @@ export default function motionMapper(el, params = {}, api) {
   const gy = (m) => G.bottom - ((m - XMIN) / (XMAX - XMIN)) * (G.bottom - G.top);
 
   let pos = target ? target[0][1] : XMIN;
-  let t = 0, recording = false, samples = [], dragging = false, finished = false;
+  let t = 0, recording = false, samples = [], dragging = false;
 
   const posSlider = slider({
     label: 'Move Pip', min: XMIN, max: XMAX, step: 0.1, value: pos, unit: 'm',
@@ -52,7 +52,6 @@ export default function motionMapper(el, params = {}, api) {
     t = 0;
     samples = [[0, pos]];
     recording = true;
-    finished = false;
     sfx.click();
     banner.set(target ? 'Recording... follow the dashed line!' : 'Recording... move Pip with the slider or drag on the track.');
   }
