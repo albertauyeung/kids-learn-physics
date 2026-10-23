@@ -11,9 +11,38 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Pixelify+Sans:wght@400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <!-- Fetch every module in parallel instead of one import at a time (kept complete by tests/content.test.js) -->
+  <link rel="modulepreload" href="js/main.js">
+  <link rel="modulepreload" href="js/content/course.js">
+  <link rel="modulepreload" href="js/content/mechanics/unit1-templates.js">
+  <link rel="modulepreload" href="js/content/mechanics/unit1.js">
+  <link rel="modulepreload" href="js/content/mechanics/unit2-templates.js">
+  <link rel="modulepreload" href="js/content/mechanics/unit2.js">
+  <link rel="modulepreload" href="js/core/sound.js">
+  <link rel="modulepreload" href="js/core/sprites.js">
+  <link rel="modulepreload" href="js/core/state.js">
+  <link rel="modulepreload" href="js/core/util.js">
+  <link rel="modulepreload" href="js/engine/graph-svg.js">
+  <link rel="modulepreload" href="js/engine/questions.js">
+  <link rel="modulepreload" href="js/engine/runner.js">
+  <link rel="modulepreload" href="js/engine/templates.js">
+  <link rel="modulepreload" href="js/widgets/index.js">
+  <link rel="modulepreload" href="js/widgets/journey.js">
+  <link rel="modulepreload" href="js/widgets/motion-mapper.js">
+  <link rel="modulepreload" href="js/widgets/race.js">
+  <link rel="modulepreload" href="js/widgets/rail-delivery.js">
+  <link rel="modulepreload" href="js/widgets/river.js">
+  <link rel="modulepreload" href="js/widgets/slope-reader.js">
+  <link rel="modulepreload" href="js/widgets/sorter.js">
+  <link rel="modulepreload" href="js/widgets/stage.js">
+  <link rel="modulepreload" href="js/widgets/travelator.js">
+  <link rel="modulepreload" href="js/widgets/two-carts.js">
+  <link rel="modulepreload" href="js/widgets/velocity-line.js">
+  <link rel="modulepreload" href="js/widgets/walker.js">
 </head>
 <body>
   <div id="app">
+    <div class="boot">Loading Block Physics…</div>
     <noscript>Block Physics needs JavaScript to run.</noscript>
   </div>
   <script type="module" src="js/main.js"></script>

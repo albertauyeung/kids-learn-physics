@@ -111,3 +111,15 @@ test('every "in a row" quest is reachable within a single session', async () => 
   }
   for (const q of QUESTS.filter((x) => x.metric === 'bestCombo')) assert.ok(q.target <= maxQ, `${q.id} needs ${q.target} in a row; longest session has ${maxQ}`);
 });
+
+test('index.html preloads every JavaScript module', async () => {
+  const { readFileSync, readdirSync, statSync } = await import('node:fs');
+  const { join } = await import('node:path');
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const walk = (d) => readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirectory() ? walk(join(d, f)) : [join(d, f)]));
+  const root = new URL('..', import.meta.url).pathname;
+  for (const f of walk(join(root, 'js')).filter((x) => x.endsWith('.js'))) {
+    const rel = f.slice(root.length);
+    assert.ok(html.includes(`<link rel="modulepreload" href="${rel}">`), `missing modulepreload for ${rel}`);
+  }
+});
