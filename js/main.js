@@ -84,12 +84,14 @@ function renderTopbar() {
   const lv = S.levelInfo();
   const lit = st.streak.count > 0 && st.streak.lastDate === todayKey();
   topbarEl.innerHTML = '';
-  topbarEl.append(
+  const inner = h('div', { class: 'bar-inner' });
+  topbarEl.append(inner);
+  inner.append(
     h('a', { class: 'logo', href: '#/learn' }, 'BLOCK', h('span', {}, 'PHYSICS')),
-    h('div', { class: 'stat', title: 'Day streak' }, spriteImg(lit ? 'torch' : st.streak.count ? 'torch' : 'torchOff', { scale: 3, cls: `stat-icon ${lit ? '' : 'dim'}` }), h('b', {}, String(st.streak.count))),
+    h('div', { class: 'stat', title: 'Day streak' }, spriteImg(lit ? 'torch' : st.streak.count ? 'torch' : 'torchOff', { scale: 3, cls: `stat-icon ${lit ? '' : 'dim'}` }), h('b', {}, String(st.streak.count)), h('small', { class: 'stat-label' }, st.streak.count === 1 ? 'day' : 'days')),
     h('div', { class: 'stat', title: 'Emeralds' }, spriteImg('emerald', { scale: 3, cls: 'stat-icon' }), h('b', {}, String(st.emeralds))),
     h('div', { class: 'lvl', title: `${lv.into}/${lv.need} XP to next level` },
-      h('div', { class: 'lvl-num' }, String(lv.level)),
+      h('div', { class: 'lvl-num' }, `LV ${lv.level}`),
       h('div', { class: 'lvl-bar' }, h('div', { class: 'lvl-fill', style: { width: `${lv.progress * 100}%` } })),
     ),
   );
@@ -161,7 +163,7 @@ function learnScreen(main) {
       h('div', { class: 'goal-bar' }, h('div', { class: 'goal-fill', style: { width: `${goalPct * 100}%` } })),
       calendarRow(),
       st.mistakes.length
-        ? h('button', { class: 'mc-btn small practice-btn', type: 'button', onClick: () => go('#/practice') }, `↻ Practise your mistakes (${uniqueMistakes().length})`)
+        ? h('button', { class: 'mc-btn small blue practice-btn', type: 'button', onClick: () => go('#/practice') }, `↻ Practise your mistakes (${uniqueMistakes().length})`)
         : '',
     ),
   );
@@ -313,7 +315,8 @@ function resultsScreen(session, result, rewards) {
     h('div', { class: 'results-sub' }, session.title),
     tiles,
     extras,
-    h('button', { class: 'mc-btn big green', type: 'button', onClick: () => go('#/learn') }, 'Continue'),
+    goalProgress(),
+    resultButtons(session),
   ));
 
   // XP count-up with orb sounds
@@ -329,6 +332,29 @@ function resultsScreen(session, result, rewards) {
     }
   }, 60);
   teardown = () => clearInterval(timer);
+}
+
+function goalProgress() {
+  const d = S.today();
+  const goal = S.state.profile.dailyGoal;
+  const left = goal - d.xp;
+  return h('div', { class: 'result-goal' },
+    h('div', {}, left > 0 ? `Today: ${d.xp} / ${goal} XP — ${left} XP to your daily goal!` : `Today: ${d.xp} XP — daily goal done! 🎉`),
+    h('div', { class: 'goal-bar' }, h('div', { class: 'goal-fill', style: { width: `${Math.min(1, d.xp / goal) * 100}%` } })));
+}
+
+function resultButtons(session) {
+  const next = session.id === 'practice' ? null : findNext(playableUnits());
+  const row = h('div', { class: 'foot-row center' });
+  if (next) {
+    row.append(
+      h('button', { class: 'mc-btn', type: 'button', onClick: () => go('#/learn') }, 'Map'),
+      h('button', { class: 'mc-btn big green', type: 'button', onClick: () => go(`#/session/${next.id}`) }, `Next: ${next.title} ▶`),
+    );
+  } else {
+    row.append(h('button', { class: 'mc-btn big green', type: 'button', onClick: () => go('#/learn') }, 'Continue'));
+  }
+  return row;
 }
 
 function resultTile(label, value, icon, cls) {
@@ -350,10 +376,12 @@ function questsScreen(main) {
         ),
         q.claimed
           ? h('span', { class: 'claimed' }, 'Claimed')
+          : !q.done
+          ? h('span', { class: 'quest-reward', title: 'Reward' }, `+${q.reward} `, spriteImg('emerald', { scale: 2, cls: 'inline-icon' }))
           : h('button', {
-              class: `mc-btn small ${q.done ? 'green' : ''}`, type: 'button', disabled: !q.done,
+              class: 'mc-btn small green', type: 'button',
               onClick: () => { const n = S.claimQuest(q.id); if (n) { sfx.coin(); toast(`+${n} emeralds!`); } render(); },
-            }, h('span', {}, `+${q.reward} `), spriteImg('emerald', { scale: 2, cls: 'inline-icon' })),
+            }, h('span', {}, `Claim +${q.reward} `), spriteImg('emerald', { scale: 2, cls: 'inline-icon' })),
       ));
     }
     const lv = S.levelInfo();
@@ -433,7 +461,7 @@ function profileScreen(main) {
       h('div', {},
         h('h1', { class: 'screen-title' }, st.profile.name),
         h('div', {}, `Level ${lv.level} · ${st.xp} XP`),
-        h('div', { class: 'muted' }, `Exploring since ${st.profile.createdAt}`),
+        h('div', { class: 'muted' }, `Exploring since ${niceDate(st.profile.createdAt)}`),
       ),
     ),
     h('div', { class: 'stat-grid' },
@@ -448,7 +476,7 @@ function profileScreen(main) {
   for (const [id, a] of Object.entries(S.ACHIEVEMENTS)) {
     const got = st.achievements[id];
     ach.append(h('div', { class: `ach ${got ? 'got' : ''}`, title: a.desc },
-      spriteImg(a.icon, { scale: 3, cls: 'ach-icon' }), h('b', {}, a.name), h('small', {}, got ? `Unlocked ${got}` : a.desc)));
+      spriteImg(a.icon, { scale: 3, cls: 'ach-icon' }), h('b', {}, a.name), h('small', {}, got ? `Unlocked ${niceDate(got)}` : a.desc)));
   }
   main.append(h('h2', { class: 'section-title' }, 'Achievements'), ach);
 
@@ -485,13 +513,44 @@ function profileScreen(main) {
   main.append(h('div', { class: 'card settings' },
     h('h2', {}, 'Settings'),
     toggle('Sound effects', st.settings.sound, (v) => { S.update((s) => (s.settings.sound = v)); setSoundEnabled(v); }),
-    toggle('Unlock all sessions (parent mode)', st.settings.unlockAll, (v) => S.update((s) => (s.settings.unlockAll = v))),
     h('label', { class: 'setting' }, h('span', {}, 'Daily goal'), goalSel),
-    h('button', {
-      class: 'mc-btn small red', type: 'button',
-      onClick: () => { if (confirm('Reset ALL progress? This cannot be undone.')) { S.resetAll(); go('#/learn'); } },
-    }, 'Reset progress'),
+    parentSettings(st),
   ));
+}
+
+// Grown-up settings sit behind a small maths gate: friction for a child, not security.
+function parentSettings(st) {
+  const box = h('div', { class: 'parent-settings' });
+  const open = () => {
+    box.innerHTML = '';
+    box.append(
+      h('h3', {}, 'Parent settings'),
+      toggle('Unlock all sessions', st.settings.unlockAll, (v) => S.update((s) => (s.settings.unlockAll = v))),
+      h('button', {
+        class: 'mc-btn small red', type: 'button',
+        onClick: () => { if (confirm('Reset ALL progress? This cannot be undone.')) { S.resetAll(); go('#/learn'); } },
+      }, 'Reset progress'),
+    );
+  };
+  const a = 12 + Math.floor(Math.random() * 18), b = 12 + Math.floor(Math.random() * 18);
+  const input = h('input', { class: 'text-input gate-input', inputmode: 'numeric', autocomplete: 'off', 'aria-label': `${a} times ${b}` });
+  const tryOpen = () => {
+    if (Number(input.value) === a * b) open();
+    else { input.classList.add('shake'); setTimeout(() => input.classList.remove('shake'), 400); }
+  };
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryOpen(); });
+  box.append(
+    h('h3', {}, '🔒 Parent settings'),
+    h('label', { class: 'setting' }, h('span', {}, `Grown-ups: what is ${a} × ${b}?`), input),
+    h('button', { class: 'mc-btn small', type: 'button', onClick: tryOpen }, 'Unlock'),
+  );
+  return box;
+}
+
+function niceDate(s) {
+  if (!s) return '';
+  const [y, m, d] = s.split('-').map(Number);
+  return `${d} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m - 1]} ${y}`;
 }
 
 function days(n) {

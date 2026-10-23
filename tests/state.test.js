@@ -57,9 +57,10 @@ test('XP, perfect bonus, daily goal and levels', () => {
   const r = S.completeSession({ id: 'x.ps', type: 'problems' }, null, result);
   assert.equal(r.xp, 30); // 20 + 10 perfect
   assert.equal(r.goalReached, true); // default goal 20
-  assert.equal(r.emeralds, 1 + 2 + 5);
-  assert.equal(S.levelInfo(30).level, 2);
-  assert.equal(S.levelInfo(29).level, 1);
+  assert.equal(r.emeralds, 2 + 2 + 5);
+  assert.equal(S.levelInfo(0).level, 1); // a new player is level 1
+  assert.equal(S.levelInfo(30).level, 3);
+  assert.equal(S.levelInfo(29).level, 2);
 });
 
 test('a tab left open overnight still uses freezes when the next session finishes', () => {

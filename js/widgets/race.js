@@ -1,13 +1,19 @@
 // Race lanes: each racer has a speed and a distance to cover. Shows the clock and finish times.
-// params: { lanes: [{ racer, name, speed, distance }], editDistance?: { min, max, step }, predictPrompt? }
+// params: { lanes: [{ racer, name, speed, distance }], editDistance?: { min, max, step },
+//           races?: number of races at different distances needed, hideSpeeds?: work speeds out from times }
 
-import { makeStage, loop, sky, ground, text, tag, slider, button, controls, readout } from './stage.js';
+import { makeStage, loop, sky, ground, text, tag, slider, button, controls, readout, taskBanner } from './stage.js';
 import { drawSprite } from '../core/sprites.js';
 import { fmt } from '../core/util.js';
 import { sfx } from '../core/sound.js';
 
 export default function race(el, params, api) {
   const lanes = params.lanes.map((l) => ({ ...l }));
+  const needRaces = params.races || 1;
+  const raced = new Set();
+  const banner = taskBanner();
+  el.append(banner.el);
+  banner.set(needRaces > 1 ? `Race at <b>${needRaces} different distances</b>. Then check: does distance ÷ time give each racer's speed?` : 'Press <b>Start race</b>!');
   const W = 480, laneH = 64, top = 26;
   const H = top + lanes.length * laneH + 10;
   const st = makeStage(el, W, H);
@@ -38,8 +44,8 @@ export default function race(el, params, api) {
       const ft = l.distance / l.speed;
       const done = t >= ft;
       return [
-        `${l.name} (${fmt(l.speed)} m/s, ${fmt(l.distance)} m)`,
-        done ? `finished in ${fmt(ft, 2)} s` : running ? '...' : '—',
+        params.hideSpeeds && raced.size < needRaces ? `${l.name} (${fmt(l.distance)} m)` : `${l.name} (${fmt(l.speed)} m/s, ${fmt(l.distance)} m)`,
+        done ? `${fmt(ft, 2)} s${params.hideSpeeds ? ` → ${fmt(l.distance)} ÷ ${fmt(ft, 2)} = ${fmt(l.distance / ft, 2)} m/s` : ''}` : running ? '...' : '—',
         done && Math.abs(ft - Math.min(...lanes.map((x) => x.distance / x.speed))) < 1e-9 ? 'winner' : '',
       ];
     }));
@@ -55,7 +61,18 @@ export default function race(el, params, api) {
         if (!finished) {
           finished = true;
           sfx.complete();
-          api.done();
+          raced.add(lanes[0].distance);
+          const times = lanes.map((l) => l.distance / l.speed);
+          const best = Math.min(...times);
+          const winners = lanes.filter((l, i) => Math.abs(times[i] - best) < 1e-9).map((l) => l.name);
+          const result = `🏆 ${winners.join(' & ')} ${winners.length > 1 ? 'tie' : 'wins'} in ${fmt(best, 2)} s!`;
+          if (raced.size >= needRaces) {
+            banner.set(needRaces > 1 ? `${result} Look at the table: distance ÷ time gives the same speed in every race.` : result, true);
+            api.done();
+          } else {
+            banner.set(`${result} Now change the distance and race again (${raced.size}/${needRaces}).`);
+          }
+          show();
         }
       }
       show();

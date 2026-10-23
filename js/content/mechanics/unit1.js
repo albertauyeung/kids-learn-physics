@@ -59,6 +59,8 @@ export default {
         { type: 'q', t: 'u1.unit-choice' },
         { type: 'q', t: 'u1.mm-to-cm' },
         { type: 'q', t: 'u1.s-to-ms' },
+        { type: 'q', t: 'u1.h-to-min' },
+        { type: 'q', t: 'u1.cm-to-m' },
       ],
     },
     // ------------------------------------------------------------------
@@ -92,6 +94,8 @@ export default {
         { type: 'q', t: 'u1.lap' },
         { type: 'q', t: 'u1.disp-bigger' },
         { type: 'q', t: 'u1.disp-backforth' },
+        { type: 'q', t: 'u1.dist-backforth' },
+        { type: 'q', t: 'u1.disp-backforth' },
       ],
     },
     // ------------------------------------------------------------------
@@ -117,8 +121,10 @@ export default {
         },
         {
           type: 'sim', widget: 'race', goal: true, title: 'Animal Race',
-          html: 'Change the race distance and race again. Check: does <b>distance ÷ time</b> give each racer\'s speed?',
+          html: 'Race the animals at two different distances. The table works out <b>distance ÷ time</b> for each racer — what do you notice?',
           params: {
+            races: 2,
+            hideSpeeds: true,
             lanes: [
               { racer: 'turtle', name: 'Turtle', speed: 0.5, distance: 20 },
               { racer: 'chicken', name: 'Chicken', speed: 2, distance: 20 },
@@ -134,6 +140,8 @@ export default {
         { type: 'q', t: 'u1.speed-distance' },
         { type: 'q', t: 'u1.speed-time' },
         { type: 'q', t: 'u1.speed-unit-mcq' },
+        { type: 'q', t: 'u1.speed-kmh' },
+        { type: 'q', t: 'u1.speed-basic' },
       ],
     },
     // ------------------------------------------------------------------
@@ -171,6 +179,8 @@ export default {
         { type: 'q', t: 'u1.avg-speeds' },
         { type: 'q', t: 'u1.ms-to-kmh' },
         { type: 'q', t: 'u1.avg-trap-mcq' },
+        { type: 'q', t: 'u1.avg-times' },
+        { type: 'q', t: 'u1.kmh-to-ms' },
       ],
     },
     // ------------------------------------------------------------------
@@ -208,6 +218,8 @@ export default {
         { type: 'q', t: 'u1.graph-speed' },
         { type: 'q', t: 'u1.graph-stop' },
         { type: 'q', t: 'u1.graph-speed' },
+        { type: 'q', t: 'u1.graph-stop' },
+        { type: 'q', t: 'u1.speed-distance' },
       ],
     },
     // ------------------------------------------------------------------
@@ -251,6 +263,9 @@ export default {
         { type: 'q', t: 'u1.avg-speeds' },
         { type: 'q', t: 'u1.wp-avg-trap' },
         { type: 'q', t: 'u1.graph-stop' },
+        { type: 'q', t: 'u1.wp-school' },
+        { type: 'q', t: 'u1.speed-time' },
+        { type: 'q', t: 'u1.wp-thunder' },
       ],
     },
   ],

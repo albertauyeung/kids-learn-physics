@@ -96,7 +96,7 @@ export function levelInfo(xp = state.xp) {
   while (xpForLevel(L + 1) <= xp) L++;
   const lo = xpForLevel(L);
   const hi = xpForLevel(L + 1);
-  return { level: L, into: xp - lo, need: hi - lo, progress: (xp - lo) / (hi - lo) };
+  return { level: L + 1, into: xp - lo, need: hi - lo, progress: (xp - lo) / (hi - lo) }; // shown from level 1
 }
 
 // ---------- Streaks ----------
@@ -192,7 +192,7 @@ export function completeSession(session, unit, result) {
     xp *= 2;
     state.potion--;
   }
-  let emeralds = 1 + (result.perfect ? 2 : 0) + (session.type === 'boss' ? 5 : 0) + result.puzzleBonus;
+  let emeralds = 2 + (result.perfect ? 2 : 0) + (session.type === 'boss' ? 5 : 0) + result.puzzleBonus;
 
   state.xp += xp;
   d.xp += xp;

@@ -48,6 +48,8 @@ export default {
         { type: 'q', t: 'u2.speed-avg' },
         { type: 'q', t: 'u2.vel-avg' },
         { type: 'q', t: 'u2.vel-avg' },
+        { type: 'q', t: 'u2.speed-avg' },
+        { type: 'q', t: 'u2.vel-avg' },
       ],
     },
     // ------------------------------------------------------------------
@@ -85,6 +87,8 @@ export default {
         { type: 'q', t: 'u2.add-opposite' },
         { type: 'q', t: 'u2.boat-line' },
         { type: 'q', t: 'u2.add-opposite' },
+        { type: 'q', t: 'u2.add-same' },
+        { type: 'q', t: 'u2.boat-line' },
       ],
     },
     // ------------------------------------------------------------------
@@ -122,6 +126,8 @@ export default {
         { type: 'q', t: 'u2.rel-meet' },
         { type: 'q', t: 'u2.rel-chase' },
         { type: 'q', t: 'u2.rel-meetpos' },
+        { type: 'q', t: 'u2.rel-meet' },
+        { type: 'q', t: 'u2.rel-chase' },
       ],
     },
     // ------------------------------------------------------------------
@@ -167,6 +173,8 @@ export default {
         { type: 'q', t: 'u2.river-speed' },
         { type: 'q', t: 'u2.river-time' },
         { type: 'q', t: 'u2.river-drift' },
+        { type: 'q', t: 'u2.pyth-hyp' },
+        { type: 'q', t: 'u2.river-drift' },
       ],
     },
     // ------------------------------------------------------------------
@@ -196,6 +204,9 @@ export default {
           params: { duration: 10, track: [0, 20], target: [[0, 2], [4, 14], [6, 14], [10, 4]], tolerance: 1.6 },
         },
         { type: 'q', t: 'u2.slope-read' },
+        { type: 'q', t: 'u2.slope-read' },
+        { type: 'q', t: 'u2.slope-segment' },
+        { type: 'q', t: 'u2.vel-sign-mcq' },
         { type: 'q', t: 'u2.slope-read' },
         { type: 'q', t: 'u2.slope-segment' },
       ],
@@ -232,7 +243,7 @@ export default {
       steps: [
         {
           type: 'info', title: 'BOSS MISSION: River Rescue', speaker: 'boat',
-          html: `<p>Swimmers are stuck on the far side of a fast river! Your boat always points <b>straight across</b>, so the current will carry you downstream.</p>
+          html: `<p>Swimmers are stuck in a fast river, close to the far bank! Your boat always points <b>straight across</b>, so the current will carry you downstream.</p>
                  <p>Choose your <b>launch point</b> so you land right next to each swimmer:</p>
                  <p class="eq">time = width ÷ boat speed &nbsp;→&nbsp; drift = current × time</p>
                  <p>Launch point = swimmer position − drift. Rescue <b>3 swimmers</b> to win!</p>`,
@@ -241,6 +252,9 @@ export default {
         { type: 'q', t: 'u2.river-speed' },
         { type: 'q', t: 'u2.wp-escalator' },
         { type: 'q', t: 'u2.slope-segment' },
+        { type: 'q', t: 'u2.wp-plane' },
+        { type: 'q', t: 'u2.rel-meetpos' },
+        { type: 'q', t: 'u2.pyth-leg' },
       ],
     },
   ],

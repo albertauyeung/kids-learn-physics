@@ -151,7 +151,8 @@ export default function river(el, params = {}, api) {
     const bx = start + p.current * t;
     const by = p.boat * t;
     const px = xOf(bx), py = bankBottom() - by * sy();
-    // path line
+    // path line: in the boss it would give the answer away, so only show it once the boat moves
+    if (mode === 'free' || running || landed) {
     ctx.strokeStyle = 'rgba(252,238,75,0.7)';
     ctx.setLineDash([4, 4]);
     ctx.beginPath();
@@ -159,6 +160,7 @@ export default function river(el, params = {}, api) {
     ctx.lineTo(xOf(start + p.current * T()), top);
     ctx.stroke();
     ctx.setLineDash([]);
+    }
     drawSprite(ctx, 'boat', px, py, 3, { anchor: 'center' });
     // velocity triangle near boat
     if (mode === 'free' || running) {

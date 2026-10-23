@@ -12,7 +12,7 @@ export default function sorter(el, params, api) {
 
   const pool = h('div', { class: 'sorter-pool' });
   const row = h('div', { class: 'sorter-row' });
-  const msg = h('div', { class: 'sorter-msg' }, params.prompt || 'Tap the items from smallest to largest.');
+  const msg = h('div', { class: 'sorter-msg' }, params.prompt || 'Tap a placed item to take it back.');
   const reset = h('button', { class: 'mc-btn small', type: 'button', onClick: () => { chosen = []; render(); } }, 'Reset');
   el.append(h('div', { class: 'sorter' }, msg, h('div', { class: 'sorter-label' }, 'Your order:'), row, h('div', { class: 'sorter-label' }, 'Items:'), pool, reset));
 
@@ -36,7 +36,10 @@ export default function sorter(el, params, api) {
       );
     }
     chosen.forEach((it, idx) => {
-      row.append(h('span', { class: 'sorter-slot' }, h('small', {}, `${idx + 1}.`), it.label));
+      row.append(h('button', {
+        class: 'sorter-slot', type: 'button', title: 'Tap to take back',
+        onClick: () => { chosen.splice(idx, 1); sfx.click(); msg.textContent = 'Tap a placed item to take it back.'; render(); },
+      }, h('small', {}, `${idx + 1}.`), it.label));
     });
     for (let i = chosen.length; i < items.length; i++) row.append(h('span', { class: 'sorter-slot empty' }, `${i + 1}.`));
   }

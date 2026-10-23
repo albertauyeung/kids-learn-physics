@@ -83,7 +83,7 @@ function numeric(el, q, ctx) {
     header(q),
     h('div', { class: 'q-prompt', html: q.prompt }),
     h('div', { class: 'num-row' }, signBtn, input, unitBox),
-    h('div', { class: 'unit-note' }, `${q.unitChoices ? 'Pick the unit too! ' : ''}Press Enter ↵ to check.`),
+    h('div', { class: 'unit-note' }, q.unitChoices ? 'Pick the unit too! ' : '', h('span', { class: 'enter-note' }, 'Press Enter ↵ to check.')),
     hintBtn ? h('div', { class: 'hint-row' }, hintBtn) : '',
     hintBox,
   );
