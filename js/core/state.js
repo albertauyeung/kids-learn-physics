@@ -40,7 +40,13 @@ function emit() {
 export function load() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) state = Object.assign(fresh(), JSON.parse(raw));
+    if (raw) {
+      const saved = JSON.parse(raw);
+      const base = fresh();
+      state = Object.assign(base, saved);
+      // Merge nested objects one level deeper so saves from older versions gain new fields.
+      for (const k of ['profile', 'settings', 'streak', 'skins']) state[k] = { ...fresh()[k], ...(saved[k] || {}) };
+    }
   } catch {
     state = fresh();
   }
@@ -154,12 +160,11 @@ export function recordAnswer({ correct, concepts = [], templateId, combo, calc, 
   }
   if (templateId) {
     if (!correct) {
-      state.mistakes.push({ templateId, date: dateStr() });
+      if (!state.mistakes.some((m) => m.templateId === templateId)) state.mistakes.push({ templateId, date: dateStr() });
       state.mistakes = state.mistakes.slice(-40);
     } else if (!retry) {
       // Only a later, first-try success clears a mistake from the review list.
-      const i = state.mistakes.findIndex((m) => m.templateId === templateId);
-      if (i >= 0) state.mistakes.splice(i, 1);
+      state.mistakes = state.mistakes.filter((m) => m.templateId !== templateId);
     }
   }
   if (combo >= 10) unlock('combo10');
@@ -195,12 +200,15 @@ export function completeSession(session, unit, result) {
   if (result.perfect) d.perfect++;
   if (session.type === 'problems') d.problemSets++;
 
-  const rec = (state.sessions[session.id] ||= { completions: 0, bestAccuracy: 0, perfect: false, lastDate: null });
-  rec.completions++;
-  rec.bestAccuracy = Math.max(rec.bestAccuracy, result.accuracy);
-  rec.perfect = rec.perfect || result.perfect;
-  rec.lastDate = dateStr();
+  if (session.id !== 'practice') {
+    const rec = (state.sessions[session.id] ||= { completions: 0, bestAccuracy: 0, perfect: false, lastDate: null });
+    rec.completions++;
+    rec.bestAccuracy = Math.max(rec.bestAccuracy, result.accuracy);
+    rec.perfect = rec.perfect || result.perfect;
+    rec.lastDate = dateStr();
+  }
 
+  refreshStreak(); // the app may have stayed open across midnight
   const streakExtended = extendStreak();
 
   let goalReached = false;

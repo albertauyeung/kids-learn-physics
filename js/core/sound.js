@@ -18,7 +18,7 @@ function audio() {
       return null;
     }
   }
-  if (ctx.state === 'suspended') ctx.resume();
+  if (ctx.state !== 'running') ctx.resume().catch(() => {}); // iOS uses 'interrupted' after app switches
   return ctx;
 }
 

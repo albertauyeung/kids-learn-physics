@@ -61,3 +61,40 @@ test('XP, perfect bonus, daily goal and levels', () => {
   assert.equal(S.levelInfo(30).level, 2);
   assert.equal(S.levelInfo(29).level, 1);
 });
+
+test('a tab left open overnight still uses freezes when the next session finishes', () => {
+  // No reload, so load()/refreshStreak() never ran since the missed day.
+  S.state.streak = { count: 3, best: 3, lastDate: addDays(today, -2), freezes: 2, frozenDates: [] };
+  S.completeSession(lesson, null, result);
+  assert.equal(S.state.streak.count, 4);
+  assert.equal(S.state.streak.freezes, 1);
+});
+
+test('a question answered wrong several times leaves review after one first-try success', () => {
+  S.recordAnswer({ correct: false, templateId: 't2', combo: 0 });
+  S.recordAnswer({ correct: false, templateId: 't2', combo: 0, retry: true });
+  S.recordAnswer({ correct: false, templateId: 't2', combo: 0, retry: true });
+  assert.equal(S.state.mistakes.length, 1, 'no duplicates');
+  S.recordAnswer({ correct: true, templateId: 't2', combo: 1 });
+  assert.equal(S.state.mistakes.length, 0);
+});
+
+test('practice runs are not counted as course sessions', () => {
+  S.completeSession({ id: 'practice', type: 'lesson' }, null, result);
+  assert.equal(S.state.sessions.practice, undefined);
+});
+
+test('old saves missing nested fields load with defaults filled in', () => {
+  const store = { 'klp.save.v1': JSON.stringify({ profile: { name: 'Old' }, streak: { count: 2, lastDate: today } }) };
+  globalThis.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => (store[k] = v), removeItem: (k) => delete store[k] };
+  try {
+    S.load();
+    assert.equal(S.state.profile.name, 'Old');
+    assert.equal(S.state.profile.dailyGoal, 30);
+    assert.deepEqual(S.state.streak.frozenDates, []);
+    assert.equal(S.state.streak.count, 2);
+    assert.doesNotThrow(() => S.streakCalendar(7));
+  } finally {
+    delete globalThis.localStorage;
+  }
+});

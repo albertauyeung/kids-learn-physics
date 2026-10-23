@@ -83,7 +83,7 @@ function numeric(el, q, ctx) {
     header(q),
     h('div', { class: 'q-prompt', html: q.prompt }),
     h('div', { class: 'num-row' }, signBtn, input, unitBox),
-    q.unitChoices ? h('div', { class: 'unit-note' }, 'Pick the unit too!') : '',
+    h('div', { class: 'unit-note' }, `${q.unitChoices ? 'Pick the unit too! ' : ''}Press Enter ↵ to check.`),
     hintBtn ? h('div', { class: 'hint-row' }, hintBtn) : '',
     hintBox,
   );
@@ -123,10 +123,10 @@ function mcq(el, q, ctx) {
   const list = h('div', { class: `choices ${q.grid ? 'grid' : ''}` });
   order.forEach((ci) => {
     const b = h('button', {
-      class: 'choice', type: 'button', html: q.choices[ci],
+      class: 'choice', type: 'button', html: q.choices[ci], 'aria-pressed': 'false',
       onClick: () => {
         picked = ci;
-        list.querySelectorAll('.choice').forEach((x) => x.classList.toggle('on', x === b));
+        list.querySelectorAll('.choice').forEach((x) => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', String(x === b)); });
         sfx.select();
         ctx.setReady(true);
       },

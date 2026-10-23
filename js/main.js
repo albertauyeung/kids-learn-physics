@@ -17,6 +17,10 @@ setSoundEnabled(S.state.settings.sound);
 applyTextures();
 S.onChange(() => renderTopbar());
 window.addEventListener('hashchange', route);
+// iPad Safari often keeps the page alive for days: re-check the streak when it comes back.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') S.refreshStreak();
+});
 route();
 
 function applyTextures() {
@@ -59,7 +63,7 @@ function shell(page) {
   ];
   const nav = h('nav', { class: 'bottom-nav' },
     tabs.map(([id, label, icon]) => {
-      const badge = id === 'quests' && S.unclaimedQuests() ? h('span', { class: 'badge' }, String(S.unclaimedQuests())) : '';
+      const badge = id === 'quests' ? h('span', { class: 'badge', hidden: !S.unclaimedQuests() }, String(S.unclaimedQuests())) : '';
       return h('a', { href: `#/${id}`, class: `nav-item ${page === id ? 'on' : ''}` }, spriteImg(icon, { scale: 3, cls: 'nav-icon' }), h('span', {}, label), badge);
     }),
   );
@@ -70,6 +74,12 @@ function shell(page) {
 
 function renderTopbar() {
   if (!topbarEl || !topbarEl.isConnected) return;
+  const badge = document.querySelector('.bottom-nav .badge');
+  if (badge) {
+    const n = S.unclaimedQuests();
+    badge.textContent = String(n);
+    badge.hidden = !n;
+  }
   const st = S.state;
   const lv = S.levelInfo();
   const lit = st.streak.count > 0 && st.streak.lastDate === todayKey();

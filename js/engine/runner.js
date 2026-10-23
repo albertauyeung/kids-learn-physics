@@ -32,7 +32,7 @@ export function runSession(root, { session, unit, review = [], onFinish, onQuit 
   const closeBtn = h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Quit', onClick: confirmQuit }, '✕');
   const top = h('div', { class: 'runner-top' }, closeBtn, bar, comboEl);
   const stage = h('div', { class: 'runner-stage' });
-  const feedback = h('div', { class: 'feedback' });
+  const feedback = h('div', { class: 'feedback', 'aria-live': 'polite' });
   const mainBtn = h('button', { class: 'mc-btn big green', type: 'button' }, 'Check');
   const skipBtn = h('button', { class: 'link-btn', type: 'button', hidden: true }, 'Skip this challenge');
   const foot = h('div', { class: 'runner-foot' }, feedback, h('div', { class: 'foot-row' }, skipBtn, mainBtn));
@@ -44,7 +44,7 @@ export function runSession(root, { session, unit, review = [], onFinish, onQuit 
   // Enter = press the main button. Skip it when focus is on another button, whose own
   // Enter-click would otherwise fire as well (choices and unit chips are safe to repeat).
   const keyHandler = (e) => {
-    if (e.key !== 'Enter' || e.repeat || mainBtn.disabled) return;
+    if (e.key !== 'Enter' || e.repeat || mainBtn.disabled || modal) return;
     const a = document.activeElement;
     if (a?.tagName === 'BUTTON' && !a.matches('.choice, .unit-chip')) return;
     e.preventDefault();
@@ -192,7 +192,7 @@ export function runSession(root, { session, unit, review = [], onFinish, onQuit 
         combo++;
         stats.bestCombo = Math.max(stats.bestCombo, combo);
         if (combo >= 5) stats.comboBonus++;
-        if (q.puzzle) {
+        if (q.puzzle && first && !q.review) {
           stats.puzzleSolved = true;
           stats.puzzleBonus += 5;
         }
@@ -200,7 +200,7 @@ export function runSession(root, { session, unit, review = [], onFinish, onQuit 
         sfx.correct();
         feedback.className = 'feedback show good';
         const praise = ['Correct!', 'Awesome!', 'Nailed it!', 'Brilliant!', 'Great job!'][combo % 5];
-        feedback.innerHTML = `<b>${praise}${combo >= 5 ? ' Combo bonus +1 XP' : ''}</b>${q.puzzle ? ' <b>+5 emeralds!</b>' : ''}${res.html ? `<div>${res.html}</div>` : ''}`;
+        feedback.innerHTML = `<b>${praise}${combo >= 5 ? ' Combo bonus +1 XP' : ''}</b>${q.puzzle && first && !q.review ? ' <b>+5 emeralds!</b>' : ''}${res.html ? `<div>${res.html}</div>` : ''}`;
       } else {
         combo = 0;
         stats.mistakes++;
@@ -228,21 +228,28 @@ export function runSession(root, { session, unit, review = [], onFinish, onQuit 
     onFinish({ ...stats, accuracy, perfect: stats.mistakes === 0 });
   }
 
+  let modal = null;
   function confirmQuit() {
-    const modal = h('div', { class: 'modal-back' },
+    if (modal) return;
+    const close = () => { modal?.remove(); modal = null; };
+    const keepBtn = h('button', { class: 'mc-btn', type: 'button', onClick: close }, 'Keep going');
+    modal = h('div', { class: 'modal-back', role: 'dialog', 'aria-modal': 'true', onKeydown: (e) => { if (e.key === 'Escape') close(); } },
       h('div', { class: 'modal card' },
         h('h2', {}, 'Leave this session?'),
         h('p', {}, 'Your progress in this session will be lost.'),
         h('div', { class: 'foot-row' },
-          h('button', { class: 'mc-btn', type: 'button', onClick: () => modal.remove() }, 'Keep going'),
-          h('button', { class: 'mc-btn red', type: 'button', onClick: () => { modal.remove(); destroy(); onQuit(); } }, 'Quit'),
+          keepBtn,
+          h('button', { class: 'mc-btn red', type: 'button', onClick: () => { close(); destroy(); onQuit(); } }, 'Quit'),
         ),
       ),
     );
     document.body.append(modal);
+    keepBtn.focus();
   }
 
   function destroy() {
+    modal?.remove();
+    modal = null;
     cleanup();
     window.removeEventListener('keydown', keyHandler);
   }

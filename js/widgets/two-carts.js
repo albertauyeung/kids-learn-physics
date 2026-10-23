@@ -71,7 +71,9 @@ export default function twoCarts(el, params = {}, api) {
         }
       } else if (posA(t) > L || posB(t) > L) {
         running = false;
-        banner.set('Cart A never caught up! It needs to be faster than cart B.');
+        banner.set(closing() > 0
+          ? 'The track ran out before A caught B! A is faster, but only a little — try a bigger difference in speed.'
+          : 'Cart A never caught up! It needs to be faster than cart B.');
       }
     }
     const { ctx } = st;

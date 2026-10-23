@@ -30,7 +30,10 @@ export function makeStage(parent, w, hgt) {
     if (Math.abs(canvas.width - w * k) > 2) setScale(k);
     ctx.__fs = Math.min(2, Math.max(1.15, (w / shown) * 1.2));
   };
-  if (window.ResizeObserver) new ResizeObserver(fit).observe(canvas);
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(() => (canvas.isConnected ? fit() : ro.disconnect()));
+    ro.observe(canvas);
+  }
   requestAnimationFrame(fit);
   const toLocal = (e) => {
     const r = canvas.getBoundingClientRect();

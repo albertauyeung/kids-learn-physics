@@ -45,6 +45,10 @@ export default function motionMapper(el, params = {}, api) {
   el.append(controls(startBtn), posSlider.el);
 
   function start() {
+    if (target) {
+      pos = target[0][1];
+      posSlider.value = pos;
+    }
     t = 0;
     samples = [[0, pos]];
     recording = true;
@@ -92,6 +96,8 @@ export default function motionMapper(el, params = {}, api) {
   st.canvas.addEventListener('pointerdown', onDown);
   st.canvas.addEventListener('pointermove', onMove);
   st.canvas.addEventListener('pointerup', onUp);
+  st.canvas.addEventListener('pointercancel', onUp);
+  st.canvas.addEventListener('lostpointercapture', onUp);
   st.canvas.style.touchAction = 'none';
 
   banner.set(target
