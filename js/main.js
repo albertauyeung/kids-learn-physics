@@ -9,6 +9,7 @@ import { runSession } from './engine/runner.js';
 
 const app = document.getElementById('app');
 let teardown = null;
+let topbarEl = null; // declared before boot: route() runs immediately below
 
 // ---------- boot ----------
 S.load();
@@ -46,7 +47,6 @@ function go(path) {
 }
 
 // ---------- shell: top bar + bottom nav ----------
-let topbarEl = null;
 
 function shell(page) {
   topbarEl = h('header', { class: 'topbar' });
