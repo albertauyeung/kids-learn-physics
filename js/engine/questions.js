@@ -26,13 +26,34 @@ function numeric(el, q, ctx) {
   let unit = q.unitChoices ? null : q.unit;
   let hintIdx = 0;
   let usedHint = false;
-  const input = h('input', {
-    class: 'num-input', type: 'text', inputmode: 'decimal', autocomplete: 'off', placeholder: 'your answer',
-    'aria-label': 'Your answer',
-  });
+  // The answer is shown in a display, not a text field, and typed on an on-screen number pad,
+  // so the iPad keyboard never pops up and covers the screen. A physical keyboard still works.
+  let value = '';
+  let locked = false;
+  const display = h('div', { class: 'num-input num-display', role: 'textbox', 'aria-label': 'Your answer', 'aria-live': 'polite' });
   const unitBox = h('div', { class: 'unit-box' });
   const hintBox = h('div', { class: 'hint-box' });
-  const ready = () => ctx.setReady(parseNumber(input.value) != null && !!unit);
+  const ready = () => ctx.setReady(parseNumber(value) != null && !!unit);
+  const MAX_LEN = 12;
+
+  function render() {
+    display.textContent = value ? value.replace(/^-/, '−') : '';
+    display.classList.toggle('empty', !value);
+    ready();
+  }
+  function press(key) {
+    if (locked) return;
+    if (key === 'back') value = value.slice(0, -1);
+    else if (key === 'clear') value = '';
+    else if (key === 'sign') value = value.startsWith('-') ? value.slice(1) : `-${value}`;
+    else if (key === '.') {
+      if (!value.replace('-', '').includes('.') && value.length < MAX_LEN) value += value.replace('-', '') === '' ? '0.' : '.';
+    } else if (/^\d$/.test(key) && value.replace('-', '').length < MAX_LEN) {
+      value = value.replace(/^(-?)0$/, '$1') + key; // no leading zeros like "07"
+    }
+    sfx.click();
+    render();
+  }
 
   if (q.unitChoices) {
     for (const u of q.unitChoices) {
@@ -64,30 +85,44 @@ function numeric(el, q, ctx) {
       }, 'Hint')
     : null;
 
-  input.addEventListener('input', ready);
+  // Number pad: digits, decimal point, ± (only when the answer can be negative), delete and clear.
+  const key = (label, k, cls = '', aria) => h('button', {
+    class: `kp-key ${cls}`, type: 'button', 'aria-label': aria || label, 'data-key': k,
+    onClick: () => press(k),
+    // Keep focus off the pad so a later Enter checks the answer instead of re-pressing the key.
+    onMousedown: (e) => e.preventDefault(),
+  }, label);
+  const pad = h('div', { class: 'keypad', role: 'group', 'aria-label': 'Number pad' },
+    ...['7', '8', '9', '4', '5', '6', '1', '2', '3'].map((d) => key(d, d)),
+    q.signed ? key('±', 'sign', 'kp-fn', 'Change sign (plus or minus)') : key('.', '.', 'kp-fn', 'Decimal point'),
+    key('0', '0'),
+    q.signed ? key('.', '.', 'kp-fn', 'Decimal point') : key('⌫', 'back', 'kp-fn', 'Delete'),
+    ...(q.signed ? [key('⌫ Delete', 'back', 'kp-fn kp-wide', 'Delete'), key('Clear', 'clear', 'kp-fn kp-clear', 'Clear')] : [key('Clear', 'clear', 'kp-fn kp-clear kp-full', 'Clear')]),
+  );
 
-  // iPad number keyboards can lack a minus key, so signed answers get a ± button.
-  const signBtn = q.signed
-    ? h('button', {
-        class: 'mc-btn small sign-btn', type: 'button', 'aria-label': 'Change sign',
-        onClick: () => {
-          const v = input.value.trim().replace(/^[−–]/, '-');
-          input.value = v.startsWith('-') ? v.slice(1) : `-${v.replace(/^\+/, '')}`;
-          sfx.click();
-          ready();
-        },
-      }, '±')
-    : null;
+  // Physical keyboards (laptops): digits, ".", "-", Backspace, Delete/Escape to clear. Enter is handled by the runner.
+  const onKey = (e) => {
+    if (locked || e.metaKey || e.ctrlKey || e.altKey || document.querySelector('.modal-back')) return;
+    const k = e.key;
+    if (/^\d$/.test(k) || k === '.' || k === ',') press(k === ',' ? '.' : k);
+    else if (k === '-' || k === '−') press('sign');
+    else if (k === 'Backspace') press('back');
+    else if (k === 'Delete' || k === 'Escape') press('clear');
+    else return;
+    e.preventDefault();
+  };
+  window.addEventListener('keydown', onKey);
 
-  el.append(
+  const main = h('div', { class: 'q-main' },
     header(q),
     h('div', { class: 'q-prompt', html: q.prompt }),
-    h('div', { class: 'num-row' }, signBtn, input, unitBox),
-    h('div', { class: 'unit-note' }, q.unitChoices ? 'Pick the unit too! ' : '', h('span', { class: 'enter-note' }, 'Press Enter ↵ to check.')),
+    h('div', { class: 'num-row' }, display, unitBox),
+    h('div', { class: 'unit-note' }, q.unitChoices ? 'Pick the unit too! ' : '', h('span', { class: 'enter-note' }, 'Type with the keypad or your keyboard, then press Enter ↵.')),
     hintBtn ? h('div', { class: 'hint-row' }, hintBtn) : '',
     hintBox,
   );
-  setTimeout(() => input.focus({ preventScroll: true }), 50);
+  el.append(h('div', { class: 'q-with-pad' }, main, pad));
+  render();
 
   return {
     get usedHint() {
@@ -95,15 +130,20 @@ function numeric(el, q, ctx) {
     },
     calc: true,
     lock() {
-      input.disabled = true;
+      locked = true;
+      window.removeEventListener('keydown', onKey);
+      display.classList.add('locked');
+      pad.querySelectorAll('button').forEach((b) => (b.disabled = true));
       unitBox.querySelectorAll('button').forEach((b) => (b.disabled = true));
       if (hintBtn) hintBtn.disabled = true;
-      if (signBtn) signBtn.disabled = true;
+    },
+    destroy() {
+      window.removeEventListener('keydown', onKey);
     },
     evaluate() {
-      const v = parseNumber(input.value);
+      const v = parseNumber(value);
       const numOk = v != null && closeEnough(v, q.answer, q.tolerance);
-      const typed = typedUnit(input.value);
+      const typed = typedUnit(value);
       const typedOk = !typed || !q.unit || sameUnit(typed, q.unit);
       const unitOk = (!q.unitChoices || unit === q.unit) && typedOk;
       const correct = numOk && unitOk;

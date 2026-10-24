@@ -19,6 +19,7 @@ export function runSession(root, { session, review = [], onFinish, onQuit }) {
   const queue = steps.map((step, i) => ({ step, key: `${session.id}#${i - review.length}`, attempt: 0 }));
   let idx = 0;
   let destroyWidget = null;
+  let currentQ = null; // the question on screen (its number pad listens for key presses)
   let skipTimer = null;
   let combo = 0;
   let pendingReveal = null; // a prediction whose answer is shown once the next sim is done
@@ -77,6 +78,8 @@ export function runSession(root, { session, review = [], onFinish, onQuit }) {
   function cleanup() {
     destroyWidget?.();
     destroyWidget = null;
+    currentQ?.destroy?.();
+    currentQ = null;
     clearTimeout(skipTimer);
     skipBtn.hidden = true;
   }
@@ -229,6 +232,7 @@ export function runSession(root, { session, review = [], onFinish, onQuit }) {
     const card = h('div', { class: 'card q-card' });
     stage.append(card);
     const r = renderQuestion(card, q, { setReady: (v) => setMain('Check', v, check) });
+    currentQ = r;
     setMain('Check', false, check);
 
     function check() {

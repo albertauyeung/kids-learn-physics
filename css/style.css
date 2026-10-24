@@ -414,7 +414,29 @@ canvas.stage { width: 100%; display: block; border: 3px solid #000; background: 
 .text-input { width: 100%; font-size: 20px; }
 .select { font-size: 18px; width: auto; }
 .num-input:focus, .text-input:focus { outline: 3px solid var(--gold); }
-.sign-btn { min-width: 52px; font-size: 22px; }
+.num-display { min-height: 52px; display: flex; align-items: center; letter-spacing: 1px; user-select: none; cursor: default; }
+.num-display.empty::before { content: 'your answer'; color: #8f86a3; font-size: 20px; letter-spacing: 0; }
+.num-display:not(.locked):not(.empty)::after { content: ''; width: 3px; height: 1.1em; margin-left: 3px; background: var(--gold); animation: caret 1s steps(1) infinite; }
+@keyframes caret { 50% { opacity: 0; } }
+/* On-screen number pad beside the question, so the iPad keyboard never covers the page. */
+.q-with-pad { display: grid; gap: 16px; }
+.q-main { min-width: 0; }
+.keypad { display: grid; grid-template-columns: repeat(3, 64px); gap: 6px; justify-self: center; align-self: start; padding: 8px; background: #3b3b3b; border: 3px solid #000; box-shadow: inset 3px 3px 0 #5a5a5a, inset -3px -3px 0 #222; }
+.kp-key {
+  font-family: var(--font); font-size: 26px; font-weight: 800; color: #fff; height: 56px;
+  background: var(--btn); border: 3px solid #000; cursor: pointer; user-select: none; touch-action: manipulation;
+  box-shadow: inset 3px 3px 0 var(--btn-hi), inset -3px -4px 0 var(--btn-lo); text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
+}
+.kp-key:active:not(:disabled) { box-shadow: inset -3px -3px 0 var(--btn-hi), inset 3px 4px 0 var(--btn-lo); transform: translateY(1px); }
+.kp-key:focus-visible { outline: 3px solid var(--gold); outline-offset: 1px; }
+.kp-key:disabled { filter: grayscale(1) brightness(0.75); cursor: default; }
+.kp-fn { font-size: 20px; background: #5b6b8a; box-shadow: inset 3px 3px 0 #8494b3, inset -3px -4px 0 #38445c; }
+.kp-key[data-key="."] { font-size: 34px; line-height: 1; }
+.kp-wide { grid-column: span 2; }
+.kp-full { grid-column: 1 / -1; }
+.kp-clear { font-size: 18px; background: var(--red); box-shadow: inset 3px 3px 0 var(--red-hi), inset -3px -4px 0 var(--red-lo); }
+@media (min-width: 700px) { .q-with-pad { grid-template-columns: 1fr auto; align-items: start; } }
+@media (hover: hover) { .kp-key:hover:not(:disabled) { filter: brightness(1.12); } }
 .unit-box { display: flex; flex-wrap: wrap; gap: 6px; }
 .unit-fixed { font-size: 22px; font-weight: 700; }
 .unit-chip { font-family: var(--font); font-size: 18px; padding: 6px 12px; border: 3px solid #000; background: #fff; cursor: pointer; box-shadow: inset -2px -3px 0 #b9b9b9; }
