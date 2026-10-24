@@ -1,7 +1,7 @@
 // App shell: routing + screens (learn map, quests, shop, profile, session, results).
 
 import * as S from './core/state.js';
-import { h, makeRng, randomSeed } from './core/util.js';
+import { h, makeRng, randomSeed, dateStr } from './core/util.js';
 import { sfx, setSoundEnabled } from './core/sound.js';
 import { spriteImg, blockImg, textureURL } from './core/sprites.js';
 import { course, playableUnits, findSession, sessionTemplates } from './content/course.js';
@@ -11,6 +11,7 @@ import { hasTemplate } from './engine/templates.js';
 const app = document.getElementById('app');
 let teardown = null;
 let topbarEl = null; // declared before boot: route() runs immediately below
+let renderedDay = dateStr(); // the day the screen was last drawn for
 
 // ---------- boot ----------
 S.load();
@@ -22,8 +23,14 @@ window.addEventListener('hashchange', route);
 // and pick up progress saved by another tab meanwhile.
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible') return;
-  if (S.reloadIfChanged() && !inSession()) route();
+  const newDay = renderedDay !== dateStr(); // left open overnight: today's goal and calendar must move on
+  if ((S.reloadIfChanged() || newDay) && !inSession()) route();
   S.refreshStreak();
+});
+// The results screen replaces the session's history entry with #/learn, so Back (or an iPad
+// swipe) can land on the same hash with no hashchange: route manually then.
+window.addEventListener('popstate', () => {
+  if (document.querySelector('.results') && location.hash === '#/learn') route();
 });
 window.addEventListener('storage', (e) => {
   if (e.key === 'klp.save.v1' && S.reloadIfChanged() && !inSession()) route();
@@ -46,6 +53,7 @@ function applyTextures() {
 
 // ---------- routing ----------
 function route() {
+  renderedDay = dateStr();
   teardown?.();
   teardown = null;
   app.innerHTML = '';

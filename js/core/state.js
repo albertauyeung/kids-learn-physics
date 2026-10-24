@@ -51,7 +51,10 @@ function sanitize(saved) {
     if (kind(v) !== kind(def)) continue;
     if (kind(def) === 'object' && ['profile', 'settings', 'streak', 'skins'].includes(k)) {
       // one level deeper: older saves gain new fields, wrong-typed fields fall back
-      for (const [kk, dd] of Object.entries(def)) if (kind(v[kk]) === kind(dd)) def[kk] = v[kk];
+      for (const [kk, dd] of Object.entries(def)) {
+        // a null default (streak.lastDate) is filled in later with a date string
+        if (kind(v[kk]) === kind(dd) || (dd === null && typeof v[kk] === 'string')) def[kk] = v[kk];
+      }
     } else {
       base[k] = v;
     }

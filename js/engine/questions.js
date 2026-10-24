@@ -75,6 +75,7 @@ function numeric(el, q, ctx) {
   const hintBtn = q.hints?.length
     ? h('button', {
         class: 'mc-btn small hint-btn', type: 'button',
+        onMousedown: (e) => e.preventDefault(), // keep focus off it, so Enter checks the answer instead of adding hints
         onClick: () => {
           if (hintIdx >= q.hints.length) return;
           usedHint = true;

@@ -45,6 +45,7 @@ export function runSession(root, { session, review = [], onFinish, onQuit }) {
   let switchedAt = 0;
   // A double tap must not also press the *next* button (skipping feedback or a card).
   const press = () => {
+    if (modal) return; // the quit dialog is open
     if (performance.now() - switchedAt < (window.__KLP_TAP_GUARD_MS ?? 450)) return; // overridable for automated tests
     onMain();
   };
@@ -284,11 +285,15 @@ export function runSession(root, { session, review = [], onFinish, onQuit }) {
   }
 
   let modal = null;
+  let closeModal = null;
   function confirmQuit() {
     if (modal) return;
-    const close = () => { modal?.remove(); modal = null; };
+    // Escape closes the dialog wherever focus is; the page behind can't be reached meanwhile.
+    const onEsc = (e) => { if (e.key === 'Escape') close(); };
+    const close = () => { modal?.remove(); modal = null; wrap.inert = false; window.removeEventListener('keydown', onEsc); closeModal = null; };
+    closeModal = close;
     const keepBtn = h('button', { class: 'mc-btn', type: 'button', onClick: close }, 'Keep going');
-    modal = h('div', { class: 'modal-back', role: 'dialog', 'aria-modal': 'true', onKeydown: (e) => { if (e.key === 'Escape') close(); } },
+    modal = h('div', { class: 'modal-back', role: 'dialog', 'aria-modal': 'true' },
       h('div', { class: 'modal card' },
         h('h2', {}, 'Leave this session?'),
         h('p', {}, 'Your progress in this session will be lost.'),
@@ -299,12 +304,13 @@ export function runSession(root, { session, review = [], onFinish, onQuit }) {
       ),
     );
     document.body.append(modal);
+    wrap.inert = true;
+    window.addEventListener('keydown', onEsc);
     keepBtn.focus();
   }
 
   function destroy() {
-    modal?.remove();
-    modal = null;
+    closeModal?.();
     cleanup();
     window.removeEventListener('keydown', keyHandler);
   }

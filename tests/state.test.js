@@ -105,6 +105,22 @@ test('old saves missing nested fields load with defaults filled in', () => {
   }
 });
 
+test('a reload keeps the streak going (lastDate survives loading)', () => {
+  const yesterday = addDays(today, -1);
+  fakeStorage({ 'klp.save.v1': JSON.stringify({ profile: { name: 'K' }, streak: { count: 3, best: 3, lastDate: yesterday, freezes: 1, frozenDates: [] } }) });
+  try {
+    S.load();
+    assert.equal(S.state.streak.lastDate, yesterday);
+    S.completeSession(lesson, null, result);
+    assert.equal(S.state.streak.count, 4);
+    S.load(); // reload the same day: still 4, not reset to 1
+    S.completeSession(lesson, null, result);
+    assert.equal(S.state.streak.count, 4);
+  } finally {
+    delete globalThis.localStorage;
+  }
+});
+
 // ---------- Robustness against other tabs and damaged saves ----------
 function fakeStorage(initial = {}) {
   const store = { ...initial };
