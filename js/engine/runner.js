@@ -148,7 +148,15 @@ export function runSession(root, { session, unit, review = [], onFinish, onQuit 
       skipTimer = setTimeout(() => {
         if (done) return;
         skipBtn.hidden = false;
-        skipBtn.onclick = () => { stats.skipped++; next(); };
+        skipBtn.onclick = () => {
+          stats.skipped++;
+          if (!pendingReveal) return next();
+          // Show the prediction's answer here rather than at some later challenge.
+          done = true;
+          skipBtn.hidden = true;
+          revealPrediction();
+          setMain('Continue', true, next);
+        };
       }, SKIP_AFTER_MS());
     }
   }

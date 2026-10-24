@@ -83,9 +83,9 @@ export default {
         { type: 'q', t: 'u2.add-same' },
         { type: 'q', t: 'u2.add-opposite' },
         { type: 'q', t: 'u2.boat-line' },
-        { type: 'q', t: 'u2.frame-mcq' },
+        { type: 'q', t: 'u2.add-cancel-mcq' },
         { type: 'q', t: 'u2.add-opposite' },
-        { type: 'q', t: 'u2.boat-line' },
+        { type: 'q', t: 'u1.kmh-to-ms' },
       ],
     },
     // ------------------------------------------------------------------
@@ -120,6 +120,7 @@ export default {
           explain: 'The gap shrinks by "closing speed" metres every second, so time = gap ÷ closing speed.',
         },
         { type: 'q', t: 'u2.rel-same-mcq' },
+        { type: 'q', t: 'u2.frame-mcq' },
         { type: 'q', t: 'u2.rel-meet' },
         { type: 'q', t: 'u2.rel-chase' },
         { type: 'q', t: 'u2.meet-unknown' },
@@ -138,6 +139,7 @@ export default {
                  <table class="mini-table squares">
                    <tr><td>1² = 1</td><td>2² = 4</td><td>3² = 9</td><td>4² = 16</td><td>5² = 25</td><td>6² = 36</td><td>7² = 49</td></tr>
                    <tr><td>8² = 64</td><td>9² = 81</td><td>10² = 100</td><td>11² = 121</td><td>12² = 144</td><td>13² = 169</td><td>15² = 225</td></tr>
+                   <tr><td>16² = 256</td><td>17² = 289</td><td>20² = 400</td><td>24² = 576</td><td>25² = 625</td><td></td><td></td></tr>
                  </table>`,
         },
         {
@@ -201,13 +203,14 @@ export default {
         },
         {
           type: 'sim', widget: 'river', goal: true, title: 'River Lab',
-          html: 'Test your prediction: launch, then double the current and launch again. Watch the time! Then complete the tasks.',
+          html: 'Launch once with these settings and note the time. Then follow the tasks — the first one tests your prediction!',
           params: {
             mode: 'free', width: 20, boat: 4, current: 3,
             tasks: [
-              { text: 'Make the crossing take exactly <b>5 s</b>.', check: (p) => p.width / p.boat === 5 },
+              { text: 'Keep the river 20 m wide and the boat at 4 m/s, but <b>double the current to 6 m/s</b>. Did the crossing time change?', check: (p) => p.current === 6 && p.width === 20 && p.boat === 4 },
+              { text: 'Make the crossing take exactly <b>4 s</b>.', check: (p) => p.width / p.boat === 4 },
               { text: 'Make the boat drift exactly <b>12 m</b> downstream.', check: (p, drift) => Math.abs(drift - 12) < 1e-9 },
-              { text: 'Make the boat\'s actual speed exactly <b>5 m/s</b> (with a current).', check: (p) => p.current > 0 && Math.abs(Math.hypot(p.boat, p.current) - 5) < 1e-9 },
+              { text: 'Make the boat\'s actual speed exactly <b>10 m/s</b>.', check: (p) => Math.abs(Math.hypot(p.boat, p.current) - 10) < 1e-9 },
             ],
           },
         },
@@ -270,6 +273,7 @@ export default {
         { type: 'q', t: 'u2.rel-chase' },
         { type: 'q', t: 'u2.pyth-leg' },
         { type: 'q', t: 'u2.slope-read' },
+        { type: 'q', t: 'u2.slope-left-mcq' },
         { type: 'q', t: 'u1.kmh-to-ms' },
         { type: 'q', t: 'u1.avg-times' },
       ],

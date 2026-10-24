@@ -58,7 +58,7 @@ export default {
         { type: 'q', t: 'u1.min-to-s' },
         { type: 'q', t: 'u1.unit-choice' },
         { type: 'q', t: 'u1.mm-to-cm' },
-        { type: 'q', t: 'u1.estimate-mcq' },
+        { type: 'q', t: 'u1.s-to-ms' },
         { type: 'q', t: 'u1.h-to-min' },
         { type: 'q', t: 'u1.chain-convert' },
       ],
@@ -87,7 +87,7 @@ export default {
         {
           type: 'info', title: 'Displacement is never longer',
           html: `<p>Notice: the size of your displacement can <b>never</b> be bigger than your distance. A straight line is always the shortest way between two points!</p>
-                 <p>Later we'll see that walking <b>3 blocks east and 4 blocks north</b> gives a distance of 7 m but a displacement of only <b>5 m</b>. (Spoiler: it's a famous triangle!)</p>`,
+                 <p>Later we'll see that walking <b>3 blocks east and 4 blocks north</b> gives a distance of 7 m, but a straight-line displacement that's <b>shorter</b>. How much shorter? You'll work it out in Unit 2 with a famous triangle!</p>`,
         },
         { type: 'q', t: 'u1.dist-backforth' },
         { type: 'q', t: 'u1.disp-backforth' },
@@ -191,6 +191,7 @@ export default {
         { type: 'q', t: 'u1.kmh-to-ms' },
         { type: 'q', t: 'u1.avg-speeds' },
         { type: 'q', t: 'u1.ms-to-kmh' },
+        { type: 'q', t: 'u1.estimate-mcq' },
         { type: 'q', t: 'u1.avg-trap-mcq' },
         { type: 'q', t: 'u1.spot-bug-avg' },
         { type: 'q', t: 'u1.avg-inverse' },

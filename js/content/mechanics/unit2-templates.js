@@ -393,7 +393,7 @@ registerTemplates([
     generate(r) {
       const b = r.pick([2, 4, 5]), w = b * r.pick([4, 5, 6]), c = r.pick([1, 2]);
       return {
-        type: 'mcq', keepOrder: true,
+        type: 'mcq',
         prompt: `A boat points straight across a <b>${w} m</b> river at <b>${b} m/s</b>. The current is <b>${c} m/s</b>. If the current becomes <b>twice as fast</b>, what happens to the time it takes to cross?`,
         choices: ['It stays the same', 'It doubles', 'It halves', 'It gets a bit longer'],
         answer: 0,
@@ -430,13 +430,13 @@ registerTemplates([
       const v = until(r, (rr) => {
         const vB = rr.int(2, 5), diff = rr.int(1, 3), T = rr.int(3, 10);
         return { vB, vA: vB + diff, T, delay: (diff * T) / vB };
-      }, (x) => Number.isInteger(x.delay) && x.delay >= 1 && x.delay <= 10);
+      }, (x) => Number.isInteger(x.delay) && x.delay >= 1 && x.delay <= 10 && x.T !== x.delay);
       return {
         type: 'numeric',
         prompt: `Cart B leaves the station at <b>${v.vB} m/s</b>. Cart A leaves the same station <b>${v.delay} s later</b> at <b>${v.vA} m/s</b>, on the same track. How many seconds <b>after A leaves</b> does it catch B?`,
         answer: v.T, unit: 's',
         hints: ['How far ahead is B when A sets off?', 'How much does A gain on B every second?', 'time = head start ÷ (faster − slower)'],
-        errors: [{ value: v.T + v.delay, msg: 'That\'s the time since B left. The question asks how long after A leaves.' }],
+        errors: [{ value: v.T + v.delay, msg: 'That\'s the time since B left. The question asks how long after A leaves.' }, { value: v.vB * v.delay, msg: 'That\'s B\'s head start in metres. How long does A take to close it?' }],
         solution: `Head start: ${v.vB} × ${v.delay} = ${v.vB * v.delay} m. A gains ${v.vA} − ${v.vB} = ${v.vA - v.vB} m/s, so it takes ${v.vB * v.delay} ÷ ${v.vA - v.vB} = <b>${v.T} s</b>`,
       };
     },
@@ -459,15 +459,29 @@ registerTemplates([
   {
     id: 'u2.vel-avg-unknown', concepts: [C.vel], tier: 'engineer',
     generate(r) {
-      const v = r.int(1, 3), t = r.int(2, 6), back = r.int(2, 8);
+      // Realistic walking: the whole walk (there and back) at no more than 3 m/s.
+      const { v, t, back } = until(r, (rr) => ({ v: rr.int(1, 2), t: rr.int(4, 10), back: rr.int(2, 8) }), (x) => (2 * x.back + x.v * x.t) / x.t <= 3 && x.back !== x.v * x.t);
       const disp = v * t, a = disp + back;
       return {
         type: 'numeric',
         prompt: `Pip walks <b>${a} m right</b>, then turns and walks some way <b>left</b>. The whole walk takes <b>${t} s</b> and his average velocity is <b>+${v} m/s</b>. How far did he walk <b>left</b>?`,
         answer: back, unit: 'm',
         hints: ['What is his displacement? (velocity × time)', 'He went right first. How far back must he come to end at that displacement?'],
-        errors: [{ value: disp, msg: 'That\'s his displacement. How far back left did he come from where he turned?' }, { value: a + disp, msg: 'He walked left, so his displacement is LESS than the first walk.' }],
+        errors: [{ value: disp, msg: 'That\'s his displacement. How far back left did he come from where he turned?' }, { value: a + disp, msg: 'He walked back LEFT, so subtract: it is the gap between where he turned (' + a + ' m) and where he finished.' }],
         solution: `Displacement = ${v} × ${t} = +${disp} m. He went ${a} m right, so he came back ${a} − ${disp} = <b>${back} m</b>`,
+      };
+    },
+  },
+  {
+    id: 'u2.add-cancel-mcq', concepts: [C.add], tier: 'explorer',
+    generate(r) {
+      const v = r.pick([1, 1.5, 2, 3]);
+      return {
+        type: 'mcq',
+        prompt: `A walkway moves <b>right at ${fmt(v)} m/s</b>. Pip walks <b>left at ${fmt(v)} m/s</b> on it. What does someone standing beside the walkway see?`,
+        choices: ['Pip stays in the same place', `Pip moves left at ${fmt(2 * v)} m/s`, `Pip moves right at ${fmt(2 * v)} m/s`, `Pip moves left at ${fmt(v)} m/s`],
+        answer: 0,
+        explain: `The two arrows are the same length and point opposite ways: (+${fmt(v)}) + (−${fmt(v)}) = 0. Pip walks, but stays put — like walking the wrong way on an escalator!`,
       };
     },
   },

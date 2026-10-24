@@ -256,7 +256,7 @@ registerTemplates([
       const v = until(r, (rr) => {
         const s1 = rr.int(4, 15), s2 = rr.int(4, 15), t1 = rr.int(1, 3), t2 = rr.int(1, 3);
         return { s1, s2, t1, t2, d1: s1 * t1, d2: s2 * t2 };
-      }, (x) => x.s1 !== x.s2 && nice((x.d1 + x.d2) / (x.t1 + x.t2)));
+      }, (x) => x.s1 !== x.s2 && x.t1 !== x.t2 && nice((x.d1 + x.d2) / (x.t1 + x.t2)));
       const D = v.d1 + v.d2, T = v.t1 + v.t2;
       return {
         type: 'numeric', prompt: `A cyclist rides <b>${v.d1} km in ${v.t1} h</b>, then <b>${v.d2} km in ${v.t2} h</b>. What is the average speed for the whole trip?`,
@@ -328,7 +328,7 @@ registerTemplates([
       const v = until(r, (rr) => {
         const t = rr.pick([4, 5, 8, 10]), s = rr.pick([1, 2, 3]), d0 = rr.pick([0, 0, 2, 4, 5, 6, 10]);
         return { t, s, d0, d: d0 + s * t };
-      }, (x) => x.d <= 30 && x.d0 % yAxis(x.d).yStep === 0 && x.d % yAxis(x.d).yStep === 0);
+      }, (x) => x.d <= 30 && x.d0 % yAxis(x.d).yStep === 0 && x.d % yAxis(x.d).labelEvery === 0); // the end value gets a label
       const { t, s, d0, d } = v;
       const ax = yAxis(d);
       return {
@@ -497,7 +497,7 @@ registerTemplates([
       const q = r.pick([
         { p: 'About how fast does a person <b>walk</b>?', c: ['about 1.5 m/s', 'about 15 m/s', 'about 150 m/s', 'about 0.01 m/s'], e: '1.5 m/s is about 5 km/h — a normal walking pace. 15 m/s would be faster than an Olympic sprinter!' },
         { p: 'About how long does it take to <b>walk 1 km</b>?', c: ['about 12 minutes', 'about 12 seconds', 'about 12 hours', 'about 1 minute'], e: 'At about 1.4 m/s, 1000 m takes about 700 s — roughly 12 minutes.' },
-        { p: 'About how fast does a car drive <b>through a town</b>?', c: ['about 50 km/h', 'about 5 km/h', 'about 500 km/h', 'about 5000 km/h'], e: '50 km/h is a common town speed limit. 5 km/h is walking pace; 500 km/h is faster than the fastest trains.' },
+        { p: 'About how fast does a car drive <b>through a town</b>?', c: ['about 50 km/h', 'about 5 km/h', 'about 500 km/h', 'about 5000 km/h'], e: '50 km/h is a common town speed limit. 5 km/h is walking pace; 500 km/h is faster than a Formula 1 car.' },
         { p: 'About how tall is a <b>two-storey house</b>?', c: ['about 8 m', 'about 8 cm', 'about 80 m', 'about 8 km'], e: 'Each storey is about 3–4 m, so two storeys is about 8 m — 8 blocks!' },
       ]);
       return { type: 'mcq', prompt: q.p, choices: q.c, answer: 0, explain: q.e };
@@ -527,7 +527,7 @@ registerTemplates([
       const g = (pts, label) => `<div class="graph-pair"><b>${label}</b>${graphSVG({ points: pts, tMax: 10, yMax: 20, small: true, w: 140, h: 100, tStep: 2, yStep: 4 })}</div>`;
       return {
         type: 'mcq', keepOrder: true,
-        prompt: `Two runners on the same axes. Who is running <b>faster</b>?<div class="graph-row">${g(highFirst ? high : steep, 'A')}${g(highFirst ? steep : high, 'B')}</div>`,
+        prompt: `Two runners — both graphs use the same scales. Who is running <b>faster</b>?<div class="graph-row">${g(highFirst ? high : steep, 'A')}${g(highFirst ? steep : high, 'B')}</div>`,
         choices: ['A', 'B', 'They have the same speed'], answer: highFirst ? 1 : 0,
         explain: 'Speed is how <b>steep</b> the line is, not how high it is. The higher runner started further away but only gained 4 m in 10 s; the other gained 12 m.',
       };
@@ -572,12 +572,12 @@ registerTemplates([
     id: 'u1.avg-inverse', concepts: [C.avg], tier: 'engineer',
     generate(r) {
       // s1 is the slow first part; the second part must be s2 to average A over equal distances.
-      const [s1, s2] = r.pick([[2, 6], [3, 6], [4, 12], [10, 15], [6, 12], [20, 30]]);
+      const [s1, s2] = r.pick([[2, 6], [3, 6], [4, 12], [10, 15], [6, 12]]);
       const A = (2 * s1 * s2) / (s1 + s2);
-      const d = lcm(s1, s2) * r.int(1, 2);
+      const d = until(r, (rr) => lcm(s1, s2) * rr.int(1, 3), (x) => x !== s2);
       return {
         type: 'numeric',
-        prompt: `Pip walks <b>${d} km at ${s1} km/h</b>. How fast must he go for the <b>next ${d} km</b> so that his average speed for the whole ${2 * d} km is <b>${fmt(A)} km/h</b>?`,
+        prompt: `Pip cycles <b>${d} km at ${s1} km/h</b>. How fast must he go for the <b>next ${d} km</b> so that his average speed for the whole ${2 * d} km is <b>${fmt(A)} km/h</b>?`,
         answer: s2, unit: 'km/h',
         hints: ['How long should the whole walk take at the average speed?', 'How much of that time has the first part already used?', 'Speed for the second part = distance ÷ time left.'],
         errors: [{ value: 2 * A - s1, msg: 'That would only work if both parts took the same TIME — but they are the same DISTANCE. Work with the times.' }],
