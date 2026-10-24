@@ -567,6 +567,10 @@ svg.graph .g-axis-label { fill: #aaa; font-size: 11px; }
 .mastery { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: center; }
 .missed { padding-left: 20px; }
 .settings { display: flex; flex-direction: column; gap: 10px; }
+.cloud-card { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 16px; }
+.cloud-card p { margin: 0; }
+.cloud-status.synced { color: var(--green-lo, #2e6b1f); font-weight: 700; }
+.link-btn.cloud-signin { display: block; margin-top: 14px; color: var(--ink-soft); font-size: 16px; }
 .setting { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .setting input[type=checkbox] { width: 24px; height: 24px; accent-color: var(--green); }
 

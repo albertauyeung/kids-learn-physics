@@ -1,0 +1,16 @@
+rules_version = '2';
+// Cloud save: each signed-in Google user can read and write only their own document, users/{uid}.
+// Paste into Firebase console → Firestore Database → Rules, then Publish.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['save', 'xp', 'updatedAt'])
+        && request.resource.data.save is string
+        && request.resource.data.save.size() < 500000
+        && request.resource.data.xp is number
+        && request.resource.data.updatedAt is number;
+    }
+  }
+}

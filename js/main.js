@@ -7,10 +7,12 @@ import { spriteImg, blockImg, textureURL } from './core/sprites.js';
 import { course, playableUnits, findSession, sessionTemplates } from './content/course.js';
 import { runSession } from './engine/runner.js';
 import { hasTemplate } from './engine/templates.js';
+import * as cloud from './core/cloud.js';
 
 const app = document.getElementById('app');
 let teardown = null;
 let topbarEl = null; // declared before boot: route() runs immediately below
+let cloudCardEl = null; // Profile's cloud-save card, redrawn when the sync status changes
 let renderedDay = dateStr(); // the day the screen was last drawn for
 
 // ---------- boot ----------
@@ -26,7 +28,14 @@ document.addEventListener('visibilitychange', () => {
   const newDay = renderedDay !== dateStr(); // left open overnight: today's goal and calendar must move on
   if ((S.reloadIfChanged() || newDay) && !inSession()) route();
   S.refreshStreak();
+  cloud.syncNow(); // another device may have made progress meanwhile
 });
+// Cloud save (optional): when a newer copy arrives from another device, redraw unless mid-session.
+cloud.onCloudChange(({ replaced }) => {
+  if (replaced && !inSession()) route();
+  else renderCloudCard();
+});
+cloud.initCloud();
 // The results screen replaces the session's history entry with #/learn, so Back (or an iPad
 // swipe) can land on the same hash with no hashchange: route manually then.
 window.addEventListener('popstate', () => {
@@ -163,6 +172,9 @@ function onboarding() {
       h('label', { class: 'field' }, h('span', {}, 'What should we call you?'), name),
       h('div', { class: 'field' }, h('span', {}, 'Pick a daily goal'), goalRow),
       start,
+      cloud.enabled
+        ? h('button', { class: 'link-btn cloud-signin', type: 'button', onClick: () => signInClicked() }, 'Played before? Sign in with Google to get your progress back')
+        : '',
     ),
   ));
   name.addEventListener('keydown', (e) => { if (e.key === 'Enter') start.click(); });
@@ -593,6 +605,40 @@ function profileScreen(main) {
     h('label', { class: 'setting' }, h('span', {}, 'Daily goal'), goalSel),
     parentSettings(st),
   ));
+  if (cloud.enabled) {
+    cloudCardEl = h('div', { class: 'card cloud-card' });
+    main.append(cloudCardEl);
+    renderCloudCard();
+  }
+}
+
+// ---------- cloud save card (Profile) ----------
+function renderCloudCard() {
+  if (!cloudCardEl?.isConnected) return;
+  const { status, user } = cloud.cloudState();
+  const text = {
+    'signed-out': 'Sign in with Google (a parent\'s account is best) to keep progress safe and carry it to another iPad or computer.',
+    syncing: 'Saving to the cloud…',
+    synced: 'Progress saved to the cloud ✓',
+    offline: 'Can\'t reach the cloud right now. Progress is safe on this device and will be saved later.',
+  }[status];
+  cloudCardEl.replaceChildren(
+    h('h2', {}, 'Cloud save'),
+    user ? h('p', { class: 'muted' }, `Signed in as ${user.email || 'Google user'}`) : '',
+    h('p', { class: `cloud-status ${status}` }, text),
+    user
+      ? h('button', { class: 'mc-btn small gray', type: 'button', onClick: () => cloud.signOut().catch(() => toast('Couldn\'t sign out — try again.')) }, 'Sign out')
+      : h('button', { class: 'mc-btn blue', type: 'button', onClick: () => signInClicked() }, 'Sign in with Google'),
+  );
+}
+
+async function signInClicked() {
+  try {
+    await cloud.signIn();
+  } catch (err) {
+    // Closing the popup is not an error worth shouting about.
+    if (!/popup-closed|cancelled-popup/.test(err?.code || '')) toast('Sign-in didn\'t work. Check the internet and try again.');
+  }
 }
 
 // Grown-up settings sit behind a small maths gate: friction for a child, not security.

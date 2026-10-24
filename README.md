@@ -26,6 +26,26 @@ Progress is saved in the browser's local storage, so each device or browser keep
 To jump to any session, go to **Profile → Settings**, answer the grown-ups' maths question under
 **Parent settings**, then turn on "Unlock all sessions".
 
+## Cloud save with Google sign-in (optional)
+
+Progress is always kept on the device (localStorage). Signing in with Google also keeps a copy
+in Firebase, so it is safe and can be carried to another iPad or computer. It is off until a
+Firebase config is added; no server code is needed.
+
+1. Create a project at https://console.firebase.google.com (the free Spark plan is enough).
+2. **Authentication → Sign-in method:** enable **Google**. Under **Settings → Authorized domains**, add `ayeung.dev`
+   (and `localhost` for testing).
+3. **Firestore Database → Create database** (a NoSQL document database; any region, start in production mode).
+   Then **Rules:** paste [`firestore.rules`](firestore.rules) and **Publish**.
+4. **Project settings → Your apps → Web app (`</>`):** register an app and copy its `firebaseConfig`
+   into [`js/core/firebase-config.js`](js/core/firebase-config.js). These values are public by design;
+   the rules keep each user's data private.
+
+Each Google account gets one document, `users/{uid}`, holding the whole save as a JSON string.
+When two copies differ, the one with more XP wins (ties: the newer). A device only uploads after
+reading the cloud copy, so an old tab can't overwrite newer progress. A parent's Google account is
+recommended (children's accounts under 13 are managed by Family Link).
+
 ## How it's organised
 
 ```

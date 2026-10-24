@@ -173,3 +173,29 @@ test('rewards scale with accuracy', () => {
   assert.equal(none.xp, 5);
   assert.ok(none.emeralds < full.emeralds);
 });
+
+// ---------- Cloud save: choosing between two copies ----------
+test('the copy with more XP wins; on a tie, the newer one', () => {
+  assert.equal(S.isBetterSave({ xp: 200, updatedAt: 1 }, { xp: 100, updatedAt: 9 }), true);
+  assert.equal(S.isBetterSave({ xp: 100, updatedAt: 9 }, { xp: 200, updatedAt: 1 }), false);
+  assert.equal(S.isBetterSave({ xp: 50, updatedAt: 5 }, { xp: 50, updatedAt: 4 }), true);
+  assert.equal(S.isBetterSave({ xp: 50, updatedAt: 5 }, { xp: 50, updatedAt: 5 }), false, 'identical copies: keep ours');
+  assert.equal(S.isBetterSave({}, { xp: 0 }), false);
+});
+
+test('adopting a cloud copy keeps its progress and saves it on this device', () => {
+  const store = fakeStorage();
+  try {
+    const other = { ...JSON.parse(JSON.stringify(S.state)), xp: 321, profile: { name: 'Cloud', dailyGoal: 30, createdAt: '2026-01-01' }, updatedAt: 1234 };
+    other.streak = { count: 5, best: 5, lastDate: today, freezes: 1, frozenDates: [] };
+    S.replaceWith(other);
+    assert.equal(S.state.xp, 321);
+    assert.equal(S.state.profile.name, 'Cloud');
+    assert.equal(S.state.streak.count, 5);
+    assert.equal(JSON.parse(store['klp.save.v1']).xp, 321);
+    S.persist();
+    assert.ok(S.state.updatedAt > 1234, 'a later save on this device is newer');
+  } finally {
+    delete globalThis.localStorage;
+  }
+});

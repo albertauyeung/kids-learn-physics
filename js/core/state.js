@@ -23,6 +23,7 @@ function fresh() {
     achievements: {}, // id -> date
     skins: { owned: ['classic'], active: 'classic' },
     notices: [],
+    updatedAt: 0, // ms timestamp of the last save, to pick the newer of two copies (cloud sync)
   };
 }
 
@@ -91,12 +92,35 @@ export function reloadIfChanged() {
 }
 
 export function persist() {
+  state.updatedAt = Date.now();
   try {
     const raw = JSON.stringify(state);
     localStorage.setItem(KEY, raw);
     lastRaw = raw;
   } catch {
     /* storage unavailable: progress lives only in memory */
+  }
+  emit();
+}
+
+// ---------- Cloud copies ----------
+// XP only ever goes up, so the copy with more XP has more progress; on a tie, the newer one wins.
+export function isBetterSave(a, b) {
+  const xa = Number(a?.xp) || 0, xb = Number(b?.xp) || 0;
+  if (xa !== xb) return xa > xb;
+  return (Number(a?.updatedAt) || 0) > (Number(b?.updatedAt) || 0);
+}
+
+// Adopt a save from elsewhere (the cloud) as-is, keeping its timestamp.
+export function replaceWith(saved) {
+  state = sanitize(saved);
+  refreshStreak();
+  try {
+    const raw = JSON.stringify(state);
+    localStorage.setItem(KEY, raw);
+    lastRaw = raw;
+  } catch {
+    /* storage unavailable */
   }
   emit();
 }
