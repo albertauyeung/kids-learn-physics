@@ -308,7 +308,7 @@ export const ACHIEVEMENTS = {
   combo10: { name: 'On Fire', desc: 'Get 8 answers right in a row', icon: 'xporb' },
   predictor: { name: 'Galileo', desc: 'Make 5 correct predictions', icon: 'flag' },
   puzzle: { name: 'Puzzle Master', desc: 'Solve a Puzzle Corner problem', icon: 'chest' },
-  vonneumann: { name: 'Von Neumann', desc: 'Solve the bee-and-trains puzzle', icon: 'bee' },
+  vonneumann: { name: 'Von Neumann', desc: 'Solve the bird-and-trains puzzle', icon: 'bee' },
   unit1: { name: 'Motion Master', desc: 'Beat the Unit 1 Boss Mission', icon: 'minecart' },
   unit2: { name: 'River Captain', desc: 'Beat the Unit 2 Boss Mission', icon: 'boat' },
   level5: { name: 'Level 5', desc: 'Reach level 5', icon: 'xporb' },

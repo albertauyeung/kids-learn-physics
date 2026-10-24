@@ -344,7 +344,7 @@ registerTemplates([
   {
     id: 'u1.graph-stop', concepts: [C.graph], tier: 'scientist',
     generate(r) {
-      const t1 = r.int(2, 4), stopFor = r.int(2, 4), t3 = t1 + stopFor + r.int(2, 3);
+      const t1 = r.int(2, 4), stopFor = r.pick([2, 3, 4].filter((x) => x !== t1)), t3 = t1 + stopFor + r.int(2, 3);
       const d1 = r.int(2, 4) * t1;
       const d3 = d1 + r.int(1, 3) * (t3 - t1 - stopFor);
       const ax = { yStep: 1, labelEvery: 5, yMax: Math.ceil(d3 / 5) * 5 };
@@ -454,7 +454,7 @@ registerTemplates([
   {
     id: 'u1.puzzle-snail', concepts: [C.disp], tier: 'engineer', puzzle: true,
     generate(r) {
-      const [H, up, down] = r.pick([[10, 3, 2], [12, 3, 2], [20, 5, 3], [15, 4, 1]]);
+      const [H, up, down] = r.pick([[10, 3, 2], [12, 3, 2], [20, 5, 3], [16, 4, 1]]);
       const day = Math.ceil((H - up) / (up - down)) + 1;
       return {
         type: 'numeric',

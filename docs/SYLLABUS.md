@@ -139,7 +139,7 @@ Each unit lists: lessons → problem sets → Boss Mission. Sample problems show
 - 🟢 Walk at 1.5 m/s on a travelator moving at 1 m/s. Speed relative to the ground? → **2.5 m/s**
 - 🟡 Two cars 300 m apart drive towards each other at 20 m/s and 10 m/s. When do they meet? → **10 s**
 - 🔴 A boat heads straight across a 40 m river at 4 m/s; the river flows at 3 m/s. Actual speed, crossing time, and drift downstream? → **5 m/s, 10 s, 30 m**
-- ⭐ *Puzzle Corner (the von Neumann bee):* Two trains 100 km apart approach at 50 km/h each. A bee zooms between them at 75 km/h until they meet. Total distance flown? → **75 km**
+- ⭐ *Puzzle Corner (the von Neumann trains):* Two trains 100 km apart approach at 50 km/h each. A swift (a fast bird) zooms between them at 75 km/h until they meet. Total distance flown? → **75 km**
 
 **Boss Mission:** *River Rescue* — the boat always points straight across, so choose the launch point that lets the current carry it to each stranded swimmer. (Choosing a heading needs trigonometry, so it waits for a later unit.)
 

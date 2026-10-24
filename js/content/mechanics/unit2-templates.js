@@ -92,7 +92,7 @@ registerTemplates([
   {
     id: 'u2.add-opposite', concepts: [C.add], tier: 'scientist',
     generate(r) {
-      const v = until(r, (rr) => ({ w: rr.pick([1, 1.5, 2, 3]), k: rr.pick([1, 2, 2.5, 3, 4]) }), (x) => x.w !== x.k);
+      const v = until(r, (rr) => ({ w: rr.pick([1, 1.5, 2, 3]), k: rr.pick([1, 2, 2.5, 3]) }), (x) => x.w !== x.k);
       return {
         type: 'numeric', signed: true,
         prompt: `A walkway moves <b>right at ${fmt(v.w)} m/s</b>. Pip walks <b>left at ${fmt(v.k)} m/s</b> on it. What is Pip's velocity compared with the ground?${SIGN_NOTE}`,
@@ -135,7 +135,8 @@ registerTemplates([
   {
     id: 'u2.rel-meetpos', concepts: [C.rel], tier: 'scientist',
     generate(r) {
-      const v1 = r.int(2, 8), v2 = r.int(1, 7), t = r.int(2, 8);
+      const v1 = r.int(2, 8), t = r.int(2, 8);
+      const v2 = r.pick([2, 3, 4, 5, 6, 7].filter((x) => x !== v1)); // equal speeds would make A's and B's distances the same
       const gap = (v1 + v2) * t;
       return {
         type: 'numeric',
@@ -229,7 +230,7 @@ registerTemplates([
   {
     id: 'u2.river-time', concepts: [C.add], tier: 'scientist',
     generate(r) {
-      const b = r.pick([2, 3, 4, 5]), t = r.int(3, 10), c = r.pick([1, 2, 3]);
+      const b = r.pick([2, 3, 4, 5]), t = r.int(3, 10), c = r.pick([1, 2, 3].filter((x) => x !== b));
       return {
         type: 'numeric',
         prompt: `A river is <b>${b * t} m</b> wide. A boat points straight across at <b>${b} m/s</b> while the current flows at <b>${c} m/s</b>. How long does it take to cross?`,
@@ -242,7 +243,7 @@ registerTemplates([
   {
     id: 'u2.river-drift', concepts: [C.add], tier: 'scientist',
     generate(r) {
-      const b = r.pick([2, 3, 4, 5]), t = r.int(3, 8), c = r.pick([1, 2, 3]);
+      const b = r.pick([2, 3, 4, 5]), t = r.int(3, 8), c = r.pick([2, 3]);
       return {
         type: 'numeric',
         prompt: `A boat crosses a <b>${b * t} m</b> wide river, pointing straight across at <b>${b} m/s</b>. The current flows at <b>${c} m/s</b>. How far <b>downstream</b> does the boat land?`,
@@ -346,15 +347,16 @@ registerTemplates([
   {
     id: 'u2.puzzle-fly', concepts: [C.rel], tier: 'engineer', puzzle: true, achievement: 'vonneumann',
     generate(r) {
-      const t = r.pick([1, 2, 0.5, 1.5]), v = r.pick([20, 30, 40, 50]), f = r.pick([60, 75, 80, 90, 100]);
+      const t = r.pick([1, 2, 0.5, 1.5]), v = r.pick([20, 30, 40, 50]);
+      const f = r.pick([60, 75, 80, 90, 100].filter((x) => x !== 2 * v)); // f = 2v would make the answer equal the gap
       const D = 2 * v * t;
       return {
         type: 'numeric',
-        prompt: `Two trains are <b>${D} km</b> apart, heading towards each other at <b>${v} km/h each</b>. A bee starts on one train and flies at <b>${f} km/h</b> to the other train, turns around instantly, flies back, and keeps zig-zagging until the trains meet. <b>How far does the bee fly in total?</b>`,
+        prompt: `Two trains are <b>${D} km</b> apart, heading towards each other at <b>${v} km/h each</b>. A swift (a very fast bird) starts on one train and flies at <b>${f} km/h</b> to the other train, turns around instantly, flies back, and keeps zig-zagging until the trains meet. <b>How far does the swift fly in total?</b>`,
         answer: f * t, unit: 'km',
-        hints: ['Don\'t try to add up all the zig-zags! Ask a simpler question first...', 'How long until the trains meet?', 'The bee flies the whole time at the same speed.'],
-        errors: [{ value: D, msg: 'That\'s the gap between the trains. How long is the bee flying for?' }],
-        solution: `Trains meet after ${D} ÷ (${v} + ${v}) = ${fmt(t)} h. The bee flies ${f} × ${fmt(t)} = <b>${fmt(f * t)} km</b>. (A famous puzzle the mathematician John von Neumann solved instantly!)`,
+        hints: ['Don\'t try to add up all the zig-zags! Ask a simpler question first...', 'How long until the trains meet?', 'The swift flies the whole time at the same speed.'],
+        errors: [{ value: D, msg: 'That\'s the gap between the trains. How long is the swift flying for?' }],
+        solution: `Trains meet after ${D} ÷ (${v} + ${v}) = ${fmt(t)} h. The swift flies ${f} × ${fmt(t)} = <b>${fmt(f * t)} km</b>. (A famous puzzle the mathematician John von Neumann solved instantly!)`,
       };
     },
   },
@@ -434,7 +436,7 @@ registerTemplates([
       const v = until(r, (rr) => {
         const vB = rr.int(2, 5), diff = rr.int(1, 3), T = rr.int(3, 10);
         return { vB, vA: vB + diff, T, delay: (diff * T) / vB };
-      }, (x) => Number.isInteger(x.delay) && x.delay >= 1 && x.delay <= 10 && x.T !== x.delay);
+      }, (x) => Number.isInteger(x.delay) && x.delay >= 1 && x.delay <= 10 && x.T !== x.delay && x.vB * x.delay !== x.T);
       return {
         type: 'numeric',
         prompt: `Cart B leaves the station at <b>${v.vB} m/s</b>. Cart A leaves the same station <b>${v.delay} s later</b> at <b>${v.vA} m/s</b>, on the same track. How many seconds <b>after A leaves</b> does it catch B?`,
@@ -448,7 +450,8 @@ registerTemplates([
   {
     id: 'u2.meet-unknown', concepts: [C.rel], tier: 'engineer',
     generate(r) {
-      const vA = r.int(2, 6), vB = r.int(1, 6), t = r.int(2, 8);
+      const vA = r.int(2, 6), t = r.int(2, 8);
+      const vB = r.pick([1, 2, 3, 4, 5, 6].filter((s) => s !== vA)); // else answering A's speed would score
       const x = vA * t, G = (vA + vB) * t;
       return {
         type: 'numeric',

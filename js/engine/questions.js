@@ -47,7 +47,7 @@ function numeric(el, q, ctx) {
     else if (key === 'clear') value = '';
     else if (key === 'sign') value = value.startsWith('-') ? value.slice(1) : `-${value}`;
     else if (key === '.') {
-      if (!value.replace('-', '').includes('.') && value.length < MAX_LEN) value += value.replace('-', '') === '' ? '0.' : '.';
+      if (!value.replace('-', '').includes('.') && value.replace('-', '').length < MAX_LEN) value += value.replace('-', '') === '' ? '0.' : '.';
     } else if (/^\d$/.test(key) && value.replace('-', '').length < MAX_LEN) {
       value = value.replace(/^(-?)0$/, '$1') + key; // no leading zeros like "07"
     }
@@ -105,7 +105,7 @@ function numeric(el, q, ctx) {
     if (locked || e.metaKey || e.ctrlKey || e.altKey || document.querySelector('.modal-back')) return;
     const k = e.key;
     if (/^\d$/.test(k) || k === '.' || k === ',') press(k === ',' ? '.' : k);
-    else if (k === '-' || k === '−') press('sign');
+    else if ((k === '-' || k === '−') && q.signed) press('sign');
     else if (k === 'Backspace') press('back');
     else if (k === 'Delete' || k === 'Escape') press('clear');
     else return;
