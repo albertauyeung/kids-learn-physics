@@ -56,6 +56,7 @@ function route() {
   renderedDay = dateStr();
   teardown?.();
   teardown = null;
+  announceUnlocks(); // a session left with Back never reached its results: show what it earned now
   app.innerHTML = '';
   window.scrollTo({ top: 0 });
   if (!S.state.profile.name) return onboarding();

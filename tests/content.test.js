@@ -177,6 +177,24 @@ test('mistake-specific feedback is well-formed', () => {
   assert.ok(withErrors > 3000, 'most numeric templates should anticipate common mistakes');
 });
 
+// A wrong method must not land on the right answer (it would score), and two mistakes
+// must not share a value (only the first message could ever be shown).
+test('common mistakes never give the right answer or collide', () => {
+  // Reading the end value of a graph that starts at 0 is a correct method, not a mistake.
+  const startsAtZeroOk = new Set(['u1.graph-speed', 'u2.slope-read']);
+  const same = (a, b) => Math.abs(a - b) < 1e-9;
+  for (const t of allTemplates()) {
+    for (let seed = 1; seed <= 500; seed++) {
+      const q = instantiate(t.id, seed);
+      const errs = (q.errors || []).filter((e) => !(startsAtZeroOk.has(t.id) && same(e.value, q.answer)));
+      for (const e of errs) assert.ok(!same(e.value, q.answer), `${t.id} seed ${seed}: "${e.msg}" equals the answer ${q.answer}`);
+      for (let i = 0; i < errs.length; i++) {
+        for (let j = i + 1; j < errs.length; j++) assert.ok(!same(errs[i].value, errs[j].value), `${t.id} seed ${seed}: two mistakes share the value ${errs[i].value}`);
+      }
+    }
+  }
+});
+
 test('predictions revealed after an experiment are followed by one', () => {
   for (const unit of playableUnits()) for (const s of unit.sessions) {
     s.steps.forEach((step, i) => {

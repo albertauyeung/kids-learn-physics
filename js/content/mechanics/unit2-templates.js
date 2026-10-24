@@ -258,9 +258,12 @@ registerTemplates([
   {
     id: 'u2.slope-read', concepts: [C.slope, C.vel], tier: 'scientist',
     generate(r) {
-      const v = r.pick([-3, -2, -1, 1, 2, 3]), t = r.pick([2, 3, 4, 5]);
-      const p0 = v < 0 ? -v * t + r.int(0, 4) : r.int(0, 4);
-      const p1 = p0 + v * t;
+      // Keep the two mistakes (wrong sign, end position ÷ time) apart so each gets its own message.
+      const { v, t, p0, p1 } = until(r, (rr) => {
+        const vv = rr.pick([-3, -2, -1, 1, 2, 3]), tt = rr.pick([2, 3, 4, 5]);
+        const start = vv < 0 ? -vv * tt + rr.int(0, 4) : rr.int(0, 4);
+        return { v: vv, t: tt, p0: start, p1: start + vv * tt };
+      }, (x) => x.p1 / x.t !== -x.v);
       return {
         type: 'numeric', signed: true,
         prompt: `This position–time graph shows a minecart. What is its velocity?${SIGN_NOTE}${graphSVG({ points: [[0, p0], [t, p1]], tMax: t, yMax: 20, yStep: 1, labelEvery: 2, yLabel: 'position (m)' })}`,
@@ -277,7 +280,7 @@ registerTemplates([
         const t1 = rr.int(2, 3), x1 = rr.int(3, 6) * 2, t2 = t1 + rr.int(1, 2), t3 = t2 + rr.int(2, 4);
         const vv = rr.pick([-4, -3, -2, -1, 1, 2]);
         return { t1, x1, t2, t3, vv, x3: x1 + vv * (t3 - t2) };
-      }, (x) => x.x3 >= 0 && x.x3 <= 20);
+      }, (x) => x.x3 >= 0 && x.x3 <= 20 && Math.abs(x.x3 / x.t3) !== Math.abs(x.vv)); // whole-graph slope must not match
       return {
         type: 'numeric', signed: true,
         prompt: `What is Pip's velocity between <b>${v.t2} s</b> and <b>${v.t3} s</b>?${SIGN_NOTE}${graphSVG({ points: [[0, 0], [v.t1, v.x1], [v.t2, v.x1], [v.t3, v.x3]], tMax: v.t3, yMax: 20, yStep: 1, labelEvery: 2, yLabel: 'position (m)' })}`,
