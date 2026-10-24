@@ -22,7 +22,8 @@ npm test           # checks every problem template and session (Node 18+)
 Go to **Settings → Pages → Build and deployment**. Choose **Deploy from a branch**, pick the branch and the
 `/ (root)` folder, then save. The site appears at `https://<user>.github.io/kids-learn-physics/`.
 
-Progress is saved in the browser's local storage, so each device or browser keeps its own progress.
+Progress is saved in the browser's local storage, so each device or browser keeps its own progress
+(unless cloud save is turned on, see below).
 To jump to any session, go to **Profile → Settings**, answer the grown-ups' maths question under
 **Parent settings**, then turn on "Unlock all sessions".
 
