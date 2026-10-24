@@ -176,6 +176,7 @@ export function runSession(root, { session, unit, review = [], onFinish, onQuit 
     card.append(h('div', { class: 'predict-tag' }, '🔮 Predict first!'));
     stage.append(card);
     const q = { ...step, type: 'mcq', seed: hashKey(item.key) };
+    if (window.__KLP_TEST) window.__KLP_TEST.q = q;
     const r = renderQuestion(card, q, { setReady: (v) => setMain('Lock in', v, check) });
     setMain('Lock in', false, check);
     function check() {
@@ -220,6 +221,7 @@ export function runSession(root, { session, unit, review = [], onFinish, onQuit 
       idx++;
       return show();
     }
+    if (window.__KLP_TEST) window.__KLP_TEST.q = q; // automated tests read the current question
     const card = h('div', { class: 'card q-card' });
     stage.append(card);
     const r = renderQuestion(card, q, { setReady: (v) => setMain('Check', v, check) });
