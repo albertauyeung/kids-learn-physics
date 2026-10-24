@@ -277,9 +277,9 @@ registerTemplates([
       const D = v.d1 + v.d2, T = v.t1 + v.t2;
       return {
         type: 'numeric',
-        prompt: `Pip walks <b>${v.d1} km at ${v.s1} km/h</b>, then <b>${v.d2} km at ${v.s2} km/h</b>. What is his average speed for the whole walk?`,
+        prompt: `Pip travels <b>${v.d1} km at ${v.s1} km/h</b>, then <b>${v.d2} km at ${v.s2} km/h</b>. What is his average speed for the whole trip?`,
         answer: D / T, unit: 'km/h', unitChoices: KMH_UNITS,
-        hints: ['Which part of the walk took longer?', 'Find the time for each part: time = distance ÷ speed.', 'Then average speed = total distance ÷ total time.'],
+        hints: ['Which part of the trip took longer?', 'Find the time for each part: time = distance ÷ speed.', 'Then average speed = total distance ÷ total time.'],
         errors: [{ value: (v.s1 + v.s2) / 2, msg: 'That\'s the average of the two speeds — the trap! Which part took longer?' }],
         solution: `Times: ${fmt(v.t1)} h + ${fmt(v.t2)} h = ${fmt(T)} h. Average = ${D} ÷ ${fmt(T)} = <b>${fmt(D / T)} km/h</b> (not ${fmt((v.s1 + v.s2) / 2)}!)`,
       };
@@ -412,7 +412,7 @@ registerTemplates([
   {
     id: 'u1.wp-avg-trap', concepts: [C.avg], tier: 'engineer',
     generate(r) {
-      const [s1, s2] = r.pick([[6, 2], [3, 6], [4, 12], [10, 15], [6, 12], [20, 30], [12, 4]]);
+      const [s1, s2] = r.pick([[4, 12], [10, 15], [6, 12], [20, 30], [12, 20], [15, 10]]);
       const d = lcm(s1, s2) * r.int(1, 2);
       const T = d / s1 + d / s2;
       return {
@@ -552,11 +552,11 @@ registerTemplates([
   {
     id: 'u1.spot-bug-avg', concepts: [C.avg], tier: 'scientist',
     generate(r) {
-      const [s1, s2] = r.pick([[6, 2], [3, 6], [4, 12], [10, 15], [6, 12]]);
+      const [s1, s2] = r.pick([[4, 12], [10, 15], [6, 12], [12, 20]]);
       const d = lcm(s1, s2);
       return {
         type: 'mcq',
-        prompt: `Sam says: <i>"Pip walks ${d} km at ${s1} km/h and then ${d} km at ${s2} km/h, so his average speed is (${s1} + ${s2}) ÷ 2 = ${fmt((s1 + s2) / 2)} km/h."</i> What did Sam do wrong?`,
+        prompt: `Sam says: <i>"Pip cycles ${d} km at ${s1} km/h and then ${d} km at ${s2} km/h, so his average speed is (${s1} + ${s2}) ÷ 2 = ${fmt((s1 + s2) / 2)} km/h."</i> What did Sam do wrong?`,
         choices: [
           `He averaged the speeds, but Pip spent longer on the slower part`,
           `He should have added the speeds: ${s1 + s2} km/h`,
@@ -572,16 +572,17 @@ registerTemplates([
     id: 'u1.avg-inverse', concepts: [C.avg], tier: 'engineer',
     generate(r) {
       // s1 is the slow first part; the second part must be s2 to average A over equal distances.
-      const [s1, s2] = r.pick([[2, 6], [3, 6], [4, 12], [10, 15], [6, 12]]);
+      // Cycling speeds (km/h); the average over equal distances is the harmonic mean, a whole number for these pairs.
+      const [s1, s2] = r.pick([[4, 12], [10, 15], [6, 12], [12, 20], [10, 30]]);
       const A = (2 * s1 * s2) / (s1 + s2);
       const d = until(r, (rr) => lcm(s1, s2) * rr.int(1, 3), (x) => x !== s2);
       return {
         type: 'numeric',
         prompt: `Pip cycles <b>${d} km at ${s1} km/h</b>. How fast must he go for the <b>next ${d} km</b> so that his average speed for the whole ${2 * d} km is <b>${fmt(A)} km/h</b>?`,
         answer: s2, unit: 'km/h',
-        hints: ['How long should the whole walk take at the average speed?', 'How much of that time has the first part already used?', 'Speed for the second part = distance ÷ time left.'],
+        hints: ['How long should the whole ride take at the average speed?', 'How much of that time has the first part already used?', 'Speed for the second part = distance ÷ time left.'],
         errors: [{ value: 2 * A - s1, msg: 'That would only work if both parts took the same TIME — but they are the same DISTANCE. Work with the times.' }],
-        solution: `Whole walk: ${2 * d} ÷ ${fmt(A)} = ${fmt((2 * d) / A)} h. First part: ${d} ÷ ${s1} = ${fmt(d / s1)} h. Time left: ${fmt((2 * d) / A - d / s1)} h, so speed = ${d} ÷ ${fmt((2 * d) / A - d / s1)} = <b>${s2} km/h</b>`,
+        solution: `Whole ride: ${2 * d} ÷ ${fmt(A)} = ${fmt((2 * d) / A)} h. First part: ${d} ÷ ${s1} = ${fmt(d / s1)} h. Time left: ${fmt((2 * d) / A - d / s1)} h, so speed = ${d} ÷ ${fmt((2 * d) / A - d / s1)} = <b>${s2} km/h</b>`,
       };
     },
   },

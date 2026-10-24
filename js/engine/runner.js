@@ -14,7 +14,7 @@ const QUESTION_TYPES = new Set(['q', 'numeric', 'mcq', 'equation']);
 const MAX_RETRIES = 2;
 const SKIP_AFTER_MS = () => window.__KLP_SKIP_MS ?? 45000; // overridable for automated tests
 
-export function runSession(root, { session, unit, review = [], onFinish, onQuit }) {
+export function runSession(root, { session, review = [], onFinish, onQuit }) {
   const steps = [...review.map((t) => ({ type: 'q', t, review: true })), ...session.steps];
   const queue = steps.map((step, i) => ({ step, key: `${session.id}#${i - review.length}`, attempt: 0 }));
   let idx = 0;
@@ -136,6 +136,10 @@ export function runSession(root, { session, unit, review = [], onFinish, onQuit 
     let done = !step.goal;
     setMain(step.goal ? 'Complete the challenge' : 'Continue', done, next, step.goal ? 'gray' : 'green');
     destroyWidget = mountWidget(step.widget, box, step.params, {
+      // The experiment behind a prediction has run: reveal the answer now, before the rest of the challenge.
+      tested() {
+        revealPrediction();
+      },
       done() {
         if (done) return;
         done = true;

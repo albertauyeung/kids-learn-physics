@@ -101,6 +101,7 @@ export default function river(el, params = {}, api) {
         show();
         if (mode === 'free') {
           const drift = p.current * T();
+          api.tested?.();
           if (!tasks.length) {
             sfx.correct();
             api.done();

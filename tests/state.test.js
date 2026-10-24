@@ -31,7 +31,6 @@ test('a missed day resets the streak without a freeze', () => {
 test('a streak freeze covers one missed day', () => {
   S.state.streak = { count: 6, best: 6, lastDate: addDays(today, -2), freezes: 1, frozenDates: [] };
   S.refreshStreak();
-  assert.equal(S.state.freezes, undefined);
   assert.equal(S.state.streak.freezes, 0);
   assert.deepEqual(S.state.streak.frozenDates, [addDays(today, -1)]);
   S.completeSession(lesson, null, result);

@@ -264,9 +264,12 @@ function findNext(units) {
   return null;
 }
 
-// Ids from older versions of the content may no longer exist; skip them.
+// Mistakes to practise now: ids from older content are skipped, and so are mistakes already
+// answered right today (they need a right answer on another day to leave the list).
 function uniqueMistakes() {
-  return [...new Set(S.state.mistakes.map((m) => m.templateId))].filter(hasTemplate);
+  const now = todayKey();
+  const due = S.state.mistakes.filter((m) => !(Array.isArray(m.right) && m.right.includes(now)));
+  return [...new Set(due.map((m) => m.templateId))].filter(hasTemplate);
 }
 
 // ---------- session ----------

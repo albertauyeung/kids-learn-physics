@@ -55,6 +55,7 @@ export default function journey(el, params, api) {
         t = T;
         running = false;
         sfx.complete();
+        api.tested?.();
         if (!p.goal) {
           if (!ran) {
             ran = true;

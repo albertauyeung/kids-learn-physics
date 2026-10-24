@@ -42,6 +42,7 @@ export default function travelator(el, params = {}, api) {
     if (tasks.length && taskIdx < tasks.length && tasks[taskIdx].check(ww, wk)) {
       holdTime += dt;
       if (holdTime > 0.8) {
+        api.tested?.();
         sfx.correct();
         taskIdx++;
         if (taskIdx >= tasks.length) {

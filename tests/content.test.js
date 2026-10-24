@@ -37,7 +37,11 @@ test('every template generates valid questions', () => {
 test('every session step is well-formed', () => {
   const ids = new Set();
   for (const unit of playableUnits()) {
-    assert.ok(unit.sessions.length >= 8, `${unit.id} should have 5 lessons + 2 problem sets + boss`);
+    const types = unit.sessions.map((x) => x.type);
+    assert.ok(types.filter((t) => t === 'lesson').length >= 5, `${unit.id} needs at least 5 lessons`);
+    assert.equal(types.filter((t) => t === 'boss').length, 1, `${unit.id} needs one boss`);
+    assert.equal(types[types.length - 1], 'boss', `${unit.id} should end with its boss`);
+    assert.equal(unit.sessions.filter((x) => x.id.endsWith('.review')).length, 1, `${unit.id} needs one Unit Review`);
     for (const s of unit.sessions) {
       assert.ok(!ids.has(s.id), `duplicate session id ${s.id}`);
       ids.add(s.id);
@@ -54,13 +58,23 @@ test('every session step is well-formed', () => {
   assert.equal(course.tracks[0].units.length, 10, 'mechanics track plans 10 units');
 });
 
-test('Pythagoras triples and puzzle answers are right', () => {
-  for (let seed = 1; seed <= 50; seed++) {
-    const q = instantiate('u2.puzzle-fly', seed);
-    assert.ok(q.answer > 0);
+test('Pythagoras and puzzle answers are mathematically right', () => {
+  const nums = (q) => [...q.prompt.replace(/<svg[\s\S]*?<\/svg>/g, (svg) => svg.replace(/<text[^>]*>([^<]*)<\/text>/g, ' $1 ')).matchAll(/(\d+(?:\.\d+)?)\s*m(?:\/s)?\b/g)].map((m) => Number(m[1]));
+  for (let seed = 1; seed <= 300; seed++) {
+    // hypotenuse questions: the two given sides and the answer form a right-angled triangle
+    for (const id of ['u2.pyth-hyp', 'u2.pyth-walk', 'u2.river-speed']) {
+      const q = instantiate(id, seed);
+      const [a, b] = id === 'u2.pyth-walk' ? [...q.prompt.matchAll(/(\d+) blocks/g)].map((m) => Number(m[1])) : nums(q);
+      assert.equal(a * a + b * b, q.answer * q.answer, `${id} seed ${seed}: ${a}, ${b} → ${q.answer}`);
+    }
+    const leg = instantiate('u2.pyth-leg', seed);
+    const [c, b] = nums(leg);
+    assert.equal(leg.answer * leg.answer + b * b, c * c, `pyth-leg seed ${seed}`);
+    // the bee flies for exactly as long as the trains take to meet
+    const fly = instantiate('u2.puzzle-fly', seed);
+    const [D, v, f] = [...fly.prompt.matchAll(/(\d+(?:\.\d+)?) km(?:\/h)?/g)].map((m) => Number(m[1]));
+    assert.ok(Math.abs(fly.answer - (f * D) / (2 * v)) < 1e-9, `puzzle-fly seed ${seed}`);
   }
-  // classic von Neumann numbers: 100 km apart, 50 km/h each, bee 75 km/h → 75 km
-  assert.equal(75 * (100 / (50 + 50)), 75);
 });
 
 // Regression checks from the content review.
@@ -98,8 +112,14 @@ test('average velocity answers are not predictable from the first direction', ()
   assert.ok(sameSign > 300 && sameSign < 700, `sign matches first direction in ${sameSign}/1000`);
 });
 
-test('Pythagoras lesson questions only need squares from the lesson table', () => {
-  for (const id of ['u2.pyth-hyp', 'u2.pyth-walk']) for (const q of many(id, 300)) assert.ok([5, 10, 13].includes(q.answer), `${id}: ${q.answer}`);
+test('Pythagoras questions only need squares from the lesson table', () => {
+  const table = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 20, 24, 25]); // js/content/mechanics/unit2.js
+  for (const id of ['u2.pyth-hyp', 'u2.pyth-walk', 'u2.pyth-leg', 'u2.river-speed']) {
+    for (let seed = 1; seed <= 300; seed++) {
+      const q = instantiate(id, seed);
+      assert.ok(table.has(q.answer), `${id}: √ of ${q.answer * q.answer} is not in the table`);
+    }
+  }
 });
 
 test('every "in a row" quest is reachable within a single session', async () => {
@@ -175,5 +195,16 @@ test('every lesson includes at least one concept question (not just calculations
     const concept = kinds.filter((k) => k !== 'numeric').length + s.steps.filter((x) => x.type === 'equation').length;
     if (s.id === 'mech.u2.lp') continue; // the maths power-up lesson is calculation practice by design
     assert.ok(concept >= 1, `${s.id} has no concept questions`);
+  }
+});
+
+test('River Lab: only the first task (launch as-is) passes with the starting settings', () => {
+  for (const unit of playableUnits()) for (const s of unit.sessions) for (const step of s.steps) {
+    if (step.widget !== 'river' || !step.params.tasks) continue;
+    const p = { width: step.params.width, boat: step.params.boat, current: step.params.current };
+    const drift = (p.current * p.width) / p.boat;
+    const passes = step.params.tasks.map((t) => t.check(p, drift));
+    assert.equal(passes[0], true, `${s.id}: the first task should match the starting settings the intro asks for`);
+    assert.ok(passes.slice(1).every((x) => !x), `${s.id}: later tasks must not be done before the child changes anything`);
   }
 });

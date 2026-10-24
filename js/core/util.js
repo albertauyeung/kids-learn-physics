@@ -166,7 +166,3 @@ export function h(tag, attrs = {}, ...children) {
 export function clamp(v, lo, hi) {
   return Math.max(lo, Math.min(hi, v));
 }
-
-export function frac(num, den) {
-  return `<span class="frac"><span>${num}</span><span>${den}</span></span>`;
-}

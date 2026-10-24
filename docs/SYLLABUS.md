@@ -29,7 +29,7 @@
 
 | Session | Count per unit | Purpose |
 |---|---|---|
-| **Lesson** | 5 | Teach one idea with sims + practice |
+| **Lesson** | 5–6 | Teach one idea with sims + practice |
 | **Problem Set A — Calculation drills** | 1 | Direct use of the unit's equations |
 | **Problem Set B — Word problems** | 1 | Multi-step real-world problems + 1–2 Puzzle Corner problems |
 | **Unit Review** | 1 | 10 questions, one per big idea plus earlier units; 80% first time = unit "Mastered" |
@@ -50,7 +50,7 @@
 
 ### Problem sets (≈ 12–15 min)
 
-- 7–9 questions at three tiers: 🟢 **Explorer** (one step), 🟡 **Scientist** (two steps / rearranging),
+- 7–10 questions at three tiers: 🟢 **Explorer** (one step), 🟡 **Scientist** (two steps / rearranging),
   🔴 **Engineer** (multi-step, quadratics, unit conversions).
 - Each problem is a **parameterised template** → unlimited fresh practice with different numbers.
 - Hints start with a question that makes him think, then name the idea — they never do the arithmetic.
@@ -77,7 +77,7 @@
 | **Strobe & Ruler** | Measures positions from a strobe (頻閃) replay to calculate speed / acceleration |
 | **Spot the Bug** | Finds the mistake in a "broken" sim or a wrong worked solution |
 | **Estimate It** | Fermi-style estimates ("How fast does a cheetah run in km/h?") |
-| **Try at Home** | Offline experiment card (drop two balls, time with a phone) → bonus XP |
+| **Try at Home** | Offline experiment card (e.g. time yourself walking 10 m with a phone) |
 
 ---
 
@@ -89,7 +89,7 @@
 | **Daily goal** | Choose 10 / 20 / 30 / 50 XP per day (about 10 / 15 / 25 / 40 minutes); a bar fills up on the home screen |
 | **Streak 🔥** | ≥ 1 session per day keeps the streak; achievements at 3 / 7 / 30 days |
 | **Streak Freeze** | Bought with emeralds (hold up to 2); each one protects one missed day |
-| **Emeralds** | 2 per session (+2 perfect, +5 boss, +5 daily goal, +5 per Puzzle Corner); spent on freezes, XP potions and skins for Pip |
+| **Emeralds** | 1–2 per session (2 at 50%+ accuracy; +2 perfect, +5 boss, +5 daily goal, +5 per Puzzle Corner); spent on freezes, XP potions and skins for Pip |
 | **Combo bonus** | From 5 correct in a row, each correct answer gives +1 XP; 8 in a row unlocks *On Fire* |
 | **Session badges** | Replaying a session upgrades its badge: iron → gold → diamond (★ for a perfect run) |
 | **Daily quests** | 3 a day, e.g. "Earn 20 XP", "Get 5 answers right in a row", "Solve 3 calculations without hints" |

@@ -203,10 +203,11 @@ export default {
         },
         {
           type: 'sim', widget: 'river', goal: true, title: 'River Lab',
-          html: 'Launch once with these settings and note the time. Then follow the tasks — the first one tests your prediction!',
+          html: 'Launch once with these settings and note the crossing time. Then follow the tasks — the next one tests your prediction!',
           params: {
             mode: 'free', width: 20, boat: 4, current: 3,
             tasks: [
+              { text: 'Launch with these settings and note the crossing time.', check: (p) => p.width === 20 && p.boat === 4 && p.current === 3 },
               { text: 'Keep the river 20 m wide and the boat at 4 m/s, but <b>double the current to 6 m/s</b>. Did the crossing time change?', check: (p) => p.current === 6 && p.width === 20 && p.boat === 4 },
               { text: 'Make the crossing take exactly <b>4 s</b>.', check: (p) => p.width / p.boat === 4 },
               { text: 'Make the boat drift exactly <b>12 m</b> downstream.', check: (p, drift) => Math.abs(drift - 12) < 1e-9 },

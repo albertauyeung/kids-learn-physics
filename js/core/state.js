@@ -112,7 +112,7 @@ export function update(fn) {
 // ---------- Daily counters ----------
 export function today() {
   const d = dateStr();
-  if (!state.daily[d]) {
+  if (!state.daily[d] || typeof state.daily[d] !== 'object') {
     state.daily[d] = {
       xp: 0, correct: 0, answered: 0, bestCombo: 0, perfect: 0,
       sessions: 0, problemSets: 0, noHintCalc: 0, goalBonus: false, claimed: {},

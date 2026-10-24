@@ -26,7 +26,11 @@ registerTemplates([
     generate(r) {
       // The longer leg may come first or second, and either direction may come first,
       // so the sign of the answer can't be guessed from the wording.
-      const t = r.int(2, 5), net = t * r.int(1, 3), short = r.int(1, 6);
+      // Walking speed: the whole walk at no more than 3 m/s.
+      const { t, net, short } = until(r, (rr) => {
+        const tt = rr.int(2, 5);
+        return { t: tt, net: tt * rr.int(1, 2), short: rr.int(1, 6) };
+      }, (x) => (x.net + 2 * x.short) / x.t <= 3);
       const [a, b] = r.chance(0.5) ? [net + short, short] : [short, net + short];
       const s1 = r.chance(0.5) ? 1 : -1; // +1: first leg goes right
       const [d1, d2] = s1 > 0 ? ['right', 'left'] : ['left', 'right'];
