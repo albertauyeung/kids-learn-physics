@@ -9,12 +9,13 @@ import { spriteImg } from '../core/sprites.js';
 import { renderQuestion } from './questions.js';
 import { instantiate } from './templates.js';
 import { mountWidget } from '../widgets/index.js';
+import { notesPanel } from './notes.js';
 
 const QUESTION_TYPES = new Set(['q', 'numeric', 'mcq', 'equation']);
 const MAX_RETRIES = 2;
 const SKIP_AFTER_MS = () => window.__KLP_SKIP_MS ?? 45000; // overridable for automated tests
 
-export function runSession(root, { session, review = [], onFinish, onQuit }) {
+export function runSession(root, { session, review = [], notes = [], onFinish, onQuit }) {
   const steps = [...review.map((t) => ({ type: 'q', t, review: true })), ...session.steps];
   const queue = steps.map((step, i) => ({ step, key: `${session.id}#${i - review.length}`, attempt: 0 }));
   let idx = 0;
@@ -32,14 +33,27 @@ export function runSession(root, { session, review = [], onFinish, onQuit }) {
   const bar = h('div', { class: 'xpbar' }, h('div', { class: 'xpbar-fill' }));
   const comboEl = h('div', { class: 'combo' });
   const closeBtn = h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Quit', onClick: confirmQuit }, '✕');
-  const top = h('div', { class: 'runner-top' }, h('div', { class: 'bar-inner' }, closeBtn, bar, comboEl));
+  // 📖 Cheat sheet beside the session. Remembered open/closed on wide screens, where it fits beside the work.
+  const NOTES_KEY = 'klp.notesOpen';
+  const wide = () => window.matchMedia('(min-width: 900px)').matches;
+  const notesBtn = h('button', { class: 'mc-btn small notes-btn', type: 'button', 'aria-expanded': 'false', onClick: () => sheet.toggle() }, '📖 Notes');
+  const sheet = notesPanel(notes, session.id, {
+    onToggle: (open) => {
+      wrap.classList.toggle('notes-open', open);
+      notesBtn.setAttribute('aria-expanded', String(open));
+      notesBtn.classList.toggle('on', open);
+      try { if (wide()) localStorage.setItem(NOTES_KEY, open ? '1' : ''); } catch { /* storage blocked */ }
+    },
+  });
+  const top = h('div', { class: 'runner-top' }, h('div', { class: 'bar-inner' }, closeBtn, bar, comboEl, notes.length ? notesBtn : ''));
   const stage = h('div', { class: 'runner-stage' });
   const feedback = h('div', { class: 'feedback', 'aria-live': 'polite' });
   const mainBtn = h('button', { class: 'mc-btn big green', type: 'button' }, 'Check');
   const skipBtn = h('button', { class: 'link-btn', type: 'button', hidden: true }, 'Skip this challenge');
   const foot = h('div', { class: 'runner-foot' }, feedback, h('div', { class: 'foot-row' }, skipBtn, mainBtn));
-  const wrap = h('div', { class: `runner type-${session.type}` }, top, stage, foot);
+  const wrap = h('div', { class: `runner type-${session.type}` }, top, stage, foot, notes.length ? sheet.el : '');
   root.append(wrap);
+  try { if (notes.length && wide() && localStorage.getItem(NOTES_KEY)) sheet.toggle(true); } catch { /* storage blocked */ }
 
   let onMain = () => {};
   let switchedAt = 0;

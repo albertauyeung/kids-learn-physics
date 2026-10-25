@@ -316,7 +316,7 @@ function sessionScreen(id) {
   }
   const review = session.type === 'lesson' && id !== 'practice' ? warmupReview(units, session) : [];
   const destroy = runSession(app, {
-    session, unit, review,
+    session, unit, review, notes: cheatSheet(units, unit, session),
     onQuit: () => { announceUnlocks(); go('#/learn'); },
     onFinish: (result) => {
       // Results replace the session in history, so reloading doesn't restart it.
@@ -327,6 +327,18 @@ function sessionScreen(id) {
     },
   });
   teardown = destroy;
+}
+
+// 📖 Notes for a session: this unit's lessons up to this one (the whole unit for problem sets
+// and bosses), plus earlier units folded away.
+function cheatSheet(units, unit, session) {
+  const practice = !unit; // mistake review: every lesson finished so far
+  const uIdx = practice ? units.length - 1 : units.indexOf(unit);
+  return units.slice(0, uIdx + 1).map((u, i) => {
+    const lessons = u.sessions.filter((s) => s.type === 'lesson' && s.notes && (!practice || S.sessionRecord(s.id)?.completions));
+    const upTo = i === uIdx && session.type === 'lesson' && lessons.includes(session) ? lessons.indexOf(session) + 1 : lessons.length;
+    return { title: u.title, open: i === uIdx, lessons: lessons.slice(0, upTo) };
+  }).filter((s) => s.lessons.length).reverse();
 }
 
 // Up to 2 warm-up questions: mistakes first, then random earlier templates.

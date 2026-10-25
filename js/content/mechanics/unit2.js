@@ -14,6 +14,15 @@ export default {
     // ------------------------------------------------------------------
     {
       id: 'mech.u2.l1', type: 'lesson', title: 'Speed vs Velocity', icon: 'grass',
+      // Cheat-sheet (📖 Notes in a session): the key equations and reminders of this lesson.
+      notes: {
+        eq: ['velocity = speed + direction', 'average velocity = displacement ÷ time'],
+        tips: [
+          '+3 m/s = 3 m/s right; −3 m/s = 3 m/s left. Same speed, different velocity.',
+          'A minus sign means "left", not "slowing down".',
+          'Example: 12 m right, 4 m left in 4 s → speed 16 ÷ 4 = 4 m/s, velocity (+12 − 4) ÷ 4 = +2 m/s.',
+        ],
+      },
       steps: [
         {
           type: 'predict', prompt: 'Two minecarts both have a speed of 4 m/s. Do they have the same velocity?',
@@ -55,6 +64,14 @@ export default {
     // ------------------------------------------------------------------
     {
       id: 'mech.u2.l2', type: 'lesson', title: 'Adding Velocities', icon: 'grass',
+      // Cheat-sheet (📖 Notes in a session): the key equations and reminders of this lesson.
+      notes: {
+        eq: ['ground velocity = walkway velocity + walking velocity'],
+        tips: [
+          'Velocities are arrows (vectors): put them tip-to-tail.',
+          'Keep the signs! Walkway +1, walking −3 → (+1) + (−3) = −2 m/s.',
+        ],
+      },
       steps: [
         {
           type: 'predict', prompt: 'Pip walks at 1.5 m/s on a moving walkway that goes 1 m/s in the same direction. How fast is he going compared with the ground?',
@@ -91,6 +108,13 @@ export default {
     // ------------------------------------------------------------------
     {
       id: 'mech.u2.l3', type: 'lesson', title: 'Relative Motion', icon: 'grass',
+      // Cheat-sheet (📖 Notes in a session): the key equations and reminders of this lesson.
+      notes: {
+        eq: ['towards each other: closing speed = speed A + speed B', 'chasing: closing speed = faster − slower', 'time to meet = gap ÷ closing speed'],
+        tips: [
+          'Motion depends on who is watching: it is always relative to something.',
+        ],
+      },
       steps: [
         {
           type: 'predict', prompt: 'You sit in a minecart rolling at 6 m/s. Your friend runs beside you at 6 m/s, the same way. How fast does your friend seem to move, to you?',
@@ -130,6 +154,15 @@ export default {
     // ------------------------------------------------------------------
     {
       id: 'mech.u2.lp', type: 'lesson', title: 'Pythagoras & Square Roots', icon: 'grass',
+      // Cheat-sheet (📖 Notes in a session): the key equations and reminders of this lesson.
+      notes: {
+        eq: ['a² + b² = c² &nbsp;(c = long side)', 'long side: c = √(a² + b²)', 'short side: a = √(c² − b²)'],
+        tips: [
+          'Subtract the <b>squares</b>, not the sides: 13 − 5 = 8 is wrong; √(169 − 25) = 12 ✔',
+          'Famous triangle: 3, 4, 5.',
+          'Squares: 6² = 36, 7² = 49, 8² = 64, 9² = 81, 10² = 100, 11² = 121, 12² = 144, 13² = 169, 15² = 225, 20² = 400, 25² = 625.',
+        ],
+      },
       steps: [
         {
           type: 'info', title: 'Square roots',
@@ -188,6 +221,14 @@ export default {
     // ------------------------------------------------------------------
     {
       id: 'mech.u2.l4', type: 'lesson', title: 'Crossing the River', icon: 'grass',
+      // Cheat-sheet (📖 Notes in a session): the key equations and reminders of this lesson.
+      notes: {
+        eq: ['time to cross = width ÷ boat speed', 'drift = current speed × time', 'actual speed = √(boat² + current²)'],
+        tips: [
+          'The current does <b>not</b> change the crossing time — it only pushes you sideways.',
+          'Example: 4 m/s across, 3 m/s current → actual speed √(16 + 9) = 5 m/s.',
+        ],
+      },
       steps: [
         {
           type: 'info', title: 'Why Pythagoras works for velocity',
@@ -232,6 +273,16 @@ export default {
     // ------------------------------------------------------------------
     {
       id: 'mech.u2.l5', type: 'lesson', title: 'Slope = Velocity', icon: 'grass',
+      // Cheat-sheet (📖 Notes in a session): the key equations and reminders of this lesson.
+      notes: {
+        eq: ['velocity = slope = change in position ÷ change in time'],
+        tips: [
+          'Uphill → + velocity (moving right).',
+          'Flat → 0 (stopped).',
+          'Downhill → − velocity (moving left).',
+          'Where two lines cross, they are at the same place — not the same speed.',
+        ],
+      },
       steps: [
         {
           type: 'predict', grid: true, prompt: 'This graph shows <b>position</b>, which can go up or down. Which one shows Pip walking <b>back towards the start</b> (moving left)?',

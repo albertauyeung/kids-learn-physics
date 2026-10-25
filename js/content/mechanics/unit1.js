@@ -14,6 +14,15 @@ export default {
     // ------------------------------------------------------------------
     {
       id: 'mech.u1.l1', type: 'lesson', title: 'Measuring the World', icon: 'grass',
+      // Cheat-sheet (📖 Notes in a session): the key equations and reminders of this lesson.
+      notes: {
+        eq: ['1 km = 1000 m', '1 m = 100 cm = 1000 mm', '1 cm = 10 mm', '1 min = 60 s &nbsp; 1 h = 3600 s', '1 s = 1000 ms'],
+        tips: [
+          'To a <b>smaller</b> unit → <b>multiply</b>. To a <b>bigger</b> unit → <b>divide</b>.',
+          'SI units: metre (m), second (s), kilogram (kg).',
+          'In our blocky world, 1 block = 1 m.',
+        ],
+      },
       steps: [
         {
           type: 'info', title: 'Welcome, explorer!',
@@ -66,6 +75,15 @@ export default {
     // ------------------------------------------------------------------
     {
       id: 'mech.u1.l2', type: 'lesson', title: 'Distance vs Displacement', icon: 'grass',
+      // Cheat-sheet (📖 Notes in a session): the key equations and reminders of this lesson.
+      notes: {
+        eq: ['distance = total ground covered', 'displacement = start → finish (with + or −)'],
+        tips: [
+          '+ means right, − means left.',
+          'Example: 3 m right, then 5 m left → distance 8 m, displacement −2 m.',
+          'Displacement is never longer than distance.',
+        ],
+      },
       steps: [
         {
           type: 'info', title: 'Two ways to say "how far"',
@@ -101,6 +119,14 @@ export default {
     // ------------------------------------------------------------------
     {
       id: 'mech.u1.l3', type: 'lesson', title: 'Speed', icon: 'grass',
+      // Cheat-sheet (📖 Notes in a session): the key equations and reminders of this lesson.
+      notes: {
+        eq: ['speed = distance ÷ time', 'distance = speed × time', 'time = distance ÷ speed'],
+        tips: [
+          'Units: m/s (metres per second) or km/h.',
+          'Check: 42 m at 6 m/s → 7 s, and 7 × 6 = 42 ✔',
+        ],
+      },
       steps: [
         {
           type: 'predict', prompt: 'Race time! The <b>minecart</b> (8 metres per second, written 8 m/s) races <b>40 m</b>. Pip sprints (5 m/s) but only needs to run <b>20 m</b>. Who finishes first?',
@@ -160,6 +186,14 @@ export default {
     // ------------------------------------------------------------------
     {
       id: 'mech.u1.l4', type: 'lesson', title: 'Average Speed', icon: 'grass',
+      // Cheat-sheet (📖 Notes in a session): the key equations and reminders of this lesson.
+      notes: {
+        eq: ['average speed = total distance ÷ total time', 'm/s = km/h ÷ 3.6', 'km/h = m/s × 3.6'],
+        tips: [
+          'Don\'t just average the two speeds! The slower part usually lasts longer, so it counts more.',
+          'Only equal <b>times</b> at each speed give the halfway answer.',
+        ],
+      },
       steps: [
         {
           type: 'info', title: 'Real journeys change speed',
@@ -200,6 +234,16 @@ export default {
     // ------------------------------------------------------------------
     {
       id: 'mech.u1.l5', type: 'lesson', title: 'Distance–Time Graphs', icon: 'grass',
+      // Cheat-sheet (📖 Notes in a session): the key equations and reminders of this lesson.
+      notes: {
+        eq: ['speed = change in distance ÷ change in time'],
+        tips: [
+          'Steeper line → faster.',
+          'Flat line → standing still.',
+          'Straight line → steady speed.',
+          'It\'s not a picture of the path: uphill on the graph ≠ walking uphill.',
+        ],
+      },
       steps: [
         {
           type: 'info', title: 'Pictures of motion',

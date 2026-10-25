@@ -226,3 +226,12 @@ test('River Lab: only the first task (launch as-is) passes with the starting set
     assert.ok(passes.slice(1).every((x) => !x), `${s.id}: later tasks must not be done before the child changes anything`);
   }
 });
+
+test('every lesson has cheat-sheet notes (📖 Notes)', () => {
+  for (const u of playableUnits()) {
+    for (const s of u.sessions.filter((x) => x.type === 'lesson')) {
+      assert.ok(s.notes && Array.isArray(s.notes.eq) && s.notes.eq.length, `${s.id}: missing notes.eq`);
+      for (const t of [...s.notes.eq, ...(s.notes.tips || [])]) assert.ok(typeof t === 'string' && t.length > 3 && !/undefined|NaN/.test(t), `${s.id}: bad note "${t}"`);
+    }
+  }
+});
