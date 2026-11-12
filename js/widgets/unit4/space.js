@@ -28,7 +28,7 @@ export default function space(el, params = {}, api) {
   let v, x, started, blasting, blasts, coast, trail, trailT, msg;
 
   function reset() {
-    v = v0; x = 4; started = false; blasting = null; blasts = 0; coast = 0; trail = []; trailT = 0; msg = '';
+    v = v0; x = 4; started = false; blasting = null; queue = []; blasts = 0; coast = 0; trail = []; trailT = 0; msg = '';
     show();
   }
   function start() {
@@ -37,17 +37,27 @@ export default function space(el, params = {}, api) {
     sfx.click();
     show();
   }
+  // Taps during a blast are queued (iPad users tap quickly: 3 taps = 3 blasts).
+  let queue = [];
   function blast(dir) {
-    if (blasting) return;
+    if (blasting) {
+      queue.push(dir);
+      blasts++;
+      show();
+      return;
+    }
     if (!started) start();
-    blasting = { dir, t: 0, from: v };
+    fire(dir);
     blasts++;
-    coast = 0;
-    sfx.boom();
     if (tasks.idx === 0 && !tasks.finished && (params.tasks || [])[0]?.tested) {
       msg = 'For this test, keep the jetpack OFF! Press Reset, then Start and just watch.';
     }
     show();
+  }
+  function fire(dir) {
+    blasting = { dir, t: 0, from: v };
+    coast = 0;
+    sfx.boom();
   }
 
   function show() {
@@ -56,7 +66,7 @@ export default function space(el, params = {}, api) {
       ['Force on Pip', force],
       ['Velocity (+ right, − left)', `${fmtSigned(Math.round(v * 10) / 10)} m/s`, 'winner'],
       ['Floating with no force for', `${fmt(coast, 1)} s`],
-      ['Blasts used', String(blasts)],
+      ['Blasts used', `${blasts}${queue.length ? ` (${queue.length} waiting)` : ''}`],
     ]);
     if (msg) banner.set(msg);
     else if (!started) banner.set(tasks.finished ? 'Press Start and play!' : `${tasks.text()}`);
@@ -72,6 +82,7 @@ export default function space(el, params = {}, api) {
         if (blasting.t >= 1) {
           v = blasting.from + blasting.dir; // exactly 1 m/s per blast
           blasting = null;
+          if (queue.length) fire(queue.shift());
         } else v = blasting.from + blasting.dir * blasting.t;
       } else coast += dt;
       x = (((x + v * dt) % WORLD) + WORLD) % WORLD;

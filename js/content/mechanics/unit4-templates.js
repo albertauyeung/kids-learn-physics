@@ -20,15 +20,18 @@ const dirWord = (x) => (x > 0 ? 'right' : 'left');
 // ---------- Free-body diagram (SVG string) ----------
 // right/left: arrays of { value, label }; up/down: { value, label } or null.
 // ONE scale for every arrow, so a longer arrow always means a bigger force (as taught in Lesson 1).
-export function fbdSVG({ right = [], left = [], up = null, down = null }, { small = false } = {}) {
+// scaleMax: the force drawn at full length — pass the same value to every diagram of one question so they compare fairly.
+export function fbdSVG({ right = [], left = [], up = null, down = null }, { small = false, scaleMax } = {}) {
   const box = small ? 34 : 54;
   const maxLen = small ? 44 : 96, minLen = small ? 8 : 10;
   const fs = small ? 15 : 15;
-  const lab = small ? 30 : 100; // room for a label beyond an arrow tip
+  const all = [...right, ...left, up, down].filter(Boolean).map((f) => f.value);
+  // room for a label beyond an arrow tip (small diagrams: just the number, so measure the longest one)
+  const digits = Math.max(1, ...[...right, ...left].map((f) => fmt(f.value).length));
+  const lab = small ? 8 + digits * fs * 0.62 : 100;
   const w = 2 * (box / 2 + maxLen + lab), h = 2 * (box / 2 + maxLen + (small ? 6 : 10));
   const cx = w / 2, cy = h / 2;
-  const all = [...right, ...left, up, down].filter(Boolean).map((f) => f.value);
-  const k = maxLen / Math.max(1, ...all);
+  const k = maxLen / Math.max(1, scaleMax ?? 0, ...all);
   const len = (v) => Math.max(minLen, v * k);
   const arrow = (x1, y1, x2, y2, col) => {
     const ang = Math.atan2(y2 - y1, x2 - x1), hd = Math.min(small ? 8 : 11, Math.abs(x2 - x1) + Math.abs(y2 - y1));
@@ -200,12 +203,14 @@ registerTemplates(typeable([
     generate(r) {
       const a = r.int(3, 8) * 10, b = r.int(3, 8) * 10;
       const other = (x) => r.pick([x - 20, x + 20, x + 30, x - 10].filter((y) => y > 0));
-      const choices = [
-        fbdSVG({ right: [{ value: a }], left: [{ value: a }], up: { value: b }, down: { value: b } }, { small: true }),
-        fbdSVG({ right: [{ value: a }], left: [{ value: other(a) }], up: { value: b }, down: { value: b } }, { small: true }),
-        fbdSVG({ right: [{ value: a }], left: [{ value: a }], up: { value: other(b) }, down: { value: b } }, { small: true }),
-        fbdSVG({ right: [{ value: a + 10 }], left: [], up: { value: b }, down: { value: b } }, { small: true }),
+      const sets = [
+        [{ right: [{ value: a }], left: [{ value: a }], up: { value: b }, down: { value: b } }],
+        [{ right: [{ value: a }], left: [{ value: other(a) }], up: { value: b }, down: { value: b } }],
+        [{ right: [{ value: a }], left: [{ value: a }], up: { value: other(b) }, down: { value: b } }],
+        [{ right: [{ value: a + 10 }], left: [], up: { value: b }, down: { value: b } }],
       ];
+      const scaleMax = Math.max(...sets.flatMap(([f]) => [...f.right, ...f.left, f.up, f.down].filter(Boolean).map((x) => x.value)));
+      const choices = sets.map(([f]) => fbdSVG(f, { small: true, scaleMax }));
       return {
         type: 'mcq', grid: true,
         prompt: 'Which crate has <b>balanced</b> forces (resultant force = 0)? All forces are in newtons.',

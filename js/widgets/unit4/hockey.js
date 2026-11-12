@@ -46,22 +46,39 @@ export default function hockey(el, params = {}, api) {
   let tries = 0, solved = false, note = '', busy = false;
   const solutionText = (r) => `a = ${fmt(r.f)} ÷ ${fmt(r.m)} = ${fmt(r.a)} m/s²; speed² = 2 × ${fmt(r.a)} × ${fmt(r.d)} = ${r.v * r.v}, so speed = ${r.v} m/s${r.kind === 'hit' ? `; push = ${fmt(r.m)} × ${r.v} ÷ ${HIT_T} = ${fmt(r.push)} N` : ''}.`;
   function newRound() {
-    R = hockeyRound(rng, kinds[Math.min(roundNo, kinds.length - 1)]);
+    const prev = R;
+    // a fresh shot must really be new: different numbers from the one before
+    for (let i = 0; i < 50; i++) {
+      R = hockeyRound(rng, kinds[Math.min(roundNo, kinds.length - 1)]);
+      if (R.d !== prev.d || R.a !== prev.a || R.v !== prev.v) break;
+    }
     tries = 0;
     solved = false;
     buildControls();
     reset();
   }
 
+  let sl = null;
+  // The slider is locked while a shot slides and during the pause after a goal,
+  // so moving it can't cancel a shot (which would give free feedback without using a try).
+  const onSlide = (val) => {
+    if (running || busy) return;
+    choice = val;
+    reset();
+  };
+  const lock = (on) => {
+    if (sl) sl.disabled = on;
+  };
   function buildControls() {
     box.innerHTML = '';
     if (R.kind === 'speed') {
       choice = 3;
-      box.append(slider({ label: 'Launch speed', min: 1, max: 12, step: 1, value: choice, unit: 'm/s', onInput: (val) => { choice = val; reset(); } }).el);
+      sl = slider({ label: 'Launch speed', min: 1, max: 12, step: 1, value: choice, unit: 'm/s', onInput: onSlide });
     } else {
       choice = R.pushStep * 3;
-      box.append(slider({ label: 'Stick push (for 0.1 s)', min: R.pushStep, max: 60, step: R.pushStep, value: choice, unit: 'N', onInput: (val) => { choice = val; reset(); } }).el);
+      sl = slider({ label: 'Stick push (for 0.1 s)', min: R.pushStep, max: 60, step: R.pushStep, value: choice, unit: 'N', onInput: onSlide });
     }
+    box.append(sl.el);
   }
   const launchSpeed = () => (R.kind === 'speed' ? choice : (choice / R.m) * HIT_T);
 
@@ -75,6 +92,7 @@ export default function hockey(el, params = {}, api) {
     reset();
     v = launchSpeed();
     running = true;
+    lock(true);
     swing = 0.3;
     sfx.click();
   }
@@ -116,8 +134,8 @@ export default function hockey(el, params = {}, api) {
           solved = true;
           show();
           sfx.correct();
-          roundNo++;
-          if (roundNo >= total) {
+          if (roundNo + 1 >= total) {
+            roundNo++;
             finished = true;
             banner.set('GOAL x3! You used friction like a pro. Ice Hockey Champion! 🏆', true);
             api.done();
@@ -127,7 +145,9 @@ export default function hockey(el, params = {}, api) {
             setTimeout(() => {
               if (!alive) return;
               busy = false;
+              roundNo++; // the counter moves on only when the next shot appears
               newRound();
+              lock(false);
             }, 2500);
           }
         } else {
@@ -136,9 +156,11 @@ export default function hockey(el, params = {}, api) {
           const dir = x >= RINK ? 'Way too hard — it hit the boards!' : x > R.d ? 'Too far!' : 'Too short!';
           if (tries >= TRIES) {
             // three misses: show how to solve it, then a fresh shot (the shot counter doesn't move on)
-            note = `<b>Out of tries.</b> The answer was: ${solutionText(R)} Here's a new one. `;
+            note = `${dir} <b>Out of tries.</b> The answer was: ${solutionText(R)} Here's a new one. `;
             newRound();
+            lock(false);
           } else {
+            lock(false);
             show();
             banner.set(`${dir} ${TRIES - tries} ${TRIES - tries === 1 ? 'try' : 'tries'} left. Work out a = friction ÷ mass, then (launch speed)² = 2 × a × distance.${R.kind === 'hit' ? ' Then push = mass × speed ÷ 0.1.' : ''}`);
           }
@@ -173,7 +195,7 @@ export default function hockey(el, params = {}, api) {
       tag(ctx, `${mk}`, xOf(mk), H - 6, { size: 10 });
     }
     // Pip and his stick
-    const pipX = xOf(0) - 4;
+    const pipX = xOf(0) - 14;
     drawSprite(ctx, 'hero', pipX, ICE + 22, 2.5, { flip: false });
     ctx.save();
     ctx.strokeStyle = '#7a5230';
@@ -185,13 +207,13 @@ export default function hockey(el, params = {}, api) {
     ctx.stroke();
     ctx.restore();
     // puck
-    const px = xOf(x) + 8;
+    const px = xOf(x); // drawSprite centres the puck on its real position
     drawSprite(ctx, 'u4puck', px, ICE + 20, 2);
     if (running) {
       arrow(ctx, px, ICE + 30, px - 26, ICE + 30, '#ff5050', 4);
       tag(ctx, `friction ${fmt(R.f)} N`, px - 13, ICE + 46, { size: 9, color: '#ffb0b0' });
     }
-    if (R.kind === 'speed' || solved) tag(ctx, `${fmt(v, 1)} m/s`, px, ICE - 6, { size: 11, color: '#fcee4b' });
+    if (R.kind === 'speed' || solved) tag(ctx, `${fmt(v, 1)} m/s`, Math.max(px, xOf(0) + 40), ICE - 6, { size: 11, color: '#fcee4b' }); // kept clear of Pip's face
     tag(ctx, `Shot ${Math.min(roundNo + 1, total)}/${total}`, W - 50, 20, { size: 11 });
   });
 
