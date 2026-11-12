@@ -93,6 +93,8 @@ small { font-size: 14px; }
 .card h3 { font-size: 18px; margin-top: 12px; color: var(--ink-soft); }
 
 /* ---------- Buttons ---------- */
+/* The hidden attribute always hides, even on elements whose class sets a display (e.g. .mc-btn). */
+[hidden] { display: none !important; }
 /* No iPad double-tap zoom when a child taps buttons quickly. */
 button { touch-action: manipulation; }
 .mc-btn {
