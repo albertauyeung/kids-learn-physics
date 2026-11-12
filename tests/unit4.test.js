@@ -3,6 +3,7 @@
 // that have exactly one right slider setting.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import '../js/content/course.js';
 import unit4 from '../js/content/mechanics/unit4.js';
 import { allTemplates, instantiate } from '../js/engine/templates.js';
 import { makeRng } from '../js/core/util.js';
@@ -38,7 +39,8 @@ const CHECK = {
   'u4.fric-stuck': (q, n) => n[1],
   'u4.fric-stop-time': (q, n) => n[1] / (n[2] / n[0]),
   'u4.n3-force': (q, n) => n[2],
-  'u4.n3-skaters': (q, n) => n[2] / (/<b>Alex's<\/b>/.test(q.prompt) ? n[0] : n[1]),
+  'u4.n3-skaters': (q, n) => n[2] / (/<b>Pip's<\/b>/.test(q.prompt) ? n[0] : n[1]),
+  'u4.n1-steady-two': (q, n) => (/How big is it\?/.test(q.prompt) ? n[1] - n[2] : n[1] + n[2]),
   'u4.n3-speed-ratio': (q, n) => (n[0] * n[3]) / n[1],
   'u4.wp-car': (q, n) => (n[1] - n[2]) / n[0],
   'u4.wp-rocket': (q, n) => (n[1] - n[2]) / n[0],
@@ -54,7 +56,7 @@ const CHECK = {
 
 // Realistic answer ranges (by template).
 const RANGE = {
-  'u4.fma-a': [0.5, 5], 'u4.fma-resultant': [0.5, 3], 'u4.fma-loaded': [1, 3], 'u4.fma-ratio': [0.5, 12],
+  'u4.fma-a': [0.5, 5], 'u4.fma-resultant': [0.5, 3], 'u4.fma-loaded': [0.5, 2], 'u4.fma-ratio': [0.5, 12],
   'u4.fric-accel': [0.5, 3], 'u4.fric-decel': [0.5, 2.5], 'u4.fric-push': [1, 250], 'u4.fric-stop-time': [0.5, 16],
   'u4.n3-skaters': [0.3, 6], 'u4.n3-speed-ratio': [0.5, 6], 'u4.wp-car': [1, 3], 'u4.wp-rocket': [10, 30],
   'u4.wp-sled-dogs': [0.5, 2], 'u4.wp-stop-dist': [1, 60], 'u4.hockey-speed': [4, 10], 'u4.missing-force': [60, 250],
@@ -141,7 +143,7 @@ const SPACES = {
   },
   'u4-push-apart': (p) => {
     const call = (mA, mB, F) => [{ mA, mB, F, vA: F / mA, vB: F / mB }];
-    return { start: call(p.mA, p.mB, p.F), all: range(20, 90, 10).flatMap((a) => range(20, 90, 10).flatMap((b) => range(20, 300, 20).map((F) => call(a, b, F)))) };
+    return { start: call(p.mA, p.mB, p.F), all: range(30, 45, 5).flatMap((a) => range(60, 90, 10).flatMap((b) => range(20, 300, 20).map((F) => call(a, b, F)))) };
   },
 };
 
@@ -179,6 +181,7 @@ test('hockey boss: whole-number targets, exactly one slider setting lands in the
     for (const kind of ['speed', 'hit']) {
       const R = hockeyRound(rng, kind);
       assert.ok(Number.isInteger(R.d) && R.d >= 8 && R.d <= 55, `distance ${R.d}`);
+      assert.ok(R.m === 0.2 && R.a >= 0.5 && R.a <= 1, 'realistic puck: 0.2 kg, deceleration 0.5–1 m/s² on ice');
       assert.ok(Math.abs(R.f / R.m - R.a) < 1e-9, 'a = f ÷ m');
       assert.ok(Math.abs(R.v * R.v - 2 * R.a * R.d) < 1e-9, 'v² = 2ad');
       const stopAt = (v) => (v * v) / (2 * R.a);
@@ -188,6 +191,44 @@ test('hockey boss: whole-number targets, exactly one slider setting lands in the
       assert.equal(hits.length, 1, `${kind} round ${JSON.stringify(R)}: ${hits}`);
       assert.equal(speed(hits[0]), R.v);
       if (kind === 'hit') assert.equal(hits[0], R.push);
+    }
+  }
+});
+
+test('every error value can be typed (at most 2 decimal places)', () => {
+  for (const t of u4()) for (let seed = 1; seed <= SEEDS; seed++) {
+    for (const e of instantiate(t.id, seed).errors || []) assert.ok(Math.abs(e.value * 100 - Math.round(e.value * 100)) < 1e-6, `${t.id} seed ${seed}: ${e.value}`);
+  }
+});
+
+test('no mcq template twice in one session', () => {
+  for (const s of unit4.sessions) {
+    const mcqs = s.steps.filter((x) => x.type === 'q' && instantiate(x.t, 1).type === 'mcq').map((x) => x.t);
+    assert.equal(new Set(mcqs).size, mcqs.length, `${s.id}: ${mcqs}`);
+  }
+});
+
+test('Pip is a child (30–45 kg) wherever his mass is given', () => {
+  for (const t of u4()) for (let seed = 1; seed <= 300; seed++) {
+    const q = instantiate(t.id, seed);
+    for (const m of stripSvg(q.prompt).matchAll(/Pip \(<b>(\d+) kg<\/b>\)|Pip is <b>(\d+) kg<\/b>/g)) {
+      const kg = Number(m[1] || m[2]);
+      assert.ok(kg >= 30 && kg <= 45, `${t.id}: Pip ${kg} kg`);
+    }
+  }
+});
+
+test('free-body diagrams: one scale, so a bigger force always has a longer arrow', () => {
+  for (const id of ['u4.fbd-resultant', 'u4.fbd-balanced-mcq']) for (let seed = 1; seed <= 300; seed++) {
+    const q = instantiate(id, seed);
+    for (const svg of [q.prompt, ...(q.choices || [])].flatMap((x) => x.match(/<svg[\s\S]*?<\/svg>/g) || [])) {
+      const lines = [...svg.matchAll(/<line x1="([\d.]+)" y1="([\d.]+)" x2="([\d.]+)" y2="([\d.]+)" stroke="(#[0-9a-f]+)" stroke-width="[45]"\/>/g)]
+        .map((m) => Math.hypot(m[3] - m[1], m[4] - m[2]));
+      const vals = [...svg.matchAll(/font-weight="700">(?:[A-Za-z ]+ )?(\d+)(?: N)?</g)].map((m) => Number(m[1]));
+      assert.equal(lines.length, vals.length, `${id}: arrows vs labels`);
+      for (let i = 0; i < vals.length; i++) for (let j = 0; j < vals.length; j++) {
+        if (vals[i] > vals[j] && vals[j] >= 30) assert.ok(lines[i] > lines[j], `${id} seed ${seed}: ${vals[i]} N arrow not longer than ${vals[j]} N`);
+      }
     }
   }
 });

@@ -97,7 +97,7 @@ export default {
         },
         {
           type: 'sim', widget: 'u4-space', goal: true, title: 'Space Skater',
-          html: 'Each jetpack <b>blast</b> pushes Pip for 1 second and changes his speed by exactly <b>1 m/s</b>. The dots show where he was every half second.',
+          html: 'Pip and his space suit have a mass of <b>60 kg</b>. Each jetpack <b>blast</b> pushes with <b>60 N</b> for 1 second, which changes his speed by exactly <b>1 m/s</b>. The dots show where he was every half second.',
           params: {
             v0: 3,
             tasks: [
@@ -127,7 +127,7 @@ export default {
         { type: 'q', t: 'u4.n1-steady-force' },
         { type: 'q', t: 'u4.inertia-mcq' },
         { type: 'q', t: 'u4.n1-space-speed' },
-        { type: 'q', t: 'u4.n1-state-mcq' },
+        { type: 'q', t: 'u4.n1-steady-two' },
       ],
     },
     // ------------------------------------------------------------------
@@ -188,7 +188,6 @@ export default {
         { type: 'q', t: 'u4.fma-m' },
         { type: 'q', t: 'u4.fma-resultant' },
         { type: 'q', t: 'u4.fma-loaded' },
-        { type: 'q', t: 'u4.fma-ratio' },
       ],
     },
     // ------------------------------------------------------------------
@@ -230,6 +229,7 @@ export default {
                  <li>Once it slides: <b>resultant = push − friction</b>.</li>
                  <li>When you let go, friction is the only force left, so it <b>slows</b> the crate: deceleration = friction ÷ mass.</li></ul>
                  <p>Example: push a 10 kg box with 50 N against 30 N of friction: (50 − 30) ÷ 10 = <b>2 m/s²</b>.</p>
+                 <p class="tip">In our sims, once something slides, friction stays at its maximum (in real life it drops a little).</p>
                  <p class="tip">Friction isn't just a nuisance — it's <b>grip</b>! Shoes, tyres and brakes all need it. Try walking on ice!</p>`,
         },
         { type: 'q', t: 'u4.fric-dir-mcq' },
@@ -278,7 +278,7 @@ export default {
                  <p class="eq">same size · opposite direction · on the OTHER object</p>
                  <ul><li>🚀 A rocket pushes hot gas <b>down</b> → the gas pushes the rocket <b>up</b>.</li>
                  <li>🏊 A swimmer pushes water <b>backwards</b> → the water pushes the swimmer <b>forwards</b>.</li>
-                 <li>🚶 Your foot pushes the ground <b>backwards</b> → the ground pushes you <b>forwards</b>. (On ice your foot slips, so you can't push — and you can't walk!)</li></ul>
+                 <li>🚶 Your foot pushes the ground <b>backwards</b> → the ground pushes you <b>forwards</b>. (On ice your foot slips, so you can hardly push — that's why walking on ice is really hard!)</li></ul>
                  <p class="tip">The two forces act on <b>different</b> objects, so they never cancel. Same force, different masses: a = F ÷ m, so the lighter skater flies off faster.</p>`,
         },
         { type: 'q', t: 'u4.n3-pair-mcq' },
@@ -286,7 +286,7 @@ export default {
         { type: 'q', t: 'u4.n3-cancel-mcq' },
         { type: 'q', t: 'u4.n3-which-mcq' },
         { type: 'q', t: 'u4.n3-skaters' },
-        { type: 'q', t: 'u4.n3-pair-mcq' },
+        { type: 'q', t: 'u4.n3-force' },
         { type: 'q', t: 'u4.n3-speed-ratio' },
       ],
     },
@@ -328,7 +328,7 @@ export default {
         },
         { type: 'q', t: 'u4.fbd-resultant' },
         { type: 'q', t: 'u4.n1-state-mcq' },
-        { type: 'q', t: 'u4.n1-steady-force' },
+        { type: 'q', t: 'u4.n1-steady-two' },
         { type: 'q', t: 'u4.fma-m' },
         { type: 'q', t: 'u4.fric-accel' },
         { type: 'q', t: 'u4.fric-push' },
@@ -348,7 +348,7 @@ export default {
                  <p>The puck ends at rest, so Unit 3's power equation gives:</p>
                  <p class="eq">(launch speed)² = 2 × a × distance</p>
                  <p>Some shots ask for the <b>stick's push</b> instead. The stick touches the puck for just <b>0.1 s</b> (too short for friction to matter): speed = (push ÷ mass) × 0.1.</p>
-                 <p>Land <b>3 shots</b> to win!</p>`,
+                 <p>You get <b>3 tries</b> per shot. Land <b>3 shots</b> to win!</p>`,
         },
         { type: 'sim', widget: 'u4-hockey', goal: true, title: 'Ice Hockey Physics', params: { rounds: 3 } },
         { type: 'q', t: 'u4.hockey-speed' },

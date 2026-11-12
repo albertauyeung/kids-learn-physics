@@ -16,8 +16,8 @@ export default function pushApart(el, params = {}, api) {
   const st = makeStage(el, W, H);
   const ro = readout();
   const tasks = taskRunner(params.tasks || [], banner, api, { allDone: 'Action and reaction mastered! Same force, but a = F ÷ m. 🎉' });
-  const sA = slider({ label: "Pip's mass", min: 20, max: 90, step: 10, value: mA, unit: 'kg', onInput: (v) => { mA = v; reset(); } });
-  const sB = slider({ label: "Steve's mass", min: 20, max: 90, step: 10, value: mB, unit: 'kg', onInput: (v) => { mB = v; reset(); } });
+  const sA = slider({ label: "Pip's mass", min: 30, max: 45, step: 5, value: mA, unit: 'kg', onInput: (v) => { mA = v; reset(); } });
+  const sB = slider({ label: "Steve's mass", min: 60, max: 90, step: 10, value: mB, unit: 'kg', onInput: (v) => { mB = v; reset(); } });
   const sF = slider({ label: 'Push (lasts 1 s)', min: 20, max: 300, step: 20, value: F, unit: 'N', onInput: (v) => { F = v; reset(); } });
   el.append(controls(sA.el, sB.el, sF.el), controls(button('▶ Push apart!', () => go(), 'green')), ro.el);
 

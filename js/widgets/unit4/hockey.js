@@ -1,6 +1,8 @@
 // Boss: Ice Hockey Physics. Friction is the only force on the sliding puck: a = friction ÷ mass.
 // It stops when (launch speed)² = 2 × a × distance. "Hit" rounds choose the stick's push instead:
 // the stick touches the puck for 0.1 s, so launch speed = (push ÷ mass) × 0.1.
+// Each shot allows 3 tries with direction-only feedback; after 3 misses the worked solution is shown
+// and a fresh shot (same kind, new numbers) replaces it. Win 3 shots.
 // params: { rounds, seed }
 
 import { makeStage, loop, tag, arrow, slider, button, controls, readout, taskBanner } from '../stage.js';
@@ -9,14 +11,16 @@ import { fmt, makeRng, randomSeed } from '../../core/util.js';
 import { sfx } from '../../core/sound.js';
 import { drawFloor } from './common.js';
 
-const SPEEDS = { 0.5: [4, 5, 6, 7], 1: [4, 6, 8], 2: [6, 8, 10] };
+// A real puck is about 0.17 kg; on ice friction slows it at roughly 0.5–1 m/s².
+const SPEEDS = { 0.5: [4, 5, 6, 7], 1: [4, 6, 8, 10] };
+const TRIES = 3;
 const HIT_T = 0.1;
 const TOL = 0.6;
 
 // Whole-number targets: distance = v² ÷ (2a). Exported for the tests.
 export function hockeyRound(rng, kind) {
-  const m = rng.pick([0.2, 0.5]);
-  const a = rng.pick([0.5, 1, 2]);
+  const m = 0.2;
+  const a = rng.pick([0.5, 1]);
   const v = rng.pick(SPEEDS[a]);
   // The push slider moves in steps that change the launch speed by 1 m/s (like the speed slider).
   const pushStep = Math.round((m / HIT_T) * 100) / 100;
@@ -26,7 +30,7 @@ export function hockeyRound(rng, kind) {
 export default function hockey(el, params = {}, api) {
   const rng = makeRng(params.seed ?? randomSeed());
   const total = params.rounds || 3;
-  const kinds = ['speed', rng.pick(['speed', 'hit']), 'hit', 'speed', 'hit'];
+  const kinds = ['speed', rng.pick(['speed', 'hit']), 'hit'];
   let roundNo = 0;
   let R = hockeyRound(rng, kinds[0]);
   const W = 480, H = 200, ICE = 110, RINK = 60;
@@ -39,6 +43,15 @@ export default function hockey(el, params = {}, api) {
   el.append(box, controls(button('🏒 Shoot!', () => shoot(), 'green')), ro.el);
 
   let choice = 0, x = 0, v = 0, running = false, swing = 0, stopped = null, finished = false;
+  let tries = 0, solved = false, note = '', busy = false;
+  const solutionText = (r) => `a = ${fmt(r.f)} ÷ ${fmt(r.m)} = ${fmt(r.a)} m/s²; speed² = 2 × ${fmt(r.a)} × ${fmt(r.d)} = ${r.v * r.v}, so speed = ${r.v} m/s${r.kind === 'hit' ? `; push = ${fmt(r.m)} × ${r.v} ÷ ${HIT_T} = ${fmt(r.push)} N` : ''}.`;
+  function newRound() {
+    R = hockeyRound(rng, kinds[Math.min(roundNo, kinds.length - 1)]);
+    tries = 0;
+    solved = false;
+    buildControls();
+    reset();
+  }
 
   function buildControls() {
     box.innerHTML = '';
@@ -57,7 +70,8 @@ export default function hockey(el, params = {}, api) {
     show();
   }
   function shoot() {
-    if (finished || running) return;
+    if (finished || running || busy) return;
+    note = '';
     reset();
     v = launchSpeed();
     running = true;
@@ -69,14 +83,15 @@ export default function hockey(el, params = {}, api) {
     const rows = [['Puck mass', `${fmt(R.m)} kg`], ['Friction on the puck', `${fmt(R.f)} N`]];
     if (R.kind === 'hit') rows.push(['Stick touches the puck for', `${HIT_T} s`]);
     rows.push(['Target zone', `${fmt(R.d)} m from Pip`]);
-    if (stopped) {
-      rows.push(['Launch speed', `${fmt(stopped.v0, 2)} m/s`]);
+    rows.push(['Tries left for this shot', String(TRIES - tries)]);
+    if (solved) {
+      // only once the shot is won: the steps he had to work out
       rows.push(['Deceleration = friction ÷ mass', `${fmt(R.f)} ÷ ${fmt(R.m)} = ${fmt(R.a)} m/s²`]);
-      rows.push(['Stopped at', `${fmt(stopped.x, 1)} m`, 'winner']);
+      rows.push(['Launch speed', `${fmt(R.v)} m/s`, 'winner']);
     }
     ro.set(rows);
-    if (!stopped && !finished) {
-      banner.set(`Shot ${roundNo + 1}/${total}: make the puck stop in the <b>target zone at ${fmt(R.d)} m</b>. ${R.kind === 'speed' ? 'Choose the <b>launch speed</b>.' : 'Choose the <b>stick\'s push</b>.'}`);
+    if (!stopped && !finished && !busy) {
+      banner.set(`${note}Shot ${roundNo + 1}/${total}: make the puck stop in the <b>target zone at ${fmt(R.d)} m</b>. ${R.kind === 'speed' ? 'Choose the <b>launch speed</b>.' : 'Choose the <b>stick\'s push</b>.'}`);
     }
   }
 
@@ -96,9 +111,10 @@ export default function hockey(el, params = {}, api) {
       }
       if (v <= 0) {
         running = false;
-        stopped = { x, v0: launchSpeed() };
-        show();
+        stopped = { x };
         if (Math.abs(x - R.d) <= TOL) {
+          solved = true;
+          show();
           sfx.correct();
           roundNo++;
           if (roundNo >= total) {
@@ -106,19 +122,26 @@ export default function hockey(el, params = {}, api) {
             banner.set('GOAL x3! You used friction like a pro. Ice Hockey Champion! 🏆', true);
             api.done();
           } else {
-            banner.set(`In the zone! Stopped at ${fmt(x, 1)} m. Next shot...`, true);
+            busy = true;
+            banner.set(`In the zone! ${solutionText(R)} Next shot...`, true);
             setTimeout(() => {
               if (!alive) return;
-              R = hockeyRound(rng, kinds[roundNo]);
-              buildControls();
-              reset();
-            }, 1600);
+              busy = false;
+              newRound();
+            }, 2500);
           }
         } else {
+          tries++;
           sfx.wrong();
-          banner.set(x >= RINK
-            ? 'Way too hard — it hit the boards! Work out a = friction ÷ mass, then (launch speed)² = 2 × a × distance.'
-            : `It stopped at ${fmt(x, 1)} m — the target is ${fmt(R.d)} m. Work out a = friction ÷ mass, then (launch speed)² = 2 × a × distance.${R.kind === 'hit' ? ' Then push = mass × speed ÷ 0.1.' : ''}`);
+          const dir = x >= RINK ? 'Way too hard — it hit the boards!' : x > R.d ? 'Too far!' : 'Too short!';
+          if (tries >= TRIES) {
+            // three misses: show how to solve it, then a fresh shot (the shot counter doesn't move on)
+            note = `<b>Out of tries.</b> The answer was: ${solutionText(R)} Here's a new one. `;
+            newRound();
+          } else {
+            show();
+            banner.set(`${dir} ${TRIES - tries} ${TRIES - tries === 1 ? 'try' : 'tries'} left. Work out a = friction ÷ mass, then (launch speed)² = 2 × a × distance.${R.kind === 'hit' ? ' Then push = mass × speed ÷ 0.1.' : ''}`);
+          }
         }
       }
     }
@@ -168,7 +191,7 @@ export default function hockey(el, params = {}, api) {
       arrow(ctx, px, ICE + 30, px - 26, ICE + 30, '#ff5050', 4);
       tag(ctx, `friction ${fmt(R.f)} N`, px - 13, ICE + 46, { size: 9, color: '#ffb0b0' });
     }
-    tag(ctx, `${fmt(v, 1)} m/s`, px, ICE - 6, { size: 11, color: '#fcee4b' });
+    if (R.kind === 'speed' || solved) tag(ctx, `${fmt(v, 1)} m/s`, px, ICE - 6, { size: 11, color: '#fcee4b' });
     tag(ctx, `Shot ${Math.min(roundNo + 1, total)}/${total}`, W - 50, 20, { size: 11 });
   });
 

@@ -19,50 +19,51 @@ const dirWord = (x) => (x > 0 ? 'right' : 'left');
 
 // ---------- Free-body diagram (SVG string) ----------
 // right/left: arrays of { value, label }; up/down: { value, label } or null.
+// ONE scale for every arrow, so a longer arrow always means a bigger force (as taught in Lesson 1).
 export function fbdSVG({ right = [], left = [], up = null, down = null }, { small = false } = {}) {
-  const w = small ? 170 : 340, h = small ? 130 : 220;
+  const box = small ? 34 : 54;
+  const maxLen = small ? 44 : 96, minLen = small ? 8 : 10;
+  const fs = small ? 15 : 15;
+  const lab = small ? 30 : 100; // room for a label beyond an arrow tip
+  const w = 2 * (box / 2 + maxLen + lab), h = 2 * (box / 2 + maxLen + (small ? 6 : 10));
   const cx = w / 2, cy = h / 2;
-  const box = small ? 36 : 54;
-  const minH = small ? 18 : 70, maxH = small ? 52 : 120, maxV = small ? 32 : 58;
-  const fs = small ? 16 : 13;
-  const hor = Math.max(1, ...[...right, ...left].map((f) => f.value));
-  const ver = Math.max(1, up?.value || 0, down?.value || 0);
-  const lenH = (v) => minH + (v / hor) * (maxH - minH);
-  const lenV = (v) => Math.max(small ? 14 : 24, (v / ver) * maxV);
+  const all = [...right, ...left, up, down].filter(Boolean).map((f) => f.value);
+  const k = maxLen / Math.max(1, ...all);
+  const len = (v) => Math.max(minLen, v * k);
   const arrow = (x1, y1, x2, y2, col) => {
-    const ang = Math.atan2(y2 - y1, x2 - x1), hd = small ? 9 : 11;
+    const ang = Math.atan2(y2 - y1, x2 - x1), hd = Math.min(small ? 8 : 11, Math.abs(x2 - x1) + Math.abs(y2 - y1));
     const bx = x2 - Math.cos(ang) * hd * 0.8, by = y2 - Math.sin(ang) * hd * 0.8;
     const p = (a) => `${(x2 - Math.cos(a) * hd).toFixed(1)},${(y2 - Math.sin(a) * hd).toFixed(1)}`;
     return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="${col}" stroke-width="${small ? 4 : 5}"/>`
       + `<polygon points="${x2.toFixed(1)},${y2.toFixed(1)} ${p(ang - 0.5)} ${p(ang + 0.5)}" fill="${col}"/>`;
   };
-  const label = (f) => (small ? `${fmt(f.value)}` : `${f.label ? `${f.label} ` : ''}${fmt(f.value)} N`);
-  // Horizontal labels: the name above the arrow and the size below it (big diagrams), or just the number (small ones).
-  const hLabel = (f, x, y, fill) => (small || !f.label
-    ? `<text x="${x.toFixed(1)}" y="${(y - 7).toFixed(1)}" text-anchor="middle" fill="${fill}" font-size="${fs}" font-weight="700">${label(f)}</text>`
-    : `<text x="${x.toFixed(1)}" y="${(y - 8).toFixed(1)}" text-anchor="middle" fill="${fill}" font-size="${fs}" font-weight="700">${f.label}</text>`
-      + `<text x="${x.toFixed(1)}" y="${(y + 19).toFixed(1)}" text-anchor="middle" fill="${fill}" font-size="${fs}" font-weight="700">${fmt(f.value)} N</text>`);
+  const txt = (x, y, anchor, fill, str) => `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor}" fill="${fill}" font-size="${fs}" font-weight="700">${str}</text>`;
+  // Horizontal labels sit just beyond the arrow tip (name on top, size below), so short arrows stay readable.
+  const hLabel = (f, xTip, y, dir, fill) => {
+    const x = xTip + dir * 5, anchor = dir > 0 ? 'start' : 'end';
+    if (small || !f.label) return txt(x, y + fs / 3, anchor, fill, small ? fmt(f.value) : `${fmt(f.value)} N`);
+    return txt(x, y - 3, anchor, fill, f.label) + txt(x, y + fs, anchor, fill, `${fmt(f.value)} N`);
+  };
   const offs = (n) => (n <= 1 ? [0] : [-box / 3, box / 3]);
   let out = '';
   right.forEach((f, i) => {
     const y = cy + offs(right.length)[i];
-    const x1 = cx + box / 2, x2 = x1 + lenH(f.value);
-    out += arrow(x1, y, x2, y, '#ff9b3d') + hLabel(f, (x1 + x2) / 2, y, '#ffd2a6');
+    const x1 = cx + box / 2, x2 = x1 + len(f.value);
+    out += arrow(x1, y, x2, y, '#ff9b3d') + hLabel(f, x2, y, 1, '#ffd2a6');
   });
   left.forEach((f, i) => {
     const y = cy + offs(left.length)[i];
-    const x1 = cx - box / 2, x2 = x1 - lenH(f.value);
-    out += arrow(x1, y, x2, y, '#80ff20') + hLabel(f, (x1 + x2) / 2, y, '#c8ff9a');
+    const x1 = cx - box / 2, x2 = x1 - len(f.value);
+    out += arrow(x1, y, x2, y, '#80ff20') + hLabel(f, x2, y, -1, '#c8ff9a');
   });
+  const vLabel = (f) => (small ? fmt(f.value) : `${f.label ? `${f.label} ` : ''}${fmt(f.value)} N`);
   if (up) {
-    const y1 = cy - box / 2, y2 = y1 - lenV(up.value);
-    out += arrow(cx, y1, cx, y2, '#4aedd9');
-    out += `<text x="${cx + 8}" y="${((y1 + y2) / 2 + 5).toFixed(1)}" fill="#b5fff5" font-size="${fs}" font-weight="700">${label(up)}</text>`;
+    const y1 = cy - box / 2, y2 = y1 - len(up.value);
+    out += arrow(cx, y1, cx, y2, '#4aedd9') + txt(cx + 8, (y1 + y2) / 2 + 5, 'start', '#b5fff5', vLabel(up));
   }
   if (down) {
-    const y1 = cy + box / 2, y2 = y1 + lenV(down.value);
-    out += arrow(cx, y1, cx, y2, '#ffffff');
-    out += `<text x="${cx + 8}" y="${((y1 + y2) / 2 + 5).toFixed(1)}" fill="#ffffff" font-size="${fs}" font-weight="700">${label(down)}</text>`;
+    const y1 = cy + box / 2, y2 = y1 + len(down.value);
+    out += arrow(cx, y1, cx, y2, '#ffffff') + txt(cx + 8, (y1 + y2) / 2 + 5, 'start', '#ffffff', vLabel(down));
   }
   const crate = `<rect x="${cx - box / 2}" y="${cy - box / 2}" width="${box}" height="${box}" fill="#a8702f" stroke="#4a2c12" stroke-width="4"/>`
     + `<line x1="${cx - box / 2}" y1="${cy - box / 2}" x2="${cx + box / 2}" y2="${cy + box / 2}" stroke="#4a2c12" stroke-width="3"/>`
@@ -71,7 +72,16 @@ export function fbdSVG({ right = [], left = [], up = null, down = null }, { smal
   return `<svg class="graph"${style} viewBox="0 0 ${w} ${h}" role="img" aria-label="free-body diagram"><rect width="${w}" height="${h}" class="g-bg"/>${crate}${out}</svg>`;
 }
 
-registerTemplates([
+// Every mistake value must be typeable on the keypad (at most 2 decimal places), so drop any that aren't.
+const typeable = (list) => list.map((t) => ({
+  ...t,
+  generate(r) {
+    const q = t.generate(r);
+    return q.errors ? { ...q, errors: q.errors.filter((e) => nice(e.value)) } : q;
+  },
+}));
+
+registerTemplates(typeable([
   // ---------- Lesson 1: forces and the resultant force ----------
   {
     id: 'u4.estimate-mcq', concepts: [C.force], tier: 'explorer',
@@ -167,7 +177,7 @@ registerTemplates([
   {
     id: 'u4.fbd-resultant', concepts: [C.force], tier: 'scientist',
     generate(r) {
-      const G = r.int(15, 40) * 10;
+      const G = r.int(15, 30) * 10;
       const R = r.int(6, 20) * 10;
       const L = r.pick([3, 5, 6, 7, 8, 9, 10, 12, 14, 15, 16, 18].filter((x) => x * 10 !== R)) * 10;
       const res = R - L;
@@ -294,6 +304,38 @@ registerTemplates([
     },
   },
   {
+    id: 'u4.n1-steady-two', concepts: [C.n1, C.force], tier: 'scientist',
+    generate(r) {
+      const v = until(r, (rr) => rr.pick([
+        { who: 'car', speed: 25, A: rr.int(10, 14) * 50, F: rr.int(4, 8) * 50, find: rr.pick(['friction', 'engine']) },
+        { who: 'bike', speed: 6, A: rr.int(3, 6) * 5, F: rr.int(1, 3) * 5, find: rr.pick(['friction', 'engine']) },
+        { who: 'boat', speed: 8, A: rr.int(6, 12) * 50, F: rr.int(1, 4) * 50, find: rr.pick(['friction', 'engine']) },
+      ]), (x) => x.A !== x.F);
+      const D = v.A + v.F;
+      const thing = {
+        car: { fwd: 'Its engine\'s driving force', q: 'the engine\'s driving force', back1: 'air resistance', back2: 'rolling friction from the tyres', start: `A car cruises at a steady <b>${v.speed} m/s</b> along a straight, flat road.` },
+        bike: { fwd: 'Pip\'s pedalling force', q: 'Pip\'s pedalling force', back1: 'air resistance', back2: 'friction in the wheels', start: `Pip cycles at a steady <b>${v.speed} m/s</b> along a straight, flat path.` },
+        boat: { fwd: 'The motor\'s push', q: 'the motor\'s push', back1: 'water drag', back2: 'air resistance on the sail', start: `A boat moves in a straight line at a steady <b>${v.speed} m/s</b>.` },
+      }[v.who];
+      const findFric = v.find === 'friction';
+      const prompt = findFric
+        ? `${thing.start} ${thing.fwd} is <b>${D} N</b> and ${thing.back1} pushes back with <b>${v.A} N</b>. The only other backward force is ${thing.back2}. How big is it?`
+        : `${thing.start} Two forces push back on it: ${thing.back1}, <b>${v.A} N</b>, and ${thing.back2}, <b>${v.F} N</b>. How big is ${thing.q}?`;
+      const answer = findFric ? v.F : D;
+      const errors = findFric
+        ? [{ value: D, msg: 'Steady speed means balanced — but the forward force is shared by TWO backward forces.' }, { value: D + v.A, msg: 'Air resistance points backwards too, so the friction is what is LEFT of the forward force.' }, { value: 0, msg: 'Steady speed doesn\'t mean no forces — it means the forces are balanced.' }]
+        : [{ value: v.A, msg: 'There are TWO backward forces. The forward force must balance both.' }, { value: Math.abs(v.A - v.F), msg: 'Both backward forces point the same way, so they add up.' }, { value: 0, msg: 'Steady speed doesn\'t mean no forces — it means the forces are balanced.' }];
+      return {
+        type: 'numeric', prompt, answer, unit: 'N',
+        hints: ['Is it speeding up, slowing down, or neither? What does that tell you about the forces?', 'Balanced: total forwards = total backwards.'],
+        errors: errors.filter((e) => Math.abs(e.value - answer) > 1e-9),
+        solution: findFric
+          ? `Steady speed → balanced: ${D} = ${v.A} + friction, so friction = ${D} − ${v.A} = <b>${v.F} N</b>`
+          : `Steady speed → balanced: forward force = ${v.A} + ${v.F} = <b>${D} N</b>`,
+      };
+    },
+  },
+  {
     id: 'u4.inertia-mcq', concepts: [C.n1], tier: 'explorer',
     generate(r) {
       const s = r.pick([
@@ -332,7 +374,7 @@ registerTemplates([
     generate(r) {
       const s = r.pick([
         { who: (m) => `A <b>${fmt(m)} kg</b> car`, m: r.int(10, 20) * 100, a: r.pick([1.5, 2, 2.5, 3, 4]) },
-        { who: (m) => `A <b>${m} kg</b> minecart (with Pip inside)`, m: r.pick([40, 50, 60, 80]), a: r.pick([2, 3, 4, 5]) },
+        { who: (m) => `A <b>${m} kg</b> minecart (with Pip inside)`, m: r.pick([60, 70, 80, 100]), a: r.pick([0.5, 1.5, 2]) },
         { who: (m) => `A <b>${m} kg</b> sled`, m: r.pick([40, 60, 80, 100]), a: r.pick([0.5, 1.5, 2]) },
       ]);
       const F = s.m * s.a;
@@ -355,7 +397,7 @@ registerTemplates([
       const s = until(r, (rr) => rr.pick([
         { who: 'skater', text: (m, a) => `A <b>${m} kg</b> ice skater speeds up at <b>${fmt(a)} m/s²</b>.`, m: rr.int(6, 12) * 5, a: rr.pick([1.5, 2, 3]) },
         { who: 'horse', text: (m, a) => `A <b>${m} kg</b> horse speeds up at <b>${fmt(a)} m/s²</b>.`, m: rr.int(8, 12) * 50, a: rr.pick([2, 3, 4]) },
-        { who: 'cart', text: (m, a) => `Steve pushes a <b>${m} kg</b> minecart so that it speeds up at <b>${fmt(a)} m/s²</b> (no friction).`, m: rr.int(4, 10) * 10, a: rr.pick([2, 2.5, 3, 4]) },
+        { who: 'cart', text: (m, a) => `Steve pushes a <b>${m} kg</b> minecart so that it speeds up at <b>${fmt(a)} m/s²</b> (no friction).`, m: rr.int(4, 10) * 10, a: rr.pick([1.5, 2]) },
       ]), (x) => nice(x.m * x.a) && distinct(x.m * x.a, x.m / x.a, x.m + x.a));
       const F = s.m * s.a;
       return {
@@ -396,12 +438,14 @@ registerTemplates([
   {
     id: 'u4.fma-resultant', concepts: [C.n2, C.force], tier: 'scientist',
     generate(r) {
-      const s = r.pick([
-        { text: (m, P, B) => `Steve pushes a <b>${m} kg</b> minecart forwards with <b>${P} N</b>, but a strong wind pushes back on it with <b>${B} N</b>.`, m: r.pick([20, 30, 40, 50]), B: r.int(2, 6) * 10 },
-        { text: (m, P, B) => `A <b>${m} kg</b> motorboat's engine pushes it forwards with <b>${P} N</b>, while the water drags it back with <b>${B} N</b>.`, m: r.pick([200, 300, 400, 500]), B: r.int(2, 8) * 50 },
-        { text: (m, P, B) => `Pip pulls a <b>${m} kg</b> sled forwards with <b>${P} N</b>. Alex grabs the back and pulls it backwards with <b>${B} N</b>.`, m: r.pick([10, 20, 25, 40]), B: r.int(3, 6) * 10 },
-      ]);
-      const a = r.pick([0.5, 1, 1.5, 2, 3]);
+      const { s, a } = until(r, (rr) => ({
+        s: rr.pick([
+          { text: (m, P, B) => `Steve pushes a <b>${m} kg</b> minecart forwards with <b>${P} N</b>, but a strong wind pushes back on it with <b>${B} N</b>.`, m: rr.pick([20, 40, 50]), B: rr.int(2, 6) * 10, aMax: 2 },
+          { text: (m, P, B) => `A <b>${m} kg</b> motorboat's engine pushes it forwards with <b>${P} N</b>, while the water drags it back with <b>${B} N</b>.`, m: rr.pick([200, 400, 500]), B: rr.int(2, 8) * 50, aMax: 3 },
+          { text: (m, P, B) => `Pip pulls a <b>${m} kg</b> sled forwards with <b>${P} N</b>. Alex grabs the back and pulls it backwards with <b>${B} N</b>.`, m: rr.pick([10, 20, 25, 40]), B: rr.int(3, 6) * 10, aMax: 3 },
+        ]),
+        a: rr.pick([0.5, 1, 1.5, 2, 3]),
+      }), (x) => x.a <= x.s.aMax && nice((x.s.B + x.s.m * x.a) / x.s.m) && nice((2 * x.s.B + x.s.m * x.a) / x.s.m));
       const P = s.B + s.m * a;
       return {
         type: 'numeric',
@@ -439,7 +483,7 @@ registerTemplates([
   {
     id: 'u4.fma-loaded', concepts: [C.n2], tier: 'scientist',
     generate(r) {
-      const v = until(r, (rr) => ({ mc: rr.pick([20, 30, 40]), mp: rr.pick([30, 35, 40, 45]), a: rr.pick([1, 1.5, 2, 2.5, 3]) }), (x) => x.mc !== x.mp && Number.isInteger((x.mc + x.mp) * x.a));
+      const v = until(r, (rr) => ({ mc: rr.pick([20, 25, 40, 50]), mp: rr.pick([30, 35, 40, 45]), a: rr.pick([0.5, 1, 1.5, 2]) }), (x) => x.mc !== x.mp && Number.isInteger((x.mc + x.mp) * x.a) && nice(((x.mc + x.mp) * x.a) / x.mc) && nice(((x.mc + x.mp) * x.a) / x.mp));
       const M = v.mc + v.mp, F = M * v.a;
       return {
         type: 'numeric',
@@ -532,7 +576,7 @@ registerTemplates([
       const v = until(r, (rr) => {
         const s = rr.pick([['ice', [5, 10]], ['a wooden floor', [30, 40, 50]], ['carpet', [60, 80, 100]]]);
         return { surf: s[0], f: rr.pick(s[1]), m: rr.pick([10, 20, 25, 40, 50]), a: rr.pick([0.5, 1, 1.5, 2, 3]) };
-      }, (x) => Number.isInteger(x.f + x.m * x.a) && x.f + x.m * x.a <= 250);
+      }, (x) => Number.isInteger(x.f + x.m * x.a) && x.f + x.m * x.a <= 250 && nice((x.f + x.m * x.a) / x.m) && nice((2 * x.f + x.m * x.a) / x.m));
       const P = v.f + v.m * v.a;
       return {
         type: 'numeric',
@@ -681,7 +725,7 @@ registerTemplates([
   {
     id: 'u4.n3-force', concepts: [C.n3], tier: 'explorer',
     generate(r) {
-      const [m1, m2] = r.pick([[30, 60], [40, 80], [35, 70], [25, 75]]);
+      const [m1, m2] = r.pick([[30, 60], [40, 80], [35, 70], [45, 90], [30, 90]]);
       const F = r.int(3, 10) * 20;
       return {
         type: 'numeric',
@@ -718,16 +762,16 @@ registerTemplates([
   {
     id: 'u4.n3-skaters', concepts: [C.n3, C.n2], tier: 'scientist',
     generate(r) {
-      const v = until(r, (rr) => ({ m1: rr.pick([30, 40, 50]), m2: rr.pick([60, 70, 75, 80, 90]), F: rr.int(3, 12) * 20, light: rr.chance(0.5) }), (x) => {
+      const v = until(r, (rr) => ({ m1: rr.pick([30, 35, 40, 45]), m2: rr.pick([60, 70, 75, 80, 90]), F: rr.int(3, 12) * 20, light: rr.chance(0.5) }), (x) => {
         const a = x.F / (x.light ? x.m1 : x.m2), b = x.F / (x.light ? x.m2 : x.m1);
-        return nice(a) && a <= 6 && distinct(a, b, x.F / (x.m1 + x.m2), x.F);
+        return nice(a) && nice(b) && a <= 6 && distinct(a, b, x.F / (x.m1 + x.m2), x.F);
       });
       const mAsk = v.light ? v.m1 : v.m2, mOther = v.light ? v.m2 : v.m1;
-      const who = v.light ? 'Alex' : 'Steve';
+      const who = v.light ? 'Pip' : 'Steve';
       const a = v.F / mAsk;
       return {
         type: 'numeric',
-        prompt: `Two ice skaters stand still, then push each other apart. Alex is <b>${v.m1} kg</b> and Steve is <b>${v.m2} kg</b>. Alex pushes Steve with <b>${v.F} N</b>. What is <b>${who}'s</b> acceleration while they push?`,
+        prompt: `Two ice skaters stand still, then push each other apart. Pip is <b>${v.m1} kg</b> and Steve is <b>${v.m2} kg</b>. Pip pushes Steve with <b>${v.F} N</b>. What is <b>${who}'s</b> acceleration while they push?`,
         answer: a, unit: 'm/s²',
         hints: [`How big is the force on ${who}? (Newton's 3rd law)`, `Then a = F ÷ m, using ${who}'s mass.`],
         errors: [
@@ -741,9 +785,9 @@ registerTemplates([
   {
     id: 'u4.n3-speed-ratio', concepts: [C.n3, C.n2], tier: 'engineer',
     generate(r) {
-      const v = until(r, (rr) => ({ m1: rr.pick([30, 40, 50, 60]), m2: rr.pick([20, 30, 40, 60, 80]), v1: rr.pick([1, 1.5, 2, 3, 4]), t: rr.pick([0.5, 1]) }), (x) => {
+      const v = until(r, (rr) => ({ m1: rr.pick([30, 35, 40, 45]), m2: rr.pick([60, 70, 75, 80, 90]), v1: rr.pick([1, 1.5, 2, 2.5, 3, 4]), t: rr.pick([0.5, 1]) }), (x) => {
         const v2 = (x.m1 * x.v1) / x.m2, F = (x.m1 * x.v1) / x.t;
-        return x.m1 !== x.m2 && nice(v2) && v2 <= 6 && v2 >= 0.5 && F <= 300 && distinct(v2, x.v1, (x.v1 * x.m2) / x.m1, F);
+        return x.m1 !== x.m2 && nice(v2) && nice((x.v1 * x.m2) / x.m1) && v2 <= 6 && v2 >= 0.5 && F <= 300 && distinct(v2, x.v1, (x.v1 * x.m2) / x.m1, F);
       });
       const a1 = v.v1 / v.t, F = v.m1 * a1, a2 = F / v.m2, v2 = a2 * v.t;
       return {
@@ -765,7 +809,7 @@ registerTemplates([
   {
     id: 'u4.wp-car', concepts: [C.n2, C.force], tier: 'scientist',
     generate(r) {
-      const m = r.int(10, 20) * 100, a = r.pick([1, 1.5, 2, 2.5, 3]), R = r.int(3, 9) * 100;
+      const { m, a, R } = until(r, (rr) => ({ m: rr.int(10, 20) * 100, a: rr.pick([1, 1.5, 2, 2.5, 3]), R: rr.int(3, 9) * 100 }), (x) => nice(x.R / x.m));
       const D = m * a + R;
       return {
         type: 'numeric',
@@ -803,7 +847,7 @@ registerTemplates([
     generate(r) {
       const v = until(r, (rr) => ({ n: rr.int(4, 8), p: rr.pick([50, 60, 70, 80]), m: rr.pick([100, 120, 150, 200, 250]), a: rr.pick([0.5, 1, 1.5, 2]) }), (x) => {
         const f = x.n * x.p - x.m * x.a;
-        return f >= 50 && f <= 300 && f % 10 === 0 && distinct(x.a, (x.n * x.p) / x.m, x.m * x.a);
+        return f >= 50 && f <= 300 && f % 10 === 0 && nice((x.n * x.p) / x.m) && distinct(x.a, (x.n * x.p) / x.m, x.m * x.a);
       });
       const total = v.n * v.p, f = total - v.m * v.a;
       return {
@@ -848,8 +892,8 @@ registerTemplates([
   {
     id: 'u4.hockey-speed', concepts: [C.fric, C.n2], tier: 'engineer',
     generate(r) {
-      const m = r.pick([0.2, 0.5]);
-      const [a, v] = r.pick([[0.5, 4], [0.5, 5], [0.5, 6], [1, 4], [1, 6], [1, 8], [2, 6], [2, 8], [2, 10]]);
+      const m = 0.2;
+      const [a, v] = r.pick([[0.5, 4], [0.5, 5], [0.5, 6], [0.5, 7], [1, 4], [1, 6], [1, 8], [1, 10]]);
       const f = m * a, d = (v * v) / (2 * a);
       return {
         type: 'numeric',
@@ -905,4 +949,4 @@ registerTemplates([
       };
     },
   },
-]);
+]));
