@@ -80,7 +80,7 @@ export default function traffic(el, params = {}, api) {
     goBtn.disabled = off;
     if (sl) sl.disabled = off;
     // After a win or a 3-miss reveal the child reads the banner, then moves on when ready.
-    nextBtn.style.display = waiting() && !finished ? '' : 'none'; // .mc-btn sets display, so [hidden] would not hide it
+    nextBtn.style.display = waiting() && !finished ? '' : 'none';
   };
   const nextBtn = button('Next round ▶', () => {
     if (!waiting() || finished) return;
