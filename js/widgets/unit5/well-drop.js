@@ -6,7 +6,7 @@ import { makeStage, loop, text, tag, slider, button, controls, readout, taskBann
 import { drawSprite, drawTexture } from '../../core/sprites.js';
 import { fmt } from '../../core/util.js';
 import { sfx } from '../../core/sound.js';
-import { G } from './physics.js';
+import { G, onlyChanges } from './physics.js';
 
 export default function wellDrop(el, params = {}, api) {
   const tasks = params.tasks || [];
@@ -15,10 +15,10 @@ export default function wellDrop(el, params = {}, api) {
   const W = 480, H = 320, TOP = 44, MAXD = 80;
   const px = (H - TOP - 14) / MAXD; // pixels per metre
   const WX = 110, WW = 56; // well shaft
-  const banner = taskBanner();
+  const banner = onlyChanges(taskBanner());
   el.append(banner.el);
   const st = makeStage(el, W, H);
-  const ro = readout();
+  const ro = onlyChanges(readout());
   let t = 0, running = false, splash = null;
   let alive = true;
 

@@ -194,19 +194,21 @@ test('Egg Drop Lab: rounds need the physics (one height, or a narrow band of D),
         const wins = [];
         for (let D = 0; D <= D_MAX; D++) if (judgeEgg(round, round.H, D).ok) wins.push(D);
         assert.deepEqual(wins, round.answers);
-        assert.ok(wins.length >= 1 && wins.length <= 4, `chute band ${wins}`);
+        assert.ok(wins.length >= 1 && wins.length <= 2, `chute band ${wins}`);
+        assert.ok(!wins.includes(D_MAX), 'the end of the slider must not win');
         assert.equal(wins[wins.length - 1] - wins[0] + 1, wins.length, 'band is contiguous');
         assert.ok(!wins.includes(0), 'no parachute must not win');
         // the band from the worked solution's formulas
         assert.ok(wins[0] >= 100 / round.S ** 2 - 1e-9);
         // 3 tries of halving can't find a band this narrow among 101 values by luck alone
-        assert.ok(101 / wins.length > 2 ** MAX_TRIES);
+        assert.ok((D_MAX + 1) / wins.length > 2 ** MAX_TRIES);
       } else {
         const wins = [];
-        for (let h = 5; h <= 80; h += 5) if (judgeEgg(round, h, 0).ok) wins.push(h);
+        for (let h = 5; h <= 100; h += 5) if (judgeEgg(round, h, 0).ok) wins.push(h);
+        assert.ok(round.answerH > 5 && round.answerH < 100, 'an end of the height slider must not win');
         assert.deepEqual(wins, [round.answerH], `${type} round ${JSON.stringify(round)}`);
         assert.ok(!judgeEgg(round, 40, 0).ok, 'the starting height must not already win');
-        assert.ok(16 > 2 ** MAX_TRIES, 'halving 16 windows needs 4 tries');
+        assert.ok(20 > 2 ** MAX_TRIES, 'halving 20 windows needs more than 3 tries');
       }
       // a miss reports only a direction
       const miss = type === 'chute' ? judgeEgg(round, round.H, 0) : judgeEgg(round, round.answerH === 80 ? 75 : round.answerH + 5, 0);

@@ -53,7 +53,11 @@ export default function planetScale(el, params = {}, api) {
     else if (!tasks.length) banner.set('Pick a world and a mass, then press <b>Weigh</b>.');
   }
 
+  let lastPass = ''; // settings of the last weigh that completed a task
   function weigh() {
+    const key = `${world.id}|${mass}`;
+    // A double tap (same settings as the task just completed) must not judge the next task.
+    if (key === lastPass && weighed) return;
     weighed = true;
     shown = 0;
     sfx.click();
@@ -62,6 +66,7 @@ export default function planetScale(el, params = {}, api) {
     if (!tasks.length) { api.done(); return; }
     if (taskIdx >= tasks.length) return;
     if (tasks[taskIdx].check(world.id, mass, Wt)) {
+      lastPass = key;
       sfx.correct();
       if (params.testedAfter === taskIdx) api.tested?.();
       taskIdx++;

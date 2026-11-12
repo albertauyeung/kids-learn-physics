@@ -7,7 +7,7 @@ import { makeStage, loop, text, tag, arrow, slider, button, controls, readout, t
 import { drawSprite } from '../../core/sprites.js';
 import { fmt } from '../../core/util.js';
 import { sfx } from '../../core/sound.js';
-import { G, stepWithDrag, terminalSpeed } from './physics.js';
+import { G, stepWithDrag, terminalSpeed, onlyChanges } from './physics.js';
 
 export const BODY_D = 0.32; // no parachute: an 80 kg skydiver tops out at 50 m/s
 const RUN_TIME = 16; // seconds of fall shown
@@ -21,10 +21,10 @@ export default function parachute(el, params = {}, api) {
   const GX0 = 250, GX1 = 466, GY0 = 40, GY1 = 270, VMAX = 60;
   const gx = (t) => GX0 + (t / RUN_TIME) * (GX1 - GX0);
   const gy = (v) => GY1 - (v / VMAX) * (GY1 - GY0);
-  const banner = taskBanner();
+  const banner = onlyChanges(taskBanner());
   el.append(banner.el);
   const st = makeStage(el, W, H);
-  const ro = readout();
+  const ro = onlyChanges(readout());
   let t = 0, v = 0, running = false, done = false, trace = [];
   let scroll = 0;
   let alive = true;
@@ -111,15 +111,6 @@ export default function parachute(el, params = {}, api) {
       drawSprite(ctx, 'u5chute', cx, cy - 22, sc);
     }
     drawSprite(ctx, 'u5diver', cx, cy + 10, 3);
-    // force arrows: weight down, drag up (same scale)
-    const k = 70 / 1000;
-    arrow(ctx, cx + 40, cy, cx + 40, cy + weightN() * k, '#ff6b6b', 4);
-    tag(ctx, `weight ${weightN()} N`, cx + 46, cy + weightN() * k + 4, { size: 10, align: 'left', color: '#ff6b6b' });
-    const drag = Math.min(weightN() * 1.5, D() * v * v);
-    if (drag > 5) {
-      arrow(ctx, cx - 40, cy, cx - 40, cy - drag * k, '#4aedd9', 4);
-      tag(ctx, `drag ${fmt(drag, 0)} N`, cx - 46, cy - drag * k - 2, { size: 10, align: 'right', color: '#4aedd9' });
-    }
     // speed–time graph
     ctx.fillStyle = 'rgba(20,18,29,0.8)'; ctx.fillRect(GX0 - 30, GY0 - 18, GX1 - GX0 + 40, GY1 - GY0 + 40);
     ctx.fillStyle = 'rgba(255,255,255,0.18)';
@@ -137,6 +128,15 @@ export default function parachute(el, params = {}, api) {
       ctx.strokeStyle = '#80ff20'; ctx.lineWidth = 3; ctx.beginPath();
       trace.forEach(([tt, vv], i) => (i ? ctx.lineTo(gx(tt), gy(vv)) : ctx.moveTo(gx(tt), gy(vv))));
       ctx.stroke();
+    }
+    // force arrows (drawn after the graph so the labels stay on top): weight down, drag up (same scale)
+    const k = 70 / 1000;
+    arrow(ctx, cx + 40, cy, cx + 40, cy + weightN() * k, '#ff6b6b', 4);
+    tag(ctx, `weight ${weightN()} N`, cx + 34, cy + weightN() * k + 16, { size: 10, align: 'right', color: '#ff6b6b' });
+    const drag = Math.min(weightN() * 1.5, D() * v * v);
+    if (drag > 5) {
+      arrow(ctx, cx - 40, cy, cx - 40, cy - drag * k, '#4aedd9', 4);
+      tag(ctx, `drag ${fmt(drag, 0)} N`, cx - 46, cy - drag * k - 2, { size: 10, align: 'right', color: '#4aedd9' });
     }
     tag(ctx, `t = ${fmt(t, 1)} s   v = ${fmt(v, 1)} m/s`, 120, 20, { size: 11 });
   });

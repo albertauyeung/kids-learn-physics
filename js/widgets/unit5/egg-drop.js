@@ -17,12 +17,15 @@ export default function eggDrop(el, params = {}, api) {
   const rng = makeRng(params.seed ?? randomSeed());
   const totalRounds = params.rounds || 3;
   const order = rng.shuffle(['safe', 'timed', 'chute']);
-  let roundNo = 0;
+  let roundNo = 0; // the round on screen (0-based)
+  let wins = 0;
   let tries = 0;
+  let pendingNext = false; // a round was just won: wait for the next one
+  let nextTimer = 0;
   let round = eggRound(order[0], rng);
   let h = 40, D = 0;
   let finished = false;
-  const W = 480, H = 300, GROUND = 272, TOPY = 26, HMAX = 80;
+  const W = 480, H = 300, GROUND = 272, TOPY = 34, HMAX = 100; // answers are at most 80 m: never a slider end
   const py = (GROUND - TOPY) / HMAX;
   const yOf = (m) => GROUND - m * py;
   const TX = 40, TW = 60, PX = 160; // tower and drop line
@@ -33,11 +36,19 @@ export default function eggDrop(el, params = {}, api) {
   let drop = null; // { t, rate, verdict, landed }
   let alive = true;
 
-  const hSlider = slider({ label: 'Drop height (window)', min: 5, max: HMAX, step: 5, value: h, unit: 'm', onInput: (v) => { h = v; drop = null; show(); } });
+  // No changes while the pod is falling or the next round is loading (a change would cancel a drop for free).
+  const busy = () => finished || pendingNext || (drop && !drop.landed);
+  const hSlider = slider({ label: 'Drop height (window)', min: 5, max: HMAX, step: 5, value: h, unit: 'm', onInput: (v) => { if (busy()) { hSlider.value = h; return; } h = v; drop = null; show(); } });
   const dSlider = slider({
     label: 'Parachute', min: 0, max: D_MAX, step: 1, value: D,
-    format: (v) => (v === 0 ? 'none' : `drag = ${v} × v²`), onInput: (v) => { D = v; drop = null; show(); },
+    format: (v) => (v === 0 ? 'none' : `drag = ${v} × v²`), onInput: (v) => { if (busy()) { dSlider.value = D; return; } D = v; drop = null; show(); },
   });
+  function lockControls() {
+    const b = busy();
+    hSlider.disabled = b || round.type === 'chute';
+    dSlider.disabled = b || round.type !== 'chute';
+    dropBtn.disabled = finished || pendingNext || (drop && !drop.landed);
+  }
   let revealed = null; // the worked solution, shown after 3 misses until he asks for a new challenge
   const dropBtn = button('🥚 Drop!', () => {
     if (revealed) {
@@ -47,10 +58,11 @@ export default function eggDrop(el, params = {}, api) {
       setupRound();
       return;
     }
-    if (finished || (drop && !drop.landed)) return;
+    if (busy()) return;
     const verdict = judgeEgg(round, h, D);
     drop = { t: 0, rate: Math.max(1, verdict.out.time / 5), verdict, landed: false };
     sfx.click();
+    lockControls();
     show();
   }, 'green');
   // The short goal sits in the readout, right beside the controls (also on a narrow iPad screen).
@@ -63,8 +75,7 @@ export default function eggDrop(el, params = {}, api) {
     D = 0;
     hSlider.value = h;
     dSlider.value = D;
-    hSlider.disabled = round.type === 'chute';
-    dSlider.disabled = round.type !== 'chute';
+    lockControls();
     show();
   }
 
@@ -99,21 +110,26 @@ export default function eggDrop(el, params = {}, api) {
     const { verdict } = drop;
     if (verdict.ok) {
       sfx.correct();
-      roundNo++;
+      wins++;
       show();
       const msg = round.type === 'safe'
         ? `Perfect: the highest safe drop (h = v² ÷ 2g = ${round.S * round.S} ÷ 20 = ${round.answerH} m).`
         : round.type === 'timed'
           ? `Right on cue! (h = 5 × ${round.T}² = ${round.answerH} m)`
           : `Safe and on time! (D from ${round.answers[0]} to ${round.answers[round.answers.length - 1]} works.)`;
-      if (roundNo >= totalRounds) {
+      if (wins >= totalRounds) {
         finished = true;
+        lockControls();
         banner.set(`${msg} Every egg survived — you are an Egg Drop Engineer! 🏆`, true);
         api.done();
       } else {
+        pendingNext = true;
+        lockControls();
         banner.set(`${msg} Next round…`, true);
-        setTimeout(() => {
+        nextTimer = setTimeout(() => {
           if (!alive) return;
+          pendingNext = false;
+          roundNo = wins; // the label moves on only when the new round starts
           round = eggRound(order[roundNo % order.length], rng);
           setupRound();
         }, 2200);
@@ -122,6 +138,7 @@ export default function eggDrop(el, params = {}, api) {
     }
     sfx.wrong();
     tries++;
+    lockControls();
     show();
     // Direction only — never the exact speed or time of the miss.
     const why = {
@@ -170,7 +187,7 @@ export default function eggDrop(el, params = {}, api) {
     let y = yOf(h);
     if (drop) y = yOf(Math.max(0, h - eggState(drop.t, D).y));
     const cracked = drop?.landed && !drop.verdict.ok && drop.verdict.why === 'fast';
-    if (D && !cracked) drawSprite(ctx, 'u5chute', PX, y - 24, 1.5 + Math.min(2.5, Math.log10(D + 1) * 1.2));
+    if (D && !cracked) { const sc = 1.5 + Math.min(2.5, Math.log10(D + 1) * 1.6); drawSprite(ctx, 'u5chute', PX, Math.max(y - 24, 10 * sc + 2), sc); }
     if (cracked) {
       ctx.fillStyle = '#fcee4b'; ctx.fillRect(PX - 16, GROUND - 4, 32, 4);
       ctx.fillStyle = '#f7efdc'; ctx.fillRect(PX - 22, GROUND - 6, 8, 4); ctx.fillRect(PX + 12, GROUND - 7, 9, 4);
@@ -194,6 +211,7 @@ export default function eggDrop(el, params = {}, api) {
   setupRound();
   return () => {
     alive = false;
+    clearTimeout(nextTimer);
     stop();
   };
 }

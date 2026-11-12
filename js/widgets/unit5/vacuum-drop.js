@@ -127,7 +127,7 @@ export default function vacuumDrop(el, params = {}, api) {
       ctx.fillStyle = '#fff'; ctx.fillRect(40, y, 10, 2);
       text(ctx, `${m} m`, 36, y + 4, { size: 10, align: 'right' });
     }
-    tag(ctx, air ? 'AIR' : 'VACUUM', 210, 22, { size: 12, color: air ? '#cfe6ff' : '#80ff20' });
+    tag(ctx, air ? 'AIR' : 'VACUUM', 410, 120, { size: 12, color: air ? '#cfe6ff' : '#80ff20' }); // beside the chamber, clear of the object names
     pair().forEach((o, i) => {
       const x = i === 0 ? 150 : 270;
       const b = run?.objs[i];

@@ -39,7 +39,7 @@ export function stepWithDrag(v, m, D, dt, g = G) {
 // pretend the pod speeds up at the full g until it reaches its terminal speed √(100 ÷ D), then falls
 // steadily at that speed. D = 0 means no parachute.
 export const POD_WEIGHT = 100;
-export const D_MAX = 100;
+export const D_MAX = 20;
 export const MAX_TRIES = 3;
 
 export const chuteTerminal = (D) => (D ? Math.sqrt(POD_WEIGHT / D) : Infinity);
@@ -78,21 +78,32 @@ export function eggRound(type, rng, prev) {
 
 function makeRound(type, rng) {
   if (type === 'safe') {
-    const S = rng.pick([10, 20, 30, 40]);
+    const S = rng.pick([20, 30, 40]); // answers 20, 45, 80 m: never an end of the 5–100 m slider
     return { type, S, answerH: (S * S) / (2 * G), key: `s${S}` };
   }
   if (type === 'timed') {
-    const T = rng.pick([1, 2, 3, 4]);
+    const T = rng.pick([2, 3, 4]);
     return { type, T, answerH: 0.5 * G * T * T, key: `t${T}` };
   }
   const H = rng.pick([40, 60, 80]);
-  // safe speed S; the time limit T allows terminal speeds down to about vMin
-  const { S, vMin } = rng.pick([{ S: 5, vMin: 4 }, { S: 10, vMin: 5 }]);
-  const T = H / vMin + 0.5;
-  const round = { type: 'chute', H, S, T, key: `c${H}-${S}` };
-  round.answers = [];
-  for (let D = 0; D <= D_MAX; D++) if (judgeEgg(round, H, D).ok) round.answers.push(D);
-  return round;
+  const S = rng.pick([4, 5, 10]);
+  return chuteRound(H, S);
+}
+
+// Safe speed S needs D ≥ 100 ÷ S² (lowest whole D: lo). The time limit T is chosen so that exactly
+// D = lo and lo + 1 work, both in the exact model and with the rule of thumb "time ≈ H ÷ speed"
+// (which gives D ≤ 100 × T² ÷ H²), so the maths he does matches the lab.
+export function chuteRound(H, S) {
+  const lo = Math.ceil(100 / (S * S) - 1e-9);
+  const tOf = (D) => eggOutcome(H, D).time;
+  for (let T = Math.ceil(tOf(lo + 1) * 10) / 10; T < tOf(lo + 2); T = Math.round((T + 0.1) * 10) / 10) {
+    const round = { type: 'chute', H, S, T, key: `c${H}-${S}` };
+    const answers = [];
+    for (let D = 0; D <= D_MAX; D++) if (judgeEgg(round, H, D).ok) answers.push(D);
+    const thumb = Math.floor((100 * T * T) / (H * H) + 1e-9);
+    if (answers.join() === `${lo},${lo + 1}` && thumb === lo + 1) return { ...round, answers };
+  }
+  throw new Error(`no chute round for H=${H}, S=${S}`);
 }
 
 // Does a drop pass the round? { ok, out, why } — why is a direction: 'fast', 'low', 'early', 'late', 'slow'.
@@ -118,6 +129,21 @@ export function eggSolution(round) {
   if (round.type === 'timed') return `h = ½gt² = 5 × ${round.T}² = <b>${round.answerH} m</b>.`;
   const lo = round.answers[0], hi = round.answers[round.answers.length - 1];
   return `Slow enough: terminal speed ≤ ${round.S} m/s, so D × ${round.S}² ≥ 100 → D ≥ ${100 / (round.S * round.S)}. `
-    + `Quick enough: speed ≈ ${round.H} ÷ ${round.T} ≈ ${Math.round((round.H / round.T) * 10) / 10} m/s or more, so D × v² = 100 gives D ≤ about ${Math.round(100 / (round.H / round.T) ** 2 * 10) / 10}. `
+    + `Quick enough: time ≈ ${round.H} ÷ speed ≤ ${round.T} s, so speed ≥ ${round.H} ÷ ${round.T} ≈ ${Math.round((round.H / round.T) * 100) / 100} m/s, and D × speed² = 100 gives D ≤ about ${Math.round((100 * round.T * round.T) / (round.H * round.H) * 100) / 100}. `
     + `Any D from <b>${lo} to ${hi}</b> works.`;
+}
+
+// Wrap a readout or task banner so it only rewrites its HTML when the content changes
+// (sims call show() every frame while running).
+export function onlyChanges(widget) {
+  let last = null;
+  return {
+    el: widget.el,
+    set(...args) {
+      const key = JSON.stringify(args);
+      if (key === last) return;
+      last = key;
+      widget.set(...args);
+    },
+  };
 }

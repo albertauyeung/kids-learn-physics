@@ -8,7 +8,7 @@ import { makeStage, loop, text, tag, slider, button, controls, readout, taskBann
 import { drawSprite, drawTexture } from '../../core/sprites.js';
 import { fmt } from '../../core/util.js';
 import { sfx } from '../../core/sound.js';
-import { G, passTimes } from './physics.js';
+import { G, passTimes, onlyChanges } from './physics.js';
 
 export default function throwUp(el, params = {}, api) {
   const mode = params.mode || 'basic';
@@ -23,10 +23,10 @@ export default function throwUp(el, params = {}, api) {
   const GX0 = 238, GX1 = 466;
   const gx = (t) => GX0 + (t / TMAX) * (GX1 - GX0);
   const BX = 110; // ball column
-  const banner = taskBanner();
+  const banner = onlyChanges(taskBanner());
   el.append(banner.el);
   const st = makeStage(el, W, H);
-  const ro = readout();
+  const ro = onlyChanges(readout());
   let t = 0, running = false, result = null;
   let alive = true;
 
@@ -123,6 +123,7 @@ export default function throwUp(el, params = {}, api) {
       ctx.setLineDash([5, 4]); ctx.strokeStyle = 'rgba(74,208,255,0.9)'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(BX - 20, y); ctx.lineTo(GX1, y); ctx.stroke(); ctx.setLineDash([]);
     }
+    drawSprite(ctx, 'hero', BX - 34, GROUND, 2); // drawn first, so strobe labels stay on top
     // graph
     ctx.fillStyle = 'rgba(20,18,29,0.75)'; ctx.fillRect(GX0 - 6, TOPY - 10, GX1 - GX0 + 12, GROUND - TOPY + 14);
     ctx.fillStyle = 'rgba(255,255,255,0.18)';
@@ -142,12 +143,15 @@ export default function throwUp(el, params = {}, api) {
       // strobe: where the ball was at each whole second, with its speed
       for (let s = 1; s <= Math.floor(t + 1e-9); s++) {
         const hs = heightAt(s);
-        if (hs < 0) continue;
+        if (hs < 1e-9) continue; // back at the start: no label over Pip
         const vs = u - G * s;
         ctx.globalAlpha = 0.45;
         drawSprite(ctx, 'u5ball', BX, yOf(hs), 2, { anchor: 'center' });
         ctx.globalAlpha = 1;
-        tag(ctx, `${s} s: ${Math.abs(vs) < 1e-9 ? '0' : `${fmt(Math.abs(vs))}${vs > 0 ? '↑' : '↓'}`}`, BX - 34, yOf(hs) + 4, { size: 9, color: '#fcee4b' });
+        // going up: label on the left; coming down: on the right — so the two at the same height don't overlap
+        const label = `${s} s: ${Math.abs(vs) < 1e-9 ? '0' : `${fmt(Math.abs(vs))}${vs > 0 ? '↑' : '↓'}`}`;
+        if (vs >= 0) tag(ctx, label, BX - 12, yOf(hs) + 4, { size: 9, color: '#fcee4b', align: 'right' });
+        else tag(ctx, label, BX + 12, yOf(hs) + 4, { size: 9, color: '#fcee4b', align: 'left' });
         ctx.fillStyle = '#fcee4b'; ctx.fillRect(gx(s) - 2, yOf(hs) - 2, 5, 5);
       }
       if (mode === 'window' && result) {
@@ -161,7 +165,6 @@ export default function throwUp(el, params = {}, api) {
     ctx.fillStyle = '#7f7f7f'; ctx.fillRect(BX - 12, GROUND - 24, 24, 24);
     ctx.fillStyle = '#5a5a5a'; ctx.fillRect(BX - 12, GROUND - 24, 24, 3); ctx.fillRect(BX - 12, GROUND - 3, 24, 3);
     ctx.fillStyle = '#222'; ctx.fillRect(BX - 5, GROUND - 22, 10, 6);
-    drawSprite(ctx, 'hero', BX - 34, GROUND, 2);
     const hb = running || result ? Math.max(0, heightAt(t)) : 0;
     drawSprite(ctx, 'u5ball', BX, yOf(hb) - 6, 2, { anchor: 'center' });
     tag(ctx, `t = ${fmt(t, 2)} s`, 180, 20, { size: 11 });
