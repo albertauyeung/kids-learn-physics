@@ -3,7 +3,7 @@
 // params: { u, a, t, tasks: [{ text, check({ u, a, t, v }), test? }] }
 
 import { makeStage, loop, sky, tag, slider, button, controls, readout, taskBanner } from '../stage.js';
-import { fmt } from '../../core/util.js';
+import { fmt, h } from '../../core/util.js';
 import { sfx } from '../../core/sound.js';
 import { drawRoad, drawCar, distancePosts, speedo, taskRunner } from './common.js';
 
@@ -27,21 +27,24 @@ export default function dashboard(el, params = {}, api) {
   };
   const su = slider({ label: 'Start speed u', min: 0, max: 12, step: 1, value: p.u, unit: 'm/s', onInput: (v) => { p.u = v; reset(); } });
   const sa = slider({ label: 'Acceleration a', min: 0, max: 4, step: 0.5, value: p.a, unit: 'm/s²', onInput: (v) => { p.a = v; reset(); } });
-  const stt = slider({ label: 'Time t', min: 1, max: 6, step: 1, value: p.t, unit: 's', onInput: (v) => { p.t = v; reset(); } });
+  // Time as a compact row of buttons (a third slider would push the controls off small screens).
+  const tBtns = [1, 2, 3, 4, 5, 6].map((k) => button(`${k} s`, () => { p.t = k; markT(); reset(); sfx.select(); }));
+  const markT = () => tBtns.forEach((b, i) => { b.className = `mc-btn small ${i + 1 === p.t ? 'green' : ''}`; b.setAttribute('aria-pressed', String(i + 1 === p.t)); });
+  markT();
+  const tRow = controls(h('span', { class: 'slider-label' }, 'Time t:'), ...tBtns);
   const go = button('▶ Drive', () => {
     clock = 0; dist = 0; log = [p.u]; lastRun = null; running = true;
     sfx.click();
     show();
   }, 'green');
-  el.append(controls(su.el, sa.el, stt.el), controls(go), ro.el);
+  // The action button comes first so it is always on screen (iPad portrait and landscape).
+  el.append(controls(go), controls(su.el, sa.el), tRow, ro.el);
 
   const speed = () => p.u + p.a * clock;
 
   function show() {
     ro.set([
-      ['Speed at each second', log.length ? `${log.map((v) => fmt(v)).join(' → ')} m/s` : 'press Drive'],
-      log.length > 1 && ['Speed gained each second', `+${fmt(p.a)} m/s`],
-      lastRun && ['After ' + lastRun.t + ' s', `${fmt(lastRun.v)} m/s`, 'winner'],
+      ['Speed at each second', log.length ? `${log.map((v) => fmt(v)).join(' → ')} m/s${log.length > 1 ? ` (+${fmt(p.a)} each second)` : ''}` : 'press Drive'],
     ]);
   }
 

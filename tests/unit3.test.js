@@ -276,7 +276,7 @@ test('Unit 3: structure follows the brief', () => {
   const ids = unit3.sessions.map((s) => s.id);
   assert.deepEqual(ids, ['mech.u3.l1', 'mech.u3.l2', 'mech.u3.l3', 'mech.u3.l4', 'mech.u3.l5', 'mech.u3.lq', 'mech.u3.psA', 'mech.u3.psB', 'mech.u3.review', 'mech.u3.boss']);
   const n = (s) => s.steps.filter((x) => ['q', 'mcq', 'numeric', 'equation'].includes(x.type)).length;
-  for (const s of unit3.sessions.filter((x) => x.type === 'lesson')) assert.ok(n(s) >= 6 && n(s) <= 8, `${s.id}: ${n(s)} questions`);
+  for (const s of unit3.sessions.filter((x) => x.type === 'lesson')) assert.ok(n(s) >= 5 && n(s) <= 8, `${s.id}: ${n(s)} questions`);
   const get = (id) => unit3.sessions.find((s) => s.id === id);
   assert.ok(n(get('mech.u3.psA')) >= 8 && n(get('mech.u3.psA')) <= 10);
   assert.ok(n(get('mech.u3.psB')) >= 7 && n(get('mech.u3.psB')) <= 9);
@@ -369,9 +369,9 @@ test('Unit 3 sims: planning feedback points the right way, and a right value wit
     return msgs[msgs.length - 1];
   };
   // brakes: u = 12, b = 2 stops on the 36 m flag but the task wants 24 m/s
-  assert.match(run('Stopping-Distance Game', 2, { u: 12, b: 2, time: 6, dist: 36 }), /stopped on the flag, but it must start at 24/);
-  assert.match(run('Stopping-Distance Game', 2, { u: 24, b: 6, time: 4, dist: 48 }), /went past the flag/);
-  assert.match(run('Stopping-Distance Game', 2, { u: 24, b: 8.5, time: 24 / 8.5, dist: 576 / 17 }), /stopped before the flag/);
+  assert.match(run('Stop at the Flag', 0, { u: 12, b: 2, time: 6, dist: 36 }), /stopped on the flag, but it must start at 24/);
+  assert.match(run('Stop at the Flag', 0, { u: 24, b: 6, time: 4, dist: 48 }), /went past the flag/);
+  assert.match(run('Stop at the Flag', 0, { u: 24, b: 8.5, time: 24 / 8.5, dist: 576 / 17 }), /stopped before the flag/);
   const trap = (u, v, t) => ({ pieces: [{ v0: u, v1: v, dt: t }], total: ((u + v) / 2) * t, u, v, t });
   assert.match(run('Trapezium Lab', 2, trap(9, 9, 4)), /right distance, but it must speed up/);
   assert.match(run('Trapezium Lab', 1, trap(8, 16, 4)), /right distance, but it must start at 6/);

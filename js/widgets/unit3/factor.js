@@ -3,7 +3,7 @@
 // then choose the root that makes sense (time can't be negative). The car then drives it.
 // params: { problems: [{ u, s }] } — every problem must have whole-number roots.
 
-import { makeStage, loop, sky, text, tag, slider, button, controls, readout, taskBanner } from '../stage.js';
+import { makeStage, loop, sky, text, tag, slider, button, controls, taskBanner } from '../stage.js';
 import { h, fmt } from '../../core/util.js';
 import { sfx } from '../../core/sound.js';
 import { drawRoad, drawCar } from './common.js';
@@ -17,7 +17,6 @@ export default function factor(el, params = {}, api) {
   const banner = taskBanner();
   el.append(banner.el);
   const st = makeStage(el, W, H);
-  const ro = readout();
   let k = 0, p = 1, q = 1;
   let stage = 'factor'; // 'factor' → 'root' → 'drive' → 'solved'
   let clock = 0, root = 0;
@@ -28,7 +27,8 @@ export default function factor(el, params = {}, api) {
   const sq = slider({ label: 'Second number', min: -12, max: 12, step: 1, value: q, format: (v) => (v < 0 ? `−${-v}` : `+${v}`), onInput: (v) => { q = v; changed(); } });
   const checkBtn = button('✔ Check my brackets', check, 'green');
   const rootBox = h('div', { class: 'sim-controls' });
-  el.append(controls(sp.el, sq.el), controls(checkBtn), rootBox, ro.el);
+  // Check button first so it is always on screen; the multiply/add checks are drawn on the canvas.
+  el.append(controls(checkBtn), rootBox, controls(sp.el, sq.el));
 
   const cur = () => problems[k];
   const eqText = () => `t² + ${cur().u === 1 ? '' : cur().u}t − ${cur().s} = 0`;
@@ -38,14 +38,7 @@ export default function factor(el, params = {}, api) {
     show();
   }
 
-  function show() {
-    const { u, s } = cur();
-    ro.set([
-      ['Brackets', `(t ${sgn(p)})(t ${sgn(q)}) = 0`],
-      ['Multiply: first × second', `${par(p)} × ${par(q)} = ${fmt(p * q)}   (need −${s})`],
-      ['Add: first + second', `${par(p)} + ${par(q)} = ${fmt(p + q)}   (need +${u})`],
-    ]);
-  }
+  function show() {} // everything is drawn on the canvas
 
   function intro() {
     const { u, s } = cur();
@@ -130,9 +123,11 @@ export default function factor(el, params = {}, api) {
     const t = stage === 'drive' || stage === 'solved' ? clock : 0;
     const d = u * t + t * t;
     drawCar(ctx, xOf(d) - 16, ROAD, 2, stage === 'drive' ? Math.sin(now * 30) * 0.5 : 0);
-    text(ctx, eqText(), W / 2, 34, { size: 18, align: 'center', bold: true, color: '#fff' });
-    text(ctx, `(t ${sgn(p)})(t ${sgn(q)}) = 0`, W / 2, 64, { size: 15, align: 'center', color: '#fcee4b' });
-    tag(ctx, `t = ${fmt(t, 1)} s   distance ${fmt(d, 1)} m`, 110, 100, { size: 11 });
+    text(ctx, eqText(), W / 2, 28, { size: 17, align: 'center', bold: true, color: '#fff' });
+    text(ctx, `(t ${sgn(p)})(t ${sgn(q)}) = 0`, W / 2, 54, { size: 15, align: 'center', color: '#fcee4b' });
+    tag(ctx, `multiply: ${par(p)} × ${par(q)} = ${fmt(p * q)}  (need −${s})`, 8, 82, { size: 11, align: 'left' });
+    tag(ctx, `add: ${par(p)} + ${par(q)} = ${fmt(p + q)}  (need +${u})`, 8, 104, { size: 11, align: 'left' });
+    tag(ctx, `t = ${fmt(t, 1)} s   distance ${fmt(d, 1)} m`, 8, H - 6, { size: 11, align: 'left' });
   });
 
   intro();

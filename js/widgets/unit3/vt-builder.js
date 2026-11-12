@@ -15,13 +15,13 @@ export default function vtBuilder(el, params = {}, api) {
   const single = params.mode === 'single';
   // Multi: pieces start from rest, each piece starts at the previous end speed.
   const pieces = single
-    ? [{ v: params.v ?? 12, dt: params.t ?? 4 }]
+    ? [{ v: params.v ?? 12, dt: params.fixT ?? params.t ?? 4 }]
     : (params.pieces || [{ v: 10, dt: 4 }, { v: 10, dt: 4 }, { v: 0, dt: 2 }]).map((x) => ({ ...x }));
   let u0 = single ? params.u ?? 4 : 0;
   let sel = 0;
-  const W = 480, H = 340, ROAD = 70;
+  const W = 480, H = 290, ROAD = 44;
   const TMAX = single ? 10 : 24, VMAX = 20;
-  const G = { left: 44, right: W - 14, top: 132, bottom: H - 30 };
+  const G = { left: 44, right: W - 14, top: 96, bottom: H - 28 };
   const banner = taskBanner();
   el.append(banner.el);
   const st = makeStage(el, W, H);
@@ -65,14 +65,23 @@ export default function vtBuilder(el, params = {}, api) {
   };
 
   // ---------- controls ----------
+  // The action row (piece buttons + Drive) comes first, so Drive is always on screen.
   const box = controls();
+  const actions = controls();
+  const go = button('▶ Drive', () => {
+    clock = 0; driven = null; running = true; hidden = false;
+    sfx.click();
+    show();
+  }, 'green');
   let sv, sd, su;
   const pieceBtns = [];
   if (single) {
     su = slider({ label: 'Start speed u', min: 0, max: 20, step: 1, value: u0, unit: 'm/s', onInput: (x) => { u0 = x; reset(); } });
     sv = slider({ label: 'End speed v', min: 0, max: 20, step: 1, value: pieces[0].v, unit: 'm/s', onInput: (x) => { pieces[0].v = x; reset(); } });
-    sd = slider({ label: 'Time t', min: 1, max: 10, step: 1, value: pieces[0].dt, unit: 's', onInput: (x) => { pieces[0].dt = x; reset(); } });
-    box.append(su.el, sv.el, sd.el);
+    // fixT: every task uses the same time, so there is no time slider (fewer controls to scroll past).
+    if (!params.fixT) sd = slider({ label: 'Time t', min: 1, max: 10, step: 1, value: pieces[0].dt, unit: 's', onInput: (x) => { pieces[0].dt = x; reset(); } });
+    box.append(su.el, sv.el, ...(sd ? [sd.el] : []));
+    actions.append(go);
   } else {
     const pick = (i) => {
       sel = i;
@@ -83,15 +92,11 @@ export default function vtBuilder(el, params = {}, api) {
     sv = slider({ label: 'End speed of this piece', min: 0, max: 20, step: 1, value: pieces[0].v, unit: 'm/s', onInput: (x) => { pieces[sel].v = x; reset(); } });
     sd = slider({ label: 'Time for this piece', min: 1, max: 8, step: 1, value: pieces[0].dt, unit: 's', onInput: (x) => { pieces[sel].dt = x; reset(); } });
     pieces.forEach((_, i) => pieceBtns.push(button(`Piece ${i + 1}`, () => { pick(i); sfx.select(); })));
-    box.append(...pieceBtns, sv.el, sd.el);
+    actions.append(...pieceBtns, go);
+    box.append(sv.el, sd.el);
     pick(0);
   }
-  const go = button('▶ Drive', () => {
-    clock = 0; driven = null; running = true; hidden = false;
-    sfx.click();
-    show();
-  }, 'green');
-  el.append(box, controls(go), ro.el);
+  el.append(actions, box, ro.el);
 
   function pieceText(s) {
     const lo = Math.min(s.v0, s.v1), hi = Math.max(s.v0, s.v1);
@@ -155,7 +160,7 @@ export default function vtBuilder(el, params = {}, api) {
       const step = single ? 25 : 50;
       for (let m = 0; m <= L; m += step) {
         ctx.fillRect(Math.round(xOf(m)), ROAD + 24, 1, 5);
-        text(ctx, `${m}`, xOf(m), ROAD + 40, { size: 9, align: 'center' });
+        text(ctx, `${m}`, xOf(m), ROAD + 36, { size: 9, align: 'center' });
       }
     }
     const d = running || driven ? distAt(clock) : 0;
@@ -165,7 +170,7 @@ export default function vtBuilder(el, params = {}, api) {
 
     // ---- graph ----
     ctx.fillStyle = '#1b1527';
-    ctx.fillRect(0, ROAD + 46, W, H - ROAD - 46);
+    ctx.fillRect(0, ROAD + 42, W, H - ROAD - 42);
     ctx.fillStyle = '#26203a';
     ctx.fillRect(G.left, G.top, G.right - G.left, G.bottom - G.top);
     ctx.fillStyle = 'rgba(255,255,255,0.09)';
@@ -205,7 +210,7 @@ export default function vtBuilder(el, params = {}, api) {
     for (let t = 0; t <= TMAX; t += tl) text(ctx, String(t), gx(t), G.bottom + 13, { size: 9, align: 'center' });
     for (let v = 0; v <= VMAX; v += 4) text(ctx, String(v), G.left - 5, gy(v) + 4, { size: 9, align: 'right' });
     text(ctx, 'time (s)', G.right, H - 3, { size: 10, align: 'right', color: '#aaa' });
-    text(ctx, 'velocity (m/s)', 4, G.top - 4, { size: 10, color: '#aaa' });
+    text(ctx, 'velocity (m/s)', G.left + 6, G.top + 12, { size: 10, color: '#aaa' });
     // the line
     const ss = segs();
     ctx.strokeStyle = '#80ff20';
@@ -222,7 +227,10 @@ export default function vtBuilder(el, params = {}, api) {
       ctx.moveTo(gx(s.t0), gy(s.v0));
       ctx.lineTo(gx(s.t1), gy(s.v1));
       ctx.stroke();
-      ss.forEach((sg, i) => tag(ctx, String(i + 1), (gx(sg.t0) + gx(sg.t1)) / 2, Math.min(gy(sg.v0), gy(sg.v1)) - 6, { size: 10, color: i === sel ? '#fcee4b' : '#ddd' }));
+      ss.forEach((sg, i) => tag(ctx, driven && !hidden ? `${i + 1}: a = ${fmtSigned((sg.v1 - sg.v0) / sg.dt, 2)}` : String(i + 1), (gx(sg.t0) + gx(sg.t1)) / 2, Math.min(gy(sg.v0), gy(sg.v1)) - 6 - (driven && !hidden ? (i % 2) * 15 : 0), { size: 10, color: i === sel ? '#fcee4b' : '#ddd' }));
+    } else if (driven && !hidden) {
+      const sg = ss[0];
+      tag(ctx, `slope a = ${fmtSigned((sg.v1 - sg.v0) / sg.dt, 2)} m/s²`, (gx(sg.t0) + gx(sg.t1)) / 2, Math.min(gy(sg.v0), gy(sg.v1)) - 8, { size: 11, color: '#fcee4b' });
     }
     if (running || driven) {
       ctx.fillStyle = '#ff6b6b';

@@ -71,7 +71,7 @@ export default function traffic(el, params = {}, api) {
   let roundNo = 0, R = null, val = 0, tries = 0, label = 1, sl = null;
   const MAX_TRIES = 3;
   let clock = 0, running = false, result = null;
-  let alive = true, timer = null;
+  let finished = false;
   // Between rounds (after a win or 3 misses) Go does nothing until the next light appears.
   const waiting = () => !!result && (result.ok || tries >= MAX_TRIES);
   // Lock the controls while the car runs and between rounds, so a run can't be cancelled or counted twice.
@@ -79,14 +79,22 @@ export default function traffic(el, params = {}, api) {
     const off = running || waiting();
     goBtn.disabled = off;
     if (sl) sl.disabled = off;
+    // After a win or a 3-miss reveal the child reads the banner, then moves on when ready.
+    nextBtn.style.display = waiting() && !finished ? '' : 'none'; // .mc-btn sets display, so [hidden] would not hide it
   };
+  const nextBtn = button('Next round ▶', () => {
+    if (!waiting() || finished) return;
+    sfx.click();
+    newRound();
+  }, 'green');
+  nextBtn.style.display = 'none';
   const goBtn = button('▶ Go!', () => {
     if (running || waiting()) return;
     clock = 0; result = null; running = true;
     lock();
     sfx.click();
   }, 'green');
-  el.append(box, controls(goBtn), ro.el);
+  el.append(controls(goBtn, nextBtn), box, ro.el);
 
   function newRound() {
     // A fresh round never repeats the answer of the one before (e.g. after a reveal).
@@ -99,17 +107,17 @@ export default function traffic(el, params = {}, api) {
       val = START.stop; // never an answer (all answers are 2 m/s² or more)
       s = slider({ label: 'Brakes: deceleration', min: 1, max: 8, step: 0.1, value: val, unit: 'm/s²', onInput: (v) => { if (running || waiting()) return; val = v; clock = 0; result = null; } });
       banner.set(`Round ${roundNo + 1}/${totalRounds}: <b>Red light!</b> You're doing <b>${R.u} m/s</b> and the stop line is <b>${R.d} m</b> ahead. You brake right now — how hard, to stop <b>exactly on the line</b>?`);
-      ro.set([['Speed u', `${R.u} m/s`], ['Stop line', `${R.d} m ahead`], ['You set', 'the deceleration']]);
+      ro.set([['Speed u', `${R.u} m/s`], ['Stop line', `${R.d} m ahead`]]);
     } else if (R.type === 'brakepoint') {
       val = START.brakepoint; // never an answer (you always cruise at least 10 m first)
       s = slider({ label: 'Start braking at', min: 0, max: R.D, step: 1, value: val, unit: 'm', onInput: (v) => { if (running || waiting()) return; val = v; clock = 0; result = null; } });
       banner.set(`Round ${roundNo + 1}/${totalRounds}: The light ahead is <b>red</b>. You're cruising at <b>${R.u} m/s</b> and your brakes give <b>${R.b} m/s²</b>. The stop line is <b>${R.D} m</b> away. Where must you <b>start braking</b> to stop exactly on the line?`);
-      ro.set([['Speed u', `${R.u} m/s`], ['Brakes', `${R.b} m/s²`], ['Stop line', `${R.D} m from the start`], ['You set', 'where the brakes go on']]);
+      ro.set([['Speed u', `${R.u} m/s`], ['Brakes', `${R.b} m/s²`], ['Stop line', `${R.D} m from the start`]]);
     } else {
       val = START.go; // never an answer (answers are 1 to 4 m/s²)
       s = slider({ label: 'Acceleration', min: 0.5, max: 5, step: 0.1, value: val, unit: 'm/s²', onInput: (v) => { if (running || waiting()) return; val = v; clock = 0; result = null; } });
       banner.set(`Round ${roundNo + 1}/${totalRounds}: <b>Green wave!</b> You start from rest. The light <b>${R.D} m</b> ahead turns green in exactly <b>${R.T} s</b>. Choose your acceleration so you reach it <b>exactly as it turns green</b> — not before (you'd have to stop), not after.`);
-      ro.set([['Start', 'from rest (u = 0)'], ['Light', `${R.D} m ahead`], ['Turns green after', `${R.T} s`], ['You set', 'the acceleration']]);
+      ro.set([['Start', 'from rest (u = 0)'], ['Light', `${R.D} m ahead`], ['Turns green after', `${R.T} s`]]);
     }
     box.append(s.el);
     sl = s;
@@ -167,10 +175,8 @@ export default function traffic(el, params = {}, api) {
       sfx.wrong();
       tries++;
       if (tries >= MAX_TRIES) {
-        banner.set(`${msg} That was 3 tries. Here's how to work it out: ${solution()}. Try a new light with new numbers!`);
-        timer = setTimeout(() => {
-          if (alive) newRound();
-        }, 6000);
+        banner.set(`${msg} That was 3 tries. Here's how to work it out: ${solution()}. Press <b>Next round</b> for a new light with new numbers.`);
+        lock();
         return;
       }
       const tip = R.type === 'go' ? 'Use s = ½at² with s and t known.' : 'Use braking distance = u² ÷ (2 × deceleration).';
@@ -181,14 +187,14 @@ export default function traffic(el, params = {}, api) {
     sfx.correct();
     roundNo++;
     if (roundNo >= totalRounds) {
+      finished = true;
+      lock();
       banner.set(`${msg} Every light conquered — you are a Traffic Master! 🏆`, true);
       api.done();
       return;
     }
-    banner.set(`${msg} Next round...`, true);
-    timer = setTimeout(() => {
-      if (alive) newRound();
-    }, 1800);
+    banner.set(`${msg} Press <b>Next round</b> when you're ready.`, true);
+    lock();
   }
 
   const stop = loop((dt, now) => {
@@ -230,8 +236,6 @@ export default function traffic(el, params = {}, api) {
 
   newRound();
   return () => {
-    alive = false;
-    clearTimeout(timer);
     stop();
   };
 }

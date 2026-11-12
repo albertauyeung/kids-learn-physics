@@ -46,15 +46,14 @@ export default function brakes(el, params = {}, api) {
     sfx.click();
     show();
   }, 'green');
-  el.append(controls(su.el, sb.el), controls(go), ro.el);
+  el.append(controls(go), controls(su.el, sb.el), ro.el);
 
   let hidden = false; // the exact result of a missed planning task stays secret
   function show() {
     ro.set([
-      ['Acceleration (forward is +)', `a = −${fmt(p.b)} m/s²: it loses ${fmt(p.b)} m/s every second`],
+      ['Acceleration (forward is +)', `a = −${fmt(p.b)} m/s²`],
       log.length && !hidden && !(tasks.planning && running) && ['Speed at each second', `${log.map((v) => fmt(v, 2)).join(' → ')} m/s`],
-      done && ['Time to stop', hidden ? '?' : `${fmt(done.time, 2)} s`, 'winner'],
-      done && ['Braking distance', hidden ? '? (work it out!)' : `${fmt(done.dist, 2)} m`, 'winner'],
+      done && ['Stopped after', hidden ? '? s and ? m (work it out!)' : `${fmt(done.time, 2)} s, in ${fmt(done.dist, 2)} m`, 'winner'],
     ]);
   }
 
