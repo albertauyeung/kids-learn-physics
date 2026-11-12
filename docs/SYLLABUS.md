@@ -164,8 +164,10 @@ Each unit lists: lessons → problem sets → Boss Mission. Sample problems show
 1. **What is acceleration?** — `a = (v − u) ÷ t`; car dashboard sim
 2. **Slowing down** — negative acceleration (deceleration, 減速); braking sim
 3. **Velocity–time graphs** — slope = acceleration, area = distance (counting squares)
-4. **Equations from graphs** — derive `v = u + at` and `s = ½(u + v)t` from the area
-5. **The power equations** — `s = ut + ½at²`, `v² = u² + 2as`; stopping-distance game
+4. **Equations from graphs** — derive `v = u + at` and `s = ½(u + v)t` from the area; also `s = ut + ½at²` (rectangle + triangle under the line)
+5. **v² = u² + 2as & stopping distances** — derived by eliminating t (uses (v + u)(v − u) = v² − u²);
+   stopping distance = thinking distance + braking distance; stopping-distance game (double the speed → ×4)
+6. **Quadratics in motion** (maths power-up) — `21 = 4t + t²` → factorise → keep the positive root; Factor Finder sim
 
 **Sample problems**
 - 🟢 A car goes from 0 to 30 m/s in 6 s. Acceleration? → **5 m/s²**
@@ -173,7 +175,9 @@ Each unit lists: lessons → problem sets → Boss Mission. Sample problems show
 - 🔴 A car at 4 m/s accelerates at 2 m/s². When has it travelled 21 m?
   `21 = 4t + t²` → `(t + 7)(t − 3) = 0` → **t = 3 s**
 
-**Boss Mission:** *Traffic Light Challenge* — accelerate and brake to stop exactly on the line.
+**Boss Mission:** *Traffic Light Challenge* — three kinds of round: choose the braking to stop on the line, choose where to
+start braking, or choose the acceleration to reach a light as it turns green. Three tries per round with "too far / too short"
+feedback only, so the equations, not guessing, win it.
 
 ---
 
@@ -191,7 +195,8 @@ Each unit lists: lessons → problem sets → Boss Mission. Sample problems show
 - 🟡 Push a 10 kg box with 50 N; friction is 30 N. Acceleration? → **2 m/s²**
 - 🔴 A 2 kg trolley accelerates at 1.5 m/s² while friction is 4 N. How hard are you pushing? → **7 N**
 
-**Boss Mission:** *Ice Hockey Physics* — score with the right push, using friction to stop the puck.
+**Boss Mission:** *Ice Hockey Physics* — friction slows a 0.2 kg puck (a = friction ÷ mass); choose the launch speed or the
+stick's push so it stops in the goal zone (`v² = 2as`). Three tries per shot, direction-only feedback.
 
 ---
 
@@ -202,7 +207,9 @@ Each unit lists: lessons → problem sets → Boss Mission. Sample problems show
 2. **Everything falls the same** — Galileo, the Apollo 15 hammer & feather; vacuum chamber sim
 3. **Falling equations** — `v = gt`, `h = ½gt²`; drop-a-stone-into-a-well
 4. **Up and down** — throwing upward; symmetry (對稱); max height `h = u² ÷ 2g`
-5. **Air resistance** — drag, terminal velocity (終端速度); parachute designer
+5. **Two answers: quadratics** (maths power-up) — `10 = 15t − 5t²` → `(t − 1)(t − 2) = 0`; when both roots make sense and
+   when to reject a negative one
+6. **Air resistance** — drag, terminal velocity (終端速度); skydive sim and parachute designer
 
 **Sample problems**
 - 🟢 A 30 kg child on the Moon (g = 1.6 N/kg). Weight? → **48 N**
@@ -212,7 +219,8 @@ Each unit lists: lessons → problem sets → Boss Mission. Sample problems show
 - ⭐ *Puzzle Corner:* You hear the splash 3.15 s after dropping a stone. Sound travels at 300 m/s. How deep is the well?
   `t² + 60t − 189 = 0` → `(t + 63)(t − 3) = 0` → fall time 3 s → **45 m**
 
-**Boss Mission:** *Egg Drop Lab* — choose the height and parachute so the egg lands below a safe speed.
+**Boss Mission:** *Egg Drop Lab* — choose the drop height (`v² = 2gh`, `h = 5t²`) or the parachute so the egg lands below
+a safe speed within a time limit. Three tries per round, direction-only feedback.
 
 ---
 
@@ -360,8 +368,9 @@ Course: Physics
 
 ## 7. Build status
 
-- ✅ Units 1–2 are built and playable (19 sessions, including a Unit Review per unit). Lessons start with up to 2 warm-up review questions, which the app adds automatically.
-- ⏳ Units 3–10 appear on the map as "Coming soon".
+- ✅ Units 1–5 are built and playable (48 sessions, including a Unit Review per unit). Lessons start with up to 2 warm-up review questions, which the app adds automatically.
+- ✅ Every lesson has a 📖 cheat sheet; boss missions allow 3 tries per round with direction-only feedback.
+- ⏳ Units 6–10 appear on the map as "Coming soon".
 
 ## 8. Suggested build order
 

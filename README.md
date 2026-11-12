@@ -4,8 +4,9 @@ A blocky, game-style physics course for kids aged about 10–12. It's designed f
 Each 10–15 minute session mixes interactive simulations, predictions, worked explanations and
 calculation/word problems. Duolingo-style XP, streaks, emeralds, quests and achievements keep it fun.
 
-**Now playable:** Mechanics Unit 1 (Describing Motion) and Unit 2 (Velocity & Relative Motion).
-That's 19 sessions: per unit, 5–6 lessons, 2 problem sets, a Unit Review and a Boss Mission. The full 10-unit plan is in
+**Now playable:** Mechanics Units 1–5: Describing Motion, Velocity & Relative Motion, Acceleration & Motion Graphs,
+Forces & Newton's Laws, and Gravity & Free Fall. That's 48 sessions: per unit, 5–6 lessons, 2 problem sets, a Unit Review
+and a Boss Mission. The full 10-unit plan is in
 [`docs/SYLLABUS.md`](docs/SYLLABUS.md).
 
 ## Run it
