@@ -347,6 +347,10 @@ summary.notes-unit-title { cursor: pointer; }
 .bubble::before { content: ''; position: absolute; left: -12px; top: 18px; border: 6px solid transparent; border-right-color: #000; border-width: 6px 12px 6px 0; }
 .bubble ul { margin: 6px 0 10px; padding-left: 22px; }
 .bubble p:last-child { margin-bottom: 0; }
+/* Optional derivation inside an info card: closed by default so the main idea stays short. */
+.bubble details.why { margin: 8px 0 4px; border: 2px dashed #9a9a9a; padding: 6px 10px; background: #f6f6f6; }
+.bubble details.why > summary { cursor: pointer; font-weight: 800; color: var(--ink); }
+.bubble details.why[open] > summary { margin-bottom: 6px; }
 .eq {
   font-family: var(--font);
   font-size: 20px;
@@ -624,6 +628,8 @@ svg.graph .g-axis-label { fill: #aaa; font-size: 11px; }
   }
   .sim-box:has(canvas) > * { grid-column: 1 / -1; }
   .sim-box:has(canvas) > canvas.stage { grid-column: 1; grid-row: span 8; }
+  /* Landscape iPad / laptop: keep tall stages short enough that the card's text, controls and readout stay on screen. */
+  .sim-box > canvas.stage { max-height: 48vh; width: auto; max-width: 100%; justify-self: center; }
   .sim-box:has(canvas) > .sim-controls,
   .sim-box:has(canvas) > .slider,
   .sim-box:has(canvas) > .readout { grid-column: 2; }
