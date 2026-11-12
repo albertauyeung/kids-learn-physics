@@ -338,6 +338,9 @@ export const ACHIEVEMENTS = {
   vonneumann: { name: 'Von Neumann', desc: 'Solve the bird-and-trains puzzle', icon: 'bee' },
   unit1: { name: 'Motion Master', desc: 'Beat the Unit 1 Boss Mission', icon: 'minecart' },
   unit2: { name: 'River Captain', desc: 'Beat the Unit 2 Boss Mission', icon: 'boat' },
+  unit3: { name: 'Traffic Ace', desc: 'Beat the Unit 3 Boss Mission', icon: 'flag' },
+  unit4: { name: 'Force Champion', desc: 'Beat the Unit 4 Boss Mission', icon: 'diamond' },
+  unit5: { name: 'Egg Defender', desc: 'Beat the Unit 5 Boss Mission', icon: 'star' },
   level5: { name: 'Level 5', desc: 'Reach level 5', icon: 'xporb' },
   shopper: { name: 'New Look', desc: 'Buy a new skin', icon: 'emerald' },
 };

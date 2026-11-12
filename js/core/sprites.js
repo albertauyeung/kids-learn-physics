@@ -162,6 +162,14 @@ const SPRITES = {
   },
 };
 
+// Units can add their own sprites (e.g. js/content/mechanics/unit3-sprites.js).
+export function registerSprites(defs) {
+  for (const [name, def] of Object.entries(defs)) {
+    if (SPRITES[name]) throw new Error(`Duplicate sprite ${name}`);
+    SPRITES[name] = def;
+  }
+}
+
 const cache = new Map();
 
 function spriteCanvas(name, skinColors) {

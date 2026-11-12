@@ -584,6 +584,7 @@ function profileScreen(main) {
   // Parent corner: concept mastery + predictions to revisit
   const concepts = Object.entries(st.concepts).sort();
   const conceptNames = {
+    ...Object.assign({}, ...playableUnits().map((u) => u.conceptNames || {})),
     'mech.units': 'Units & conversions', 'mech.displacement': 'Distance & displacement', 'mech.speed': 'Speed',
     'mech.average-speed': 'Average speed', 'mech.dt-graph': 'Distance–time graphs', 'mech.velocity': 'Velocity',
     'mech.vector-add': 'Adding velocities', 'mech.relative-motion': 'Relative motion', 'mech.pythagoras': 'Pythagoras',

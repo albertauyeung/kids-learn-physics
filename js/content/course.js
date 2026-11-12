@@ -3,6 +3,9 @@
 
 import unit1 from './mechanics/unit1.js';
 import unit2 from './mechanics/unit2.js';
+import unit3 from './mechanics/unit3.js';
+import unit4 from './mechanics/unit4.js';
+import unit5 from './mechanics/unit5.js';
 
 const soon = (number, title, subtitle) => ({ id: `mech.u${number}`, number, title, subtitle, comingSoon: true, sessions: [] });
 
@@ -16,9 +19,9 @@ export const course = {
       units: [
         unit1,
         unit2,
-        soon(3, 'Acceleration & Motion Graphs', 'v = u + at, stopping distances, quadratics'),
-        soon(4, "Forces & Newton's Laws", 'F = ma, friction, action and reaction'),
-        soon(5, 'Gravity & Free Fall', 'g, weight, falling and terminal velocity'),
+        unit3,
+        unit4,
+        unit5,
         soon(6, 'Projectile Motion', 'Cannons, cliffs and the perfect throw'),
         soon(7, 'Circular Motion', 'Loops, bends and centripetal force'),
         soon(8, 'Momentum & Collisions', 'Bumper carts, recoil and airbags'),
