@@ -17,8 +17,9 @@ export default function throwUp(el, params = {}, api) {
   let u = params.u || 20;
   let hw = params.hw || 10; // window height
   const W = 480, H = 320, GROUND = 296, TOPY = 34, HMAX = 45, TMAX = 6;
-  const py = (GROUND - TOPY) / HMAX;
-  const yOf = (h) => GROUND - h * py;
+  const LAUNCH = GROUND - 24; // heights are measured from the top of the dispenser
+  const py = (LAUNCH - TOPY) / HMAX;
+  const yOf = (h) => LAUNCH - h * py;
   const GX0 = 238, GX1 = 466;
   const gx = (t) => GX0 + (t / TMAX) * (GX1 - GX0);
   const BX = 110; // ball column
@@ -29,9 +30,9 @@ export default function throwUp(el, params = {}, api) {
   let t = 0, running = false, result = null;
   let alive = true;
 
-  const uSlider = slider({ label: 'Throw speed (up)', min: 5, max: 30, step: 1, value: u, unit: 'm/s', onInput: (v) => { u = v; reset(); } });
+  const uSlider = slider({ label: 'Launch speed (up)', min: 5, max: 30, step: 1, value: u, unit: 'm/s', onInput: (v) => { u = v; reset(); } });
   const wSlider = mode === 'window' ? slider({ label: 'Window height', min: 5, max: 45, step: 5, value: hw, unit: 'm', onInput: (v) => { hw = v; reset(); } }) : null;
-  const throwBtn = button('▲ Throw!', () => { t = 0; result = null; running = true; sfx.click(); show(); }, 'green');
+  const throwBtn = button('▲ Fire!', () => { t = 0; result = null; running = true; sfx.click(); show(); }, 'green');
   el.append(controls(uSlider.el, wSlider ? wSlider.el : ''), controls(throwBtn), ro.el);
 
   const flight = () => (2 * u) / G;
@@ -54,16 +55,21 @@ export default function throwUp(el, params = {}, api) {
       ? `${fmt(Math.abs(v), 1)} m/s ${Math.abs(v) < 0.05 ? '(stopped at the top)' : v > 0 ? 'up' : 'down'}`
       : '—';
     const rows = [
-      ['Throw speed u', `${u} m/s up`],
+      ['Launch speed u', `${u} m/s up`],
       ['Speed now', now],
-      result ? ['Time to top = u ÷ g', `${u} ÷ 10 = ${fmt(u / G, 2)} s`] : ['Time to top', 'throw to find out'],
-      result ? ['Max height = u² ÷ 2g', `${u * u} ÷ 20 = ${fmt((u * u) / (2 * G), 2)} m`] : ['Max height', 'throw to find out'],
     ];
+    // Window mode hides the top height: it would give away the "just touch the window" task.
+    if (mode !== 'window') {
+      rows.push(
+        result ? ['Time to top = u ÷ g', `${u} ÷ 10 = ${fmt(u / G, 2)} s`] : ['Time to top', 'fire to find out'],
+        result ? ['Max height = u² ÷ 2g', `${u * u} ÷ 20 = ${fmt((u * u) / (2 * G), 2)} m`] : ['Max height', 'fire to find out'],
+      );
+    }
     if (mode === 'window') rows.push(['Window', `${hw} m up`], result && ['Passes the window at', passText(result.passes), 'winner']);
-    else rows.push(result && ['Caught again', `after ${fmt(flight(), 2)} s, moving down at ${u} m/s`, 'winner']);
+    else rows.push(result && ['Back at the start', `after ${fmt(flight(), 2)} s, moving down at ${u} m/s`, 'winner']);
     ro.set(rows);
     if (tasks.length && taskIdx < tasks.length) { if (!result) banner.set(`Task ${taskIdx + 1}/${tasks.length}: ${tasks[taskIdx].text}`); }
-    else if (!tasks.length) banner.set('Choose a throw speed and press <b>Throw!</b>');
+    else if (!tasks.length) banner.set('Choose a launch speed and press <b>Fire!</b>');
   }
 
   function caught() {
@@ -151,9 +157,13 @@ export default function throwUp(el, params = {}, api) {
         }
       }
     }
-    drawSprite(ctx, 'hero', BX - 12, GROUND, 2);
+    // the dispenser block the ball is fired from
+    ctx.fillStyle = '#7f7f7f'; ctx.fillRect(BX - 12, GROUND - 24, 24, 24);
+    ctx.fillStyle = '#5a5a5a'; ctx.fillRect(BX - 12, GROUND - 24, 24, 3); ctx.fillRect(BX - 12, GROUND - 3, 24, 3);
+    ctx.fillStyle = '#222'; ctx.fillRect(BX - 5, GROUND - 22, 10, 6);
+    drawSprite(ctx, 'hero', BX - 34, GROUND, 2);
     const hb = running || result ? Math.max(0, heightAt(t)) : 0;
-    drawSprite(ctx, 'u5ball', BX, yOf(hb) - (running || result ? 0 : 8), 2, { anchor: 'center' });
+    drawSprite(ctx, 'u5ball', BX, yOf(hb) - 6, 2, { anchor: 'center' });
     tag(ctx, `t = ${fmt(t, 2)} s`, 180, 20, { size: 11 });
   });
 

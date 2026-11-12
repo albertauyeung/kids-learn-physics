@@ -7,7 +7,7 @@ import '../js/content/mechanics/unit2-templates.js';
 import { allTemplates, instantiate, getTemplate } from '../js/engine/templates.js';
 import { fmt } from '../js/core/util.js';
 import names from '../js/widgets/unit5/names.js';
-import { WORLDS, CHUTES, eggRound, judgeEgg, passTimes, terminalSpeed, weight } from '../js/widgets/unit5/physics.js';
+import { WORLDS, D_MAX, MAX_TRIES, eggRound, judgeEgg, eggSolution, passTimes, terminalSpeed, weight } from '../js/widgets/unit5/physics.js';
 import { makeRng } from '../js/core/util.js';
 
 const U5 = allTemplates().filter((t) => t.id.startsWith('u5.'));
@@ -29,7 +29,10 @@ test('unit 5 structure', () => {
       if (step.type === 'sim') assert.ok(names.includes(step.widget), `${s.id}: unknown widget ${step.widget}`);
     }
     const qs = s.steps.filter((x) => x.type === 'q');
-    if (s.type === 'lesson') assert.ok(qs.length >= 6 && qs.length <= 8, `${s.id}: ${qs.length} questions`);
+    if (s.type === 'lesson') assert.ok(qs.length >= 5 && qs.length <= 8, `${s.id}: ${qs.length} questions`);
+    // no mcq template twice in one session (fixed-text scenarios would repeat)
+    const mcqs = qs.map((x) => x.t).filter((t) => instantiate(t, 1).type === 'mcq');
+    assert.equal(new Set(mcqs).size, mcqs.length, `${s.id}: an mcq template repeats`);
   }
   const review = unit5.sessions.find((s) => s.id === 'mech.u5.review');
   const rq = review.steps.filter((x) => x.type === 'q').map((x) => x.t);
@@ -58,6 +61,8 @@ test('unit 5 questions are well-formed for many seeds', () => {
         assert.ok(q.unit, `${t.id}: needs a unit`);
         const ans = fmt(q.answer);
         for (const e of q.errors || []) assert.ok(!same(e.value, q.answer), `${t.id} seed ${seed}: error equals answer`);
+        for (const e of q.errors || []) assert.ok(Math.abs(e.value * 100 - Math.round(e.value * 100)) < 1e-6, `${t.id} seed ${seed}: error ${e.value} can't be typed`);
+        if (q.hints?.length) assert.ok(q.hints[0].includes('?'), `${t.id}: first hint should be a question: ${q.hints[0]}`);
         const vals = (q.errors || []).map((e) => e.value);
         assert.equal(new Set(vals.map((v) => v.toFixed(6))).size, vals.length, `${t.id} seed ${seed}: duplicate errors`);
         for (const h of q.hints || []) assert.ok(!new RegExp(`=\\s*${ans.replace(/[.+−-]/g, '\\$&')}(?![\\d.])`).test(h), `${t.id}: hint reveals answer`);
@@ -170,7 +175,7 @@ test('sim tasks are solvable with the controls', () => {
     if (!tasks) continue;
     for (const [i, t] of tasks.entries()) {
       let ok = false;
-      if (x.widget === 'u5-planet-scale') for (const w of WORLDS) for (let m = 10; m <= 100; m++) ok ||= t.check(w.id, m, weight(m, w.g));
+      if (x.widget === 'u5-planet-scale') for (const w of WORLDS) for (let m = 40; m <= 100; m++) ok ||= t.check(w.id, m, weight(m, w.g));
       if (x.widget === 'u5-well-drop') for (let d = 5; d <= 80; d += 5) ok ||= t.check(d, Math.sqrt(d / 5), Math.sqrt(20 * d));
       if (x.widget === 'u5-throw-up') for (let u = 5; u <= 30; u++) for (let hw = 5; hw <= 45; hw += 5) ok ||= t.check(u, hw, { passes: passTimes(u, hw) });
       if (x.widget === 'u5-parachute') for (let m = 50; m <= 100; m += 10) for (let a = 0; a <= 60; a += 2) ok ||= t.check(m, a, a ? terminalSpeed(m, a) : 50);
@@ -180,20 +185,36 @@ test('sim tasks are solvable with the controls', () => {
   }
 });
 
-test('Egg Drop Lab: every round has exactly one answer', () => {
+test('Egg Drop Lab: rounds need the physics (one height, or a narrow band of D), and rerolls change the numbers', () => {
   for (let seed = 1; seed <= 200; seed++) {
     const rng = makeRng(seed);
     for (const type of ['safe', 'timed', 'chute']) {
       const round = eggRound(type, rng);
-      const wins = [];
       if (type === 'chute') {
-        for (const c of CHUTES) if (judgeEgg(round, round.H, c.id).ok) wins.push(c.id);
-        assert.deepEqual(wins, [round.answer], `chute round ${JSON.stringify(round)}`);
+        const wins = [];
+        for (let D = 0; D <= D_MAX; D++) if (judgeEgg(round, round.H, D).ok) wins.push(D);
+        assert.deepEqual(wins, round.answers);
+        assert.ok(wins.length >= 1 && wins.length <= 4, `chute band ${wins}`);
+        assert.equal(wins[wins.length - 1] - wins[0] + 1, wins.length, 'band is contiguous');
+        assert.ok(!wins.includes(0), 'no parachute must not win');
+        // the band from the worked solution's formulas
+        assert.ok(wins[0] >= 100 / round.S ** 2 - 1e-9);
+        // 3 tries of halving can't find a band this narrow among 101 values by luck alone
+        assert.ok(101 / wins.length > 2 ** MAX_TRIES);
       } else {
-        for (let h = 5; h <= 80; h += 5) if (judgeEgg(round, h, 'none').ok) wins.push(h);
+        const wins = [];
+        for (let h = 5; h <= 80; h += 5) if (judgeEgg(round, h, 0).ok) wins.push(h);
         assert.deepEqual(wins, [round.answerH], `${type} round ${JSON.stringify(round)}`);
-        assert.ok(!judgeEgg(round, 40, 'none').ok, 'the starting height must not already win');
+        assert.ok(!judgeEgg(round, 40, 0).ok, 'the starting height must not already win');
+        assert.ok(16 > 2 ** MAX_TRIES, 'halving 16 windows needs 4 tries');
       }
+      // a miss reports only a direction
+      const miss = type === 'chute' ? judgeEgg(round, round.H, 0) : judgeEgg(round, round.answerH === 80 ? 75 : round.answerH + 5, 0);
+      assert.ok(!miss.ok && ['fast', 'low', 'early', 'late', 'slow'].includes(miss.why));
+      const sol = eggSolution(round);
+      assert.ok(!/undefined|NaN/.test(sol) && sol.length > 20);
+      const next = eggRound(type, rng, round);
+      assert.notEqual(next.key, round.key, 'a reroll gives fresh numbers');
     }
   }
 });

@@ -19,8 +19,10 @@ const same = (a, b) => Math.abs(a - b) < 1e-9;
 function errs(answer, list) {
   const out = [];
   for (const e of list) {
-    if (!Number.isFinite(e.value) || same(e.value, answer) || out.some((o) => same(o.value, e.value))) continue;
-    out.push(e);
+    const value = Math.round(e.value * 1e6) / 1e6; // strip float noise (0.1 + 0.2)
+    if (!Number.isFinite(value) || Math.abs(value * 100 - Math.round(value * 100)) > 1e-6) continue; // > 2 dp: can't be typed
+    if (same(value, answer) || out.some((o) => same(o.value, value))) continue;
+    out.push({ value, msg: e.msg });
   }
   return out;
 }
@@ -137,7 +139,7 @@ registerTemplates([
         type: 'numeric',
         prompt: `A space explorer hangs a <b>${m} kg</b> test block on a force meter. On a mystery world it reads <b>${fmt(W)} N</b>. What is g there?`,
         answer: w.g, unit: 'N/kg',
-        hints: ['g tells you how many newtons of pull there are on each kilogram.', 'g = W ÷ m'],
+        hints: ['How many newtons of pull are there on each kilogram?', 'g = W ÷ m'],
         errors: errs(w.g, [
           { value: m / W, msg: 'Upside down! g = weight ÷ mass (newtons per kilogram).' },
           { value: W * m, msg: 'Divide: g = W ÷ m.' },
@@ -235,7 +237,7 @@ registerTemplates([
     },
   },
   {
-    id: 'u5.heavy-light-time', concepts: [C.same], tier: 'scientist',
+    id: 'u5.heavy-light-time', concepts: [C.same], tier: 'explorer',
     generate(r) {
       const t = r.pick([1, 1.5, 2, 3]);
       const h = 5 * t * t;
@@ -276,8 +278,13 @@ registerTemplates([
   {
     id: 'u5.fall-speed', concepts: [C.fall], tier: 'explorer',
     generate(r) {
-      const t = r.pick([0.5, 1, 1.5, 2.5, 3, 4]);
-      const who = r.pick(['A stone is dropped down a well', 'A creeper falls off a cliff', 'Pip drops a pumpkin from a tower', 'An apple falls from a tall tree']);
+      // each story with times that fit it (an apple tree is only a few metres tall)
+      const [who, t] = r.pick([
+        ['An apple falls from a branch', r.pick([0.5, 1])],
+        ['A stone is dropped down a well', r.pick([1.5, 2.5, 3])],
+        ['A creeper falls off a cliff', r.pick([2.5, 3, 4])],
+        ['Pip drops a pumpkin from a tall tower', r.pick([1.5, 2.5, 3])],
+      ]);
       return {
         type: 'numeric',
         prompt: `${who}. How fast is it falling after <b>${fmt(t)} s</b>? (g = 10 m/s², no air)`,
@@ -417,9 +424,10 @@ registerTemplates([
     id: 'u5.time-to-top', concepts: [C.up], tier: 'explorer',
     generate(r) {
       const u = r.pick([5, 10, 15, 20, 25, 30]);
+      const who = u <= 15 ? 'Pip throws a ball' : r.pick(['A dispenser fires a ball', 'A skeleton shoots an arrow']);
       return {
         type: 'numeric',
-        prompt: `Pip throws a ball straight up at <b>${u} m/s</b>. How long does it take to reach the top? (g = 10 m/s²)`,
+        prompt: `${who} straight up at <b>${u} m/s</b>. How long does it take to reach the top? (g = 10 m/s²)`,
         answer: u / 10, unit: 's',
         hints: ['What is the ball\'s speed at the very top?', 'It loses 10 m/s every second. Time to top = u ÷ g.'],
         errors: errs(u / 10, [
@@ -435,9 +443,10 @@ registerTemplates([
     generate(r) {
       const u = r.pick([10, 15, 25, 30]);
       const h = (u * u) / 20;
+      const who = u <= 15 ? 'Pip throws a ball' : 'A dispenser fires a ball';
       return {
         type: 'numeric',
-        prompt: `A ball is thrown straight up at <b>${u} m/s</b>. How high does it go? (g = 10 m/s², no air)`,
+        prompt: `${who} straight up at <b>${u} m/s</b>. How high does it go? (g = 10 m/s², no air)`,
         answer: h, unit: 'm',
         hints: ['At the top the speed is 0. How long does it take to get there, and what is its average speed on the way up?', 'Max height h = u² ÷ 2g'],
         errors: errs(h, [
@@ -453,7 +462,7 @@ registerTemplates([
     id: 'u5.flight-time', concepts: [C.up], tier: 'scientist',
     generate(r) {
       const u = r.pick([5, 10, 15, 20, 25, 30]);
-      const what = r.pick(['Pip throws a ball straight up', 'A fountain shoots a drop of water straight up', 'A skeleton fires an arrow straight up']);
+      const what = u <= 15 ? r.pick(['Pip throws a ball straight up', 'A fountain shoots a drop of water straight up']) : r.pick(['A dispenser fires a ball straight up', 'A skeleton fires an arrow straight up']);
       return {
         type: 'numeric',
         prompt: `${what} at <b>${u} m/s</b>. How long until it comes back down to where it started? (g = 10 m/s², no air)`,
@@ -470,7 +479,7 @@ registerTemplates([
   {
     id: 'u5.speed-back-mcq', concepts: [C.up], tier: 'explorer',
     generate(r) {
-      const u = r.pick([8, 12, 15, 20, 25]);
+      const u = r.pick([6, 8, 10, 12, 15]); // a child's throw
       return {
         type: 'mcq',
         prompt: `You throw a ball straight up at <b>${u} m/s</b> and catch it at the same height. How fast is it moving when you catch it? (no air)`,
@@ -489,7 +498,7 @@ registerTemplates([
       const other = v > 0 ? 'down' : 'up';
       return {
         type: 'mcq',
-        prompt: `A ball is thrown straight up at <b>${u} m/s</b>. What is it doing <b>${t} s</b> later? (g = 10 m/s²)`,
+        prompt: `A ball is ${u <= 15 ? 'thrown' : 'fired from a dispenser'} straight up at <b>${u} m/s</b>. What is it doing <b>${t} s</b> later? (g = 10 m/s²)`,
         choices: [`Moving ${dir} at ${Math.abs(v)} m/s`, `Moving ${other} at ${Math.abs(v)} m/s`, `Moving up at ${u + 10 * t} m/s`, 'Stopped at the top'],
         answer: 0,
         explain: `It loses 10 m/s every second: ${u} − 10 × ${t} = ${v}. ${v > 0 ? `Still going up at ${v} m/s.` : `It reached the top at ${u / 10} s and is now falling at ${-v} m/s.`}`,
@@ -518,10 +527,12 @@ registerTemplates([
     id: 'u5.throw-for-height', concepts: [C.up], tier: 'engineer',
     generate(r) {
       const [h, u] = r.pick([[5, 10], [11.25, 15], [31.25, 25], [45, 30]]);
-      const what = r.pick(['throw a ball up to a ledge', 'throw a ball straight up to a window', 'throw a key up to a friend on a balcony']);
+      const prompt = u <= 15
+        ? `Pip wants to throw a key up to a friend on a balcony <b>${fmt(h)} m</b> above his hand, so that it just stops there. How fast must he throw it?`
+        : `Pip builds a dispenser to fire a ball straight up to a ledge <b>${fmt(h)} m</b> above it, so that the ball just stops there. How fast must it fire the ball?`;
       return {
         type: 'numeric',
-        prompt: `Pip wants to ${what} <b>${fmt(h)} m</b> above his hand, so that it just stops there. How fast must he throw it? (g = 10 m/s²)`,
+        prompt: `${prompt} (g = 10 m/s²)`,
         answer: u, unit: 'm/s',
         hints: ['Turn the motion around: falling from the top, how fast would it be going when it got back down?', 'h = u² ÷ 2g, so u² = 2gh = 20 × h.'],
         errors: errs(u, [
@@ -538,12 +549,13 @@ registerTemplates([
     id: 'u5.quad-factor', concepts: [C.quad], tier: 'scientist',
     generate(r) {
       if (r.chance(0.5)) {
-        const { a, b } = until(r, (rr) => ({ a: rr.int(1, 5), b: rr.int(2, 6) }), (x) => x.a < x.b);
+        // a ≥ 2, so the larger root is never just the last number (a × b ≠ b) or the middle one.
+        const { a, b } = until(r, (rr) => ({ a: rr.int(2, 5), b: rr.int(3, 9) }), (x) => x.a < x.b);
         return {
           type: 'numeric',
           prompt: `t is a time in seconds. Solve by factorising: <b>${quadText(-(a + b), a * b)}</b><br>There are two answers. Type the <b>later</b> (larger) one.`,
           answer: b, unit: 's',
-          hints: [`Find two numbers that multiply to ${a * b} and add up to ${a + b}.`, `Then (t − ?)(t − ?) = 0, so one of the brackets must be zero.`],
+          hints: [`Which two numbers multiply to ${a * b} and add up to ${a + b}?`, `Then (t − ?)(t − ?) = 0, so one of the brackets must be zero.`],
           errors: errs(b, [
             { value: a, msg: 'That\'s a solution too — but it\'s the earlier (smaller) one.' },
             { value: a + b, msg: 'The two answers ADD UP to that. Find two numbers that multiply AND add correctly.' },
@@ -552,13 +564,14 @@ registerTemplates([
           solution: `${bracket(a)}${bracket(b)} = 0, so t = ${a} or t = <b>${b}</b>`,
         };
       }
-      const { p, q } = until(r, (rr) => ({ p: rr.int(2, 9), q: rr.int(1, 5) }), (x) => x.p !== x.q);
+      // the real root q must not be readable from a printed coefficient (|p − q| or p × q)
+      const { p, q } = until(r, (rr) => ({ p: rr.int(2, 9), q: rr.int(1, 5) }), (x) => x.p !== x.q && x.p !== 2 * x.q);
       // (t + p)(t − q) = t² + (p − q)t − pq
       return {
         type: 'numeric',
         prompt: `t is a time in seconds. Solve by factorising: <b>${quadText(p - q, -p * q)}</b><br>Which answer is the real time?`,
         answer: q, unit: 's',
-        hints: [`Find two numbers that multiply to −${p * q} and add up to ${p - q < 0 ? '−' : ''}${Math.abs(p - q)}.`, 'One answer will be negative. Can a time after the start be negative?'],
+        hints: [`Which two numbers multiply to −${p * q} and add up to ${p - q < 0 ? '−' : ''}${Math.abs(p - q)}?`, 'One answer will be negative. Can a time after the start be negative?'],
         errors: errs(q, [
           { value: p, msg: `t = −${p} is the other solution — but a negative time is before the start, so we reject it.` },
           { value: p * q, msg: 'Factorise into two brackets first.' },
@@ -576,9 +589,9 @@ registerTemplates([
       const ans = down ? t2 : t1;
       return {
         type: 'numeric',
-        prompt: `A ball is thrown straight up at <b>${u} m/s</b>. A window is <b>${h} m</b> above the thrower's hand. When does the ball pass the window <b>on the way ${down ? 'down' : 'up'}</b>? (height = ${u}t − 5t²)`,
+        prompt: `A ball is ${u <= 15 ? 'thrown' : 'fired from a dispenser'} straight up at <b>${u} m/s</b>. A window is <b>${h} m</b> above its starting point. When does the ball pass the window <b>on the way ${down ? 'down' : 'up'}</b>? (height = ${u}t − 5t²)`,
         answer: ans, unit: 's',
-        hints: [`Put the height in: ${h} = ${u}t − 5t². Move everything to one side.`, 'Divide by 5 and factorise. Which answer is going up and which is coming down?'],
+        hints: [`How high is the ball when it passes the window? Put that height into height = ${u}t − 5t² and move everything to one side.`, 'Divide by 5 and factorise. Which answer is going up and which is coming down?'],
         errors: errs(ans, [
           { value: down ? t1 : t2, msg: `That's when it passes on the way ${down ? 'up' : 'down'}. The ${down ? 'later' : 'earlier'} time is the one you want.` },
           { value: h / u, msg: 'That ignores gravity slowing the ball. Solve the quadratic.' },
@@ -594,7 +607,7 @@ registerTemplates([
       const u = 5 * (t1 + t2), h = 5 * t1 * t2;
       return {
         type: 'mcq',
-        prompt: `A ball is thrown up at ${u} m/s. Solving <b>${h} = ${u}t − 5t²</b> gives <b>t = ${t1} s</b> and <b>t = ${t2} s</b>. What do the two answers mean?`,
+        prompt: `A ball is ${u <= 15 ? 'thrown' : 'fired'} up at ${u} m/s. Solving <b>${h} = ${u}t − 5t²</b> gives <b>t = ${t1} s</b> and <b>t = ${t2} s</b>. What do the two answers mean?`,
         choices: [
           `The ball is ${h} m high twice: at ${t1} s going up and at ${t2} s coming down`,
           'One of the answers must be a mistake',
@@ -628,7 +641,7 @@ registerTemplates([
         type: 'numeric',
         prompt: `From the top of a <b>${H} m</b> tower, Pip throws a stone straight <b>down</b> at <b>${u} m/s</b>. How long until it hits the ground? (distance down = ${u}t + 5t²)`,
         answer: q, unit: 's',
-        hints: [`Set ${H} = ${u}t + 5t² and move everything to one side.`, 'Divide by 5, then factorise. Can the time be negative?'],
+        hints: [`How far does the stone fall before it lands? Put that into distance = ${u}t + 5t² and move everything to one side.`, 'Divide by 5, then factorise. Can the time be negative?'],
         errors: errs(q, [
           { value: H / u, msg: 'That ignores gravity speeding the stone up. Solve the quadratic.' },
           { value: neg, msg: `t = −${neg} is the root we reject — a negative time is before the throw.` },
@@ -729,17 +742,20 @@ registerTemplates([
   {
     id: 'u5.terminal-speed', concepts: [C.air], tier: 'engineer',
     generate(r) {
-      const { m, v } = until(r, (rr) => ({ m: rr.pick([50, 60, 70, 80, 90, 100]), v: rr.pick([4, 5, 5, 10]) }), (x) => Number.isInteger((x.m * 10) / (x.v * x.v)));
+      // No v = 10: then mass ÷ D (= v² ÷ 10) would equal the answer.
+      const { m, v } = until(r, (rr) => ({ m: rr.pick([60, 70, 80, 90]), v: rr.pick([4, 5, 5]) }), (x) => Number.isInteger((x.m * 10) / (x.v * x.v)));
       const W = m * 10, D = W / (v * v);
+      const who = 'Steve';
       return {
         type: 'numeric',
-        prompt: `Pip and his gear have a mass of <b>${m} kg</b>. For his parachute, <b>drag = ${D} × speed²</b> (in newtons). What is his terminal speed?`,
+        prompt: `${who} and his skydiving gear have a mass of <b>${m} kg</b>. For his parachute, <b>drag = ${D} × speed²</b> (in newtons). What is his terminal speed?`,
         answer: v, unit: 'm/s',
         hints: ['At terminal speed, how does the drag compare with his weight?', `Set ${D} × v² equal to his weight, find v², then take the square root.`],
         errors: errs(v, [
           { value: W / D, msg: 'That\'s v². Take the square root.' },
           { value: W, msg: 'That\'s his weight in newtons. Set drag = weight and solve for the speed.' },
-          { value: m / D, msg: 'Use his weight (m × g), not his mass, for the force.' },
+          { value: m / D, msg: 'That uses his mass, not his weight, and it still needs a square root. Set drag = weight = m × g, then v² = weight ÷ ' + D + '.' },
+          { value: Math.sqrt(m / D), msg: 'Use his weight (m × g), not his mass, for the force.' },
         ]),
         solution: `Weight = ${W} N. ${D} × v² = ${W} → v² = ${W / D} → v = <b>${v} m/s</b>`,
       };
@@ -750,9 +766,13 @@ registerTemplates([
   {
     id: 'u5.wp-ledge', concepts: [C.fall], tier: 'scientist',
     generate(r) {
-      const v = r.pick([5, 10, 30, 40]);
+      const [v, who] = r.pick([
+        [5, 'An apple drops from a low branch'],
+        [10, 'Pip\'s pickaxe slips off a two-storey roof'],
+        [30, 'A creeper slips off a cliff'],
+        [40, 'A melon falls off a very tall cliff'],
+      ]);
       const h = (v * v) / 20;
-      const who = r.pick(['A creeper slips off a ledge', 'A melon falls off a cliff', 'Pip\'s pickaxe slips out of his hand on a tall tower']);
       return {
         type: 'numeric',
         prompt: `${who} and hits the ground at <b>${v} m/s</b>. How high was it? (g = 10 m/s², ignore air)`,
@@ -868,11 +888,11 @@ registerTemplates([
       const askU = r.chance(0.5);
       return {
         type: 'numeric',
-        prompt: `A ball is thrown straight up. It flies past a window ledge on the way up at <b>${t1} s</b>, and past it again on the way down at <b>${t2} s</b>. ${askU ? 'How fast was it thrown?' : 'How high is the ledge above the thrower\'s hand?'} (g = 10 m/s², no air)`,
+        prompt: `A dispenser fires a ball straight up. It flies past a window ledge on the way up at <b>${t1} s</b>, and past it again on the way down at <b>${t2} s</b>. ${askU ? 'How fast was it fired?' : 'How high is the ledge above the dispenser?'} (g = 10 m/s², no air)`,
         answer: askU ? u : h, unit: askU ? 'm/s' : 'm',
         hints: askU
           ? ['Symmetry: when does the ball reach the top?', 'At the top it has stopped. It lost 10 m/s every second to get there — so how fast did it start?']
-          : ['First find the throw speed: the top is exactly halfway between the two times.', 'Then height = ut − 5t² at either time (both must give the same answer!).'],
+          : ['How fast was it thrown? (The top is exactly halfway between the two times.)', 'Then height = ut − 5t² at either time (both must give the same answer!).'],
         errors: errs(askU ? u : h, askU ? [
           { value: 10 * t2, msg: `The top isn't at ${t2} s — it is halfway between ${t1} s and ${t2} s.` },
           { value: 10 * t1, msg: `At ${t1} s the ball is still going up. The top is halfway between the two times.` },

@@ -32,7 +32,7 @@ export default function planetScale(el, params = {}, api) {
     const b = button(`${w.name} (g = ${fmt(w.g)})`, () => { world = w; reset(); sfx.select(); });
     return b;
   });
-  const massSlider = slider({ label: 'Mass on the scale', min: 10, max: 100, step: 1, value: mass, unit: 'kg', onInput: (v) => { mass = v; reset(); } });
+  const massSlider = slider({ label: 'Mass on the scale (Pip 40 kg + his backpack)', min: 40, max: 100, step: 1, value: mass, unit: 'kg', onInput: (v) => { mass = v; reset(); } });
   const weighBtn = button('⚖ Weigh', weigh, 'green');
   el.append(controls(...worldBtns), controls(massSlider.el), controls(weighBtn), ro.el);
 

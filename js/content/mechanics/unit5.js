@@ -58,6 +58,7 @@ export default {
                  <p><b>g</b> is the gravity strength: how many newtons pull on each kilogram. On Earth g ≈ <b>10 N/kg</b> (really about 9.8 — we use 10 to keep numbers friendly).</p>
                  <table class="mini-table"><tr><td>Earth 10</td><td>Moon 1.6</td><td>Mars 3.7</td><td>Jupiter 25</td></tr></table>
                  <p>Example: a 30 kg child on the Moon weighs 30 × 1.6 = <b>48 N</b> (on Earth: 300 N).</p>
+                 <p>Going backwards: if you know the weight, <b>m = W ÷ g</b>. A rover that weighs 74 N on Mars has a mass of 74 ÷ 3.7 = 20 kg — and it is still 20 kg back on Earth, where it weighs 200 N.</p>
                  <p class="tip">Bathroom scales show "kg", but they really measure the push of your feet and divide by Earth's g. On the Moon they would get your mass wrong!</p>`,
         },
         {
@@ -70,7 +71,6 @@ export default {
         { type: 'q', t: 'u5.weight-planet' },
         { type: 'q', t: 'u5.mass-weight-mcq' },
         { type: 'q', t: 'u5.mass-from-weight' },
-        { type: 'q', t: 'u5.weight-planet' },
         { type: 'q', t: 'u5.find-g' },
       ],
     },
@@ -146,10 +146,10 @@ export default {
           type: 'sim', widget: 'u5-well-drop', goal: true, title: 'Drop a Stone into a Well',
           html: 'Drop the stone and watch the strobe: a mark every second. The table shows how far it falls <b>during</b> each second.',
           params: {
-            depth: 45, testedAfter: 0,
+            depth: 20, testedAfter: 0,
             tasks: [
-              { text: 'Drop the stone into this <b>45 m</b> well. Where was it after 1 s and after 2 s?', check: (d) => d === 45 },
-              { text: 'Set the depth so the splash comes after exactly <b>2 s</b>.', check: (d) => d === 20 },
+              { text: 'Drop the stone into this <b>20 m</b> well. Where was it after 1 s, and when did it splash?', check: (d) => d === 20 },
+              { text: 'Set the depth so the splash comes after exactly <b>3 s</b>.', check: (d) => d === 45 },
               { text: 'Make the stone hit the water at <b>40 m/s</b>. (How long must it fall first?)', check: (d) => d === 80 },
             ],
           },
@@ -161,11 +161,13 @@ export default {
                  <p class="eq">h = ½ × g × t² = 5t²</p>
                  <p>Example: a stone hits the water after 3 s. h = 5 × 3² = <b>45 m</b>, and it is going v = 10 × 3 = <b>30 m/s</b>.</p>
                  <p>Distance fallen in each second: <b>5, 15, 25, 35…</b> — 5 × the odd numbers! Add them up: 5, 20, 45, 80 = 5 × 1, 4, 9, 16 — the square numbers. (Adding odd numbers always makes squares: 1 + 3 + 5 = 9.)</p>
+                 <p><b>Going backwards</b> (how long to fall h?): t² = h ÷ 5, then take the square root. 45 m: t² = 9, t = 3 s.</p>
+                 <p>Square roots of decimals work the same way — ask "which number times itself?": √2.25 = 1.5 because 1.5 × 1.5 = 2.25; √6.25 = 2.5; √0.25 = 0.5. So an 11.25 m fall: t² = 2.25, t = <b>1.5 s</b>.</p>
                  <p class="tip">No time given? Use v² = u² + 2as with u = 0: <b>v² = 2gh</b>. A 45 m fall: v² = 900, v = 30 m/s.</p>`,
         },
         {
           type: 'equation', prompt: 'Build the formula for the height fallen in time t.',
-          lhs: 'h', tiles: ['½', 'g', 't²', '×', '×', 't', '2'], answers: [['½', '×', 'g', '×', 't²'], ['½', '×', 't²', '×', 'g'], ['g', '×', 't²', '×', '½']],
+          lhs: 'h', tiles: ['½', 'g', 't²', '×', '×', 't', '2'], answers: [['½', '×', 'g', '×', 't²'], ['½', '×', 't²', '×', 'g'], ['g', '×', '½', '×', 't²'], ['g', '×', 't²', '×', '½'], ['t²', '×', '½', '×', 'g'], ['t²', '×', 'g', '×', '½']],
           explain: 'From s = ut + ½at² with u = 0 and a = g: h = ½ × g × t². With g = 10, that is 5t².',
         },
         { type: 'q', t: 'u5.fall-speed' },
@@ -174,7 +176,6 @@ export default {
         { type: 'q', t: 'u5.fall-time' },
         { type: 'q', t: 'u5.second-by-second' },
         { type: 'q', t: 'u5.fall-ratio-mcq' },
-        { type: 'q', t: 'u5.fall-speed-from-height' },
       ],
     },
     // ------------------------------------------------------------------
@@ -190,17 +191,17 @@ export default {
       },
       steps: [
         {
-          type: 'predict', prompt: 'You throw a ball straight up at <b>20 m/s</b> and catch it at the same height. How fast is it going when you catch it? (no air)',
+          type: 'predict', prompt: 'A dispenser fires a ball straight up at <b>20 m/s</b>. It falls back to the same height. How fast is it going then? (no air)',
           choices: ['20 m/s', 'less than 20 m/s', 'more than 20 m/s', '0 m/s'], answer: 0, keepOrder: true, revealAfterSim: true,
-          explain: 'It loses 10 m/s every second on the way up and gains 10 m/s every second on the way down, for the same time — so it comes back at 20 m/s.',
+          explain: 'It loses 10 m/s every second on the way up and gains 10 m/s every second on the way down, for the same time — so it comes back down at 20 m/s.',
         },
         {
           type: 'sim', widget: 'u5-throw-up', goal: true, title: 'Throw It Up',
-          html: 'Press <b>Throw!</b> The strobe shows the ball every second with its speed (↑ up, ↓ down). The graph draws its height.',
+          html: 'Press <b>Fire!</b> The dispenser shoots the ball straight up. The strobe shows the ball every second with its speed (↑ up, ↓ down). The graph draws its height.',
           params: {
             mode: 'basic', u: 20, testedAfter: 0,
             tasks: [
-              { text: 'Throw at <b>20 m/s</b> (as set). Read the speed at each strobe mark.', check: (u) => u === 20 },
+              { text: 'Fire at <b>20 m/s</b> (as set). Read the speed at each strobe mark.', check: (u) => u === 20 },
               { text: 'Make the ball reach exactly <b>45 m</b> high.', check: (u) => u === 30 },
               { text: 'Make the ball stay in the air for exactly <b>2 s</b>.', check: (u) => u === 10 },
             ],
@@ -208,13 +209,13 @@ export default {
         },
         {
           type: 'info', title: 'Up, stop, down',
-          html: `<p>Gravity pulls down all the time, so a ball thrown up <b>slows down by 10 m/s every second</b>. At the top its speed is 0 for an instant:</p>
+          html: `<p>Gravity pulls down all the time, so a ball fired straight up <b>slows down by 10 m/s every second</b>. At the top its speed is 0 for an instant:</p>
                  <p class="eq">time to top = u ÷ g</p>
                  <p>On the way up its average speed is u ÷ 2, so height = (u ÷ 2) × (u ÷ g):</p>
                  <p class="eq">max height h = u² ÷ 2g</p>
                  <p>(Or use v² = u² + 2as from Unit 3, with v = 0 at the top.)</p>
-                 <p>Example: thrown at 20 m/s → top after 2 s, height 400 ÷ 20 = <b>20 m</b>.</p>
-                 <p><b>Symmetry (對稱):</b> the way down is the way up played backwards. It takes as long to fall as to rise, and passes every height at the same speed — so it lands back in your hand at 20 m/s, after 4 s.</p>`,
+                 <p>Example: fired at 20 m/s → top after 2 s, height 400 ÷ 20 = <b>20 m</b>.</p>
+                 <p><b>Symmetry (對稱):</b> the way down is the way up played backwards. It takes as long to fall as to rise, and passes every height at the same speed — so it comes back to its start at 20 m/s, after 4 s.</p>`,
         },
         { type: 'q', t: 'u5.time-to-top' },
         { type: 'q', t: 'u5.speed-back-mcq' },
@@ -255,12 +256,12 @@ export default {
         },
         {
           type: 'sim', widget: 'u5-throw-up', goal: true, title: 'Window Watch',
-          html: 'Set the throw speed and the window height, then throw. Tip: the top of the flight is exactly halfway between the two times.',
+          html: 'Set the launch speed and the window height, then fire. Tip: the top of the flight is exactly halfway between the two times.',
           params: {
             mode: 'window', u: 15, hw: 10, testedAfter: 0,
             tasks: [
-              { text: 'Throw at <b>15 m/s</b> with the window at <b>10 m</b> (as set). When does the ball pass it?', check: (u, hw) => u === 15 && hw === 10 },
-              { text: 'Make the ball pass the window at exactly <b>1 s and 3 s</b>. (When is the top? How fast must you throw? Then how high is it at 1 s?)', check: (u, hw) => u === 20 && hw === 15 },
+              { text: 'Fire at <b>15 m/s</b> with the window at <b>10 m</b> (as set). When does the ball pass it?', check: (u, hw) => u === 15 && hw === 10 },
+              { text: 'Make the ball pass the window at exactly <b>1 s and 3 s</b>. (When is the top? How fast must it be fired? Then how high is it at 1 s?)', check: (u, hw) => u === 20 && hw === 15 },
               { text: 'Make the ball <b>just touch</b> the window once, at the very top of its flight.', check: (u, hw) => Math.abs(u * u - 20 * hw) < 1e-9 },
             ],
           },
@@ -277,7 +278,6 @@ export default {
         { type: 'q', t: 'u5.window-times' },
         { type: 'q', t: 'u5.sign-root-mcq' },
         { type: 'q', t: 'u5.throw-down' },
-        { type: 'q', t: 'u5.quad-factor' },
       ],
     },
     // ------------------------------------------------------------------
@@ -343,7 +343,7 @@ export default {
         { type: 'q', t: 'u5.weight-planet' },
         { type: 'q', t: 'u5.mass-from-weight' },
         { type: 'q', t: 'u5.find-g' },
-        { type: 'q', t: 'u5.fall-speed' },
+        { type: 'q', t: 'u5.fall-speed-from-height' },
         { type: 'q', t: 'u5.fall-height' },
         { type: 'q', t: 'u5.fall-time' },
         { type: 'q', t: 'u5.max-height' },
@@ -395,6 +395,8 @@ export default {
                  <p class="eq">v² = 2gh &nbsp;&nbsp; h = ½gt²</p>
                  <p><b>With a parachute</b> (drag = D × v²) it speeds up until drag = weight, then falls steadily at its terminal speed:</p>
                  <p class="eq">D × v² = 100 &nbsp;→&nbsp; time ≈ height ÷ terminal speed</p>
+                 <p class="tip">To keep the maths simple, the lab pretends the pod speeds up at the full 10 m/s² and then <b>suddenly</b> levels off at its parachute's terminal speed. (In Lesson 5 you saw the real thing: it levels off gradually.)</p>
+                 <p>You get <b>3 tries</b> per round, and the lab only tells you "too fast", "too slow", "too early" or "too late" — so work it out first!</p>
                  <p>Each round has a new challenge. Win <b>3 rounds</b>!</p>`,
         },
         { type: 'sim', widget: 'u5-egg-drop', goal: true, title: 'Egg Drop Lab', params: { rounds: 3 } },
