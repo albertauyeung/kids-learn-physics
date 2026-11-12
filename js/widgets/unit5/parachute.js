@@ -70,7 +70,7 @@ export default function parachute(el, params = {}, api) {
       if (params.testedAfter === taskIdx) api.tested?.();
       taskIdx++;
       if (taskIdx >= tasks.length) {
-        banner.set(`Terminal speed ${fmt(vt(), 2)} m/s. All parachute tasks done! 🎉`, true);
+        banner.set(`Terminal speed ${fmt(vt(), 2)} m/s. ${params.doneText || 'All parachute tasks done! 🎉'}`, true);
         api.done();
       } else {
         banner.set(`Terminal speed ${fmt(vt(), 2)} m/s. Next: ${tasks[taskIdx].text}`, true);

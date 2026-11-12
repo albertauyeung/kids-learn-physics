@@ -113,7 +113,7 @@ export default function wellDrop(el, params = {}, api) {
       ctx.fillStyle = '#cfe6ff';
       for (let i = -2; i <= 2; i++) ctx.fillRect(WX + WW / 2 + i * 8, bottom - 6 - (2 - Math.abs(i)) * 4, 3, 6);
     }
-    drawSprite(ctx, 'hero', WX - 40, TOP, 2);
+    drawSprite(ctx, 'hero', WX + WW + 30, TOP, 2); // right of the well, clear of the depth labels
     // table: distance fallen during each second
     const tx = 300, ty = 60;
     ctx.fillStyle = 'rgba(20,18,29,0.85)'; ctx.fillRect(tx, ty, 168, 34 + 22 * 4);

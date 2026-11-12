@@ -21,7 +21,6 @@ export default function eggDrop(el, params = {}, api) {
   let wins = 0;
   let tries = 0;
   let pendingNext = false; // a round was just won: wait for the next one
-  let nextTimer = 0;
   let round = eggRound(order[0], rng);
   let h = 40, D = 0;
   let finished = false;
@@ -47,26 +46,37 @@ export default function eggDrop(el, params = {}, api) {
     const b = busy();
     hSlider.disabled = b || round.type === 'chute';
     dSlider.disabled = b || round.type !== 'chute';
-    dropBtn.disabled = finished || pendingNext || (drop && !drop.landed);
+    dropBtn.disabled = finished || (drop && !drop.landed);
   }
+  let readyAt = 0;
   let revealed = null; // the worked solution, shown after 3 misses until he asks for a new challenge
+  // After a win ("Next round ▶") or a 3-miss reveal ("New challenge ▶") the child moves on when ready.
   const dropBtn = button('🥚 Drop!', () => {
-    if (revealed) {
-      revealed = null;
-      dropBtn.textContent = '🥚 Drop!';
-      round = eggRound(round.type, rng, round);
+    if (pendingNext) {
+      pendingNext = false;
+      roundNo = wins; // the label moves on only when the new round starts
+      round = eggRound(order[roundNo % order.length], rng);
       setupRound();
+      readyAt = performance.now() + 500;
       return;
     }
-    if (busy()) return;
+    if (revealed) {
+      revealed = null;
+      round = eggRound(round.type, rng, round);
+      setupRound();
+      readyAt = performance.now() + 500;
+      return;
+    }
+    // a double tap on "Next round ▶" must not also drop in the new round
+    if (busy() || performance.now() < readyAt) return;
     const verdict = judgeEgg(round, h, D);
     drop = { t: 0, rate: Math.max(1, verdict.out.time / 5), verdict, landed: false };
     sfx.click();
     lockControls();
     show();
   }, 'green');
-  // The short goal sits in the readout, right beside the controls (also on a narrow iPad screen).
-  el.append(ro.el, controls(hSlider.el, dSlider.el), controls(dropBtn));
+  // Sliders and the Drop button sit right under the canvas; the readout comes after them.
+  el.append(controls(hSlider.el, dSlider.el, dropBtn), ro.el);
 
   function setupRound() {
     drop = null;
@@ -75,15 +85,11 @@ export default function eggDrop(el, params = {}, api) {
     D = 0;
     hSlider.value = h;
     dSlider.value = D;
+    dropBtn.textContent = '🥚 Drop!';
     lockControls();
     show();
   }
 
-  function shortGoal() {
-    if (round.type === 'safe') return `No parachute. Land at ${round.S} m/s or less, from the HIGHEST safe window`;
-    if (round.type === 'timed') return `No parachute. Land exactly ${round.T} s after letting go`;
-    return `From ${round.H} m: land at ${round.S} m/s or less, within ${fmt(round.T)} s`;
-  }
 
   function goalText() {
     const n = `Round ${roundNo + 1}/${totalRounds}:`;
@@ -95,8 +101,6 @@ export default function eggDrop(el, params = {}, api) {
   function show() {
     const res = drop?.landed ? (drop.verdict.ok ? 'SAFE ✔' : { fast: 'too fast — cracked ✘', low: 'safe, but too low ✘', early: 'too early ✘', late: 'too late ✘', slow: 'too slow ✘' }[drop.verdict.why]) : null;
     ro.set([
-      ['Goal', shortGoal(), 'winner'],
-      ['Try', `${Math.min(tries + 1, MAX_TRIES)} of ${MAX_TRIES}`],
       ['Egg Lander pod', `mass 10 kg, weight ${POD_WEIGHT} N`],
       ['Drop height', `${h} m`],
       ['Parachute', D ? `drag = ${D} × v²` : 'none (ignore air)'],
@@ -125,14 +129,8 @@ export default function eggDrop(el, params = {}, api) {
       } else {
         pendingNext = true;
         lockControls();
-        banner.set(`${msg} Next round…`, true);
-        nextTimer = setTimeout(() => {
-          if (!alive) return;
-          pendingNext = false;
-          roundNo = wins; // the label moves on only when the new round starts
-          round = eggRound(order[roundNo % order.length], rng);
-          setupRound();
-        }, 2200);
+        dropBtn.textContent = 'Next round ▶';
+        banner.set(`${msg} Press <b>Next round ▶</b> when you're ready.`, true);
       }
       return;
     }
@@ -150,8 +148,8 @@ export default function eggDrop(el, params = {}, api) {
     }[verdict.why];
     if (tries >= MAX_TRIES) {
       revealed = eggSolution(round);
-      banner.set(`${why} That was your 3rd try. Here's how to work it out: ${revealed} Then press <b>New challenge</b> for fresh numbers.`);
-      dropBtn.textContent = '▶ New challenge';
+      banner.set(`${why} That was your 3rd try. Here's how to work it out: ${revealed} Then press <b>New challenge ▶</b> for fresh numbers.`);
+      dropBtn.textContent = 'New challenge ▶';
       show();
     } else {
       banner.set(`${why} (try ${tries + 1} of ${MAX_TRIES} next) ${goalText()}`);
@@ -211,7 +209,6 @@ export default function eggDrop(el, params = {}, api) {
   setupRound();
   return () => {
     alive = false;
-    clearTimeout(nextTimer);
     stop();
   };
 }

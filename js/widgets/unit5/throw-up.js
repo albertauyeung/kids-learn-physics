@@ -82,7 +82,7 @@ export default function throwUp(el, params = {}, api) {
       if (params.testedAfter === taskIdx) api.tested?.();
       taskIdx++;
       if (taskIdx >= tasks.length) {
-        banner.set('All throwing tasks done! 🎉', true);
+        banner.set(params.doneText || 'All launch tasks done! 🎉', true);
         api.done();
       } else {
         banner.set(`Yes! Next: ${tasks[taskIdx].text}`, true);

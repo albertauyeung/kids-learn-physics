@@ -4,6 +4,8 @@ import assert from 'node:assert/strict';
 import unit5 from '../js/content/mechanics/unit5.js';
 import '../js/content/mechanics/unit1-templates.js';
 import '../js/content/mechanics/unit2-templates.js';
+import '../js/content/mechanics/unit3-templates.js';
+import '../js/content/mechanics/unit4-templates.js';
 import { allTemplates, instantiate, getTemplate } from '../js/engine/templates.js';
 import { fmt } from '../js/core/util.js';
 import names from '../js/widgets/unit5/names.js';
@@ -38,7 +40,7 @@ test('unit 5 structure', () => {
   const rq = review.steps.filter((x) => x.type === 'q').map((x) => x.t);
   assert.equal(rq.length, 10);
   assert.equal(rq.filter((t) => t.startsWith('u5.')).length, 8);
-  assert.ok(rq.filter((t) => !t.startsWith('u5.')).every((t) => /^u[12]\./.test(t)));
+  assert.ok(rq.filter((t) => !t.startsWith('u5.')).every((t) => /^u[1-4]\./.test(t)));
   const psB = unit5.sessions.find((s) => s.id === 'mech.u5.psB');
   assert.ok(psB.steps.filter((x) => x.type === 'q' && getTemplate(x.t).puzzle).length >= 1);
   // every concept used has a readable name
