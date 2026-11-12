@@ -6,6 +6,7 @@ import unit3 from '../js/content/mechanics/unit3.js';
 import { allTemplates, instantiate } from '../js/engine/templates.js';
 import { fmt } from '../js/core/util.js';
 import { trafficRound } from '../js/widgets/unit3/traffic.js';
+import '../js/content/course.js'; // registers the Unit 1–2 templates used in the review
 import { makeRng } from '../js/core/util.js';
 
 const SEEDS = 600;
@@ -222,7 +223,7 @@ test('Unit 3 sims: every task has a reachable solution with the slider steps', (
     for (const task of step.params.tasks) {
       let found = false;
       if (step.widget === 'u3-dashboard') {
-        for (let u = 0; u <= 20 && !found; u++) for (let a = 0; a <= 5; a += 0.5) for (let t = 1; t <= 10; t++) if (task.check({ u, a, t, v: u + a * t })) found = true;
+        for (let u = 0; u <= 12 && !found; u++) for (let a = 0; a <= 4; a += 0.5) for (let t = 1; t <= 6; t++) if (task.check({ u, a, t, v: u + a * t })) found = true;
       } else if (step.widget === 'u3-brakes') {
         for (let u = 5; u <= 30 && !found; u++) for (let b = 1; b <= 8; b += 0.5) if (task.check({ u, b, time: u / b, dist: (u * u) / (2 * b) })) found = true;
       } else if (step.widget === 'u3-vt-builder' && step.params.mode === 'single') {
@@ -284,4 +285,55 @@ test('Unit 3: structure follows the brief', () => {
   assert.ok(puzzles.length >= 1 && puzzles.length <= 2);
   // every concept used has a readable name
   for (const t of u3()) for (const c of t.concepts) assert.ok(unit3.conceptNames[c], `${t.id}: concept ${c} has no name`);
+});
+
+// ---------- Review round 2 rules ----------
+test('Unit 3: the first hint is always a question', () => {
+  for (const t of u3()) {
+    for (let seed = 1; seed <= 50; seed++) {
+      const q = instantiate(t.id, seed);
+      if (q.hints) assert.ok(/\?$/.test(q.hints[0].trim()), `${t.id}: first hint is not a question: ${q.hints[0]}`);
+    }
+  }
+});
+
+test('Unit 3: every mistake value can be typed (at most 2 decimal places)', () => {
+  for (const t of u3()) {
+    for (let seed = 1; seed <= SEEDS; seed++) {
+      for (const e of instantiate(t.id, seed).errors || []) assert.ok(Math.abs(e.value * 100 - Math.round(e.value * 100)) < 1e-9, `${t.id}: ${e.value}`);
+    }
+  }
+});
+
+test('Unit 3: minecarts are gentle (≤ 12 m/s, ≤ 2 m/s²)', () => {
+  for (const t of u3()) {
+    for (let seed = 1; seed <= 300; seed++) {
+      const q = instantiate(t.id, seed);
+      const text = stripSvg(q.prompt);
+      if (!/minecart/i.test(text)) continue;
+      for (const m of text.matchAll(/(\d+(?:\.\d+)?) m\/s(?!²)/g)) assert.ok(Number(m[1]) <= 12, `${t.id}: ${text}`);
+      for (const m of text.matchAll(/(\d+(?:\.\d+)?) m\/s²/g)) assert.ok(Number(m[1]) <= 2, `${t.id}: ${text}`);
+      if (q.type === 'numeric' && /How fast|speed/.test(text) && q.unit === 'm/s') assert.ok(q.answer <= 12, `${t.id}: ${q.answer}`);
+    }
+  }
+});
+
+test('Unit 3: no mcq template appears twice in one session', () => {
+  for (const s of unit3.sessions) {
+    const mcqs = s.steps.filter((x) => x.type === 'q' && instantiate(x.t, 1).type === 'mcq').map((x) => x.t);
+    assert.equal(new Set(mcqs).size, mcqs.length, `${s.id}: ${mcqs}`);
+  }
+});
+
+test('Unit 3: acc-compare-mcq answers vary (not always the same choice)', () => {
+  const answers = new Set(Array.from({ length: 200 }, (_, i) => instantiate('u3.acc-compare-mcq', i + 1).answer));
+  assert.ok(answers.size >= 3, [...answers].join());
+});
+
+test('Unit 3 sims: planning tasks give direction-only feedback data', () => {
+  for (const step of sims) for (const task of step.params?.tasks || []) {
+    if (!task.plan) continue;
+    assert.ok(typeof task.plan.value === 'function' && Number.isFinite(task.plan.target) && task.plan.more && task.plan.less && task.plan.hint, `${step.s}: ${task.text}`);
+    assert.ok(!new RegExp(`\\b${task.plan.target}\\b`).test(task.plan.more + task.plan.less), 'direction text must not contain numbers');
+  }
 });

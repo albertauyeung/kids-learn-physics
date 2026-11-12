@@ -44,14 +44,14 @@ const SHADE_A = 'rgba(74,237,217,0.35)'; // rectangles
 const SHADE_B = 'rgba(252,238,75,0.35)'; // triangles
 
 
-registerTemplates([
+const TEMPLATES = [
   // ---------- Lesson 1: what is acceleration? ----------
   {
     id: 'u3.acc-basic', concepts: [C.acc], tier: 'explorer',
     generate(r) {
       const CTX = [
         { who: 'A car', us: [0, 5, 10], as: [1, 2, 3, 4, 5], ts: [2, 3, 4, 5, 6], vmax: 30 },
-        { who: 'Pip\'s minecart on a powered rail', us: [0, 2, 4], as: [1, 2, 3], ts: [2, 3, 4, 5], vmax: 16 },
+        { who: 'Pip\'s minecart on a powered rail', us: [0, 2, 4], as: [1, 2], ts: [2, 3, 4, 5], vmax: 12 },
         { who: 'A bus', us: [0, 4, 6], as: [1, 2], ts: [4, 5, 6, 8], vmax: 20 },
         { who: 'A sprinter', us: [0], as: [3, 4, 5], ts: [2], vmax: 10 },
       ];
@@ -83,7 +83,7 @@ registerTemplates([
     generate(r) {
       const CTX = [
         { who: 'A car', act: 'driving', us: [2, 4, 5, 6, 8, 10, 12, 15], as: [1, 1.5, 2, 2.5, 3, 4], vmax: 30 },
-        { who: 'A minecart', act: 'rolling', us: [1, 2, 3, 4, 5], as: [1, 1.5, 2, 3], vmax: 16 },
+        { who: 'A minecart', act: 'rolling', us: [1, 2, 3, 4, 5], as: [0.5, 1, 1.5, 2], vmax: 12 },
         { who: 'Pip on a sledge', act: 'sliding', us: [1, 2, 3], as: [0.5, 1, 1.5, 2], vmax: 12 },
       ];
       const x = until(r, (rr) => {
@@ -140,10 +140,10 @@ registerTemplates([
       const speeds = [0, 1, 2, 3, 4].map((k) => u + k * a);
       const table = `<table class="mini-table"><tr><td>time (s)</td>${[0, 1, 2, 3, 4].map((k) => `<td>${k}</td>`).join('')}</tr><tr><td>speed (m/s)</td>${speeds.map((s) => `<td><b>${fmt(s)}</b></td>`).join('')}</tr></table>`;
       const errors = [{ value: speeds[4], msg: 'That\'s the speed at 4 s. Acceleration is how much the speed goes UP each second.' }];
-      if (u) errors.push({ value: speeds[4] / 4, msg: `The cart didn't start at 0 m/s. Look at how much the speed changes from one second to the next.` });
+      if (u) errors.push({ value: speeds[4] / 4, msg: `The car didn't start at 0 m/s. Look at how much the speed changes from one second to the next.` });
       return {
         type: 'numeric',
-        prompt: `Pip reads a minecart's speedometer every second:${table}What is its acceleration?`,
+        prompt: `Pip reads the speedometer of his uncle's car every second:${table}What is its acceleration?`,
         answer: a, unit: ACC, unitChoices: ACC_UNITS,
         hints: ['How much does the speed go up from one second to the next?', 'Acceleration = speed gained each second.'],
         errors,
@@ -155,7 +155,7 @@ registerTemplates([
     id: 'u3.acc-meaning-mcq', concepts: [C.acc], tier: 'explorer',
     generate(r) {
       const a = r.pick([2, 3, 4, 5]);
-      const who = r.pick(['A car', 'A minecart on a powered rail', 'A rocket-powered sledge']);
+      const who = r.pick(['A car', 'A sports car', 'A motorbike']);
       return {
         type: 'mcq',
         prompt: `${who} has an acceleration of <b>${a} m/s²</b>. What does that mean?`,
@@ -168,15 +168,30 @@ registerTemplates([
   {
     id: 'u3.acc-compare-mcq', concepts: [C.acc], tier: 'scientist',
     generate(r) {
-      const [aB, tB] = r.pick([[1, 15], [2, 10], [1, 20]]);
-      const [aS, tS] = r.pick([[3, 2], [3, 3], [4, 2]]);
-      const vB = aB * tB, vS = aS * tS;
+      const WHO = [
+        { n: 'bus', as: [1, 2], ts: [5, 8, 10] },
+        { n: 'sprinter', as: [3, 4], ts: [2, 3], vmax: 10 },
+        { n: 'cyclist', as: [1, 2], ts: [3, 4, 5] },
+        { n: 'sports car', as: [4, 5], ts: [4, 5, 6] },
+        { n: 'tractor', as: [1], ts: [5, 8] },
+      ];
+      // trap: the faster finisher has the SMALLER acceleration; same: equal accelerations; plain: faster finisher wins.
+      const kind = r.pick(['trap', 'trap', 'same', 'plain']);
+      const x = until(r, (rr) => {
+        const [A, B] = rr.shuffle(WHO).slice(0, 2);
+        const aA = rr.pick(A.as), tA = rr.pick(A.ts), aB = rr.pick(B.as), tB = rr.pick(B.ts);
+        return { A, B, aA, tA, aB, tB, vA: aA * tA, vB: aB * tB };
+      }, (x) => x.vA <= (x.A.vmax || 30) && x.vB <= (x.B.vmax || 30) && x.vA !== x.vB && x.tA !== x.tB && (
+        kind === 'same' ? x.aA === x.aB : kind === 'trap' ? (x.aA - x.aB) * (x.vA - x.vB) < 0 : (x.aA - x.aB) * (x.vA - x.vB) > 0));
+      const { A, B, aA, tA, aB, tB, vA, vB } = x;
+      const answer = aA === aB ? 2 : aA > aB ? 0 : 1;
+      const big = vA > vB ? A.n : B.n;
       return {
         type: 'mcq',
-        prompt: `A bus goes from 0 to <b>${vB} m/s</b> in <b>${tB} s</b>. A sprinter goes from 0 to <b>${vS} m/s</b> in <b>${tS} s</b>. Who has the bigger acceleration?`,
-        choices: ['The sprinter', 'The bus', 'They are the same', 'You can\'t tell without the distances'],
-        answer: 0,
-        explain: `The bus ends up faster, but it gains only ${vB} ÷ ${tB} = ${aB} m/s each second. The sprinter gains ${vS} ÷ ${tS} = ${aS} m/s each second. A big final speed doesn't mean a big acceleration!`,
+        prompt: `A ${A.n} goes from 0 to <b>${vA} m/s</b> in <b>${tA} s</b>. A ${B.n} goes from 0 to <b>${vB} m/s</b> in <b>${tB} s</b>. Which has the bigger acceleration?`,
+        choices: [`The ${A.n}`, `The ${B.n}`, 'They are the same', 'You can\'t tell without the distances'],
+        answer,
+        explain: `The ${A.n} gains ${vA} ÷ ${tA} = ${aA} m/s each second; the ${B.n} gains ${vB} ÷ ${tB} = ${aB} m/s each second. ${kind === 'trap' ? `The ${big} ends up faster, but a big final speed doesn't mean a big acceleration!` : kind === 'same' ? 'Different final speeds, but the same speed gained each second.' : 'Always divide by the time to compare.'}`,
       };
     },
   },
@@ -197,7 +212,7 @@ registerTemplates([
     generate(r) {
       const CTX = [
         { who: 'A car', bs: [2, 3, 4, 5, 6, 8], umax: 30 },
-        { who: 'A minecart', bs: [1, 2, 3, 4], umax: 12 },
+        { who: 'A minecart', bs: [1, 2], umax: 12 },
         { who: 'A cyclist', bs: [1, 2, 3], umax: 10 },
       ];
       const x = until(r, (rr) => {
@@ -227,9 +242,9 @@ registerTemplates([
     generate(r) {
       const x = until(r, (rr) => {
         const car = rr.chance(0.5);
-        const b = car ? rr.pick([2, 4, 5, 6]) : rr.pick([1, 2, 3]), t = rr.int(2, 5), v = rr.chance(0.3) ? 0 : rr.int(2, 8);
+        const b = car ? rr.pick([2, 4, 5, 6]) : rr.pick([1, 2]), t = rr.int(2, 5), v = rr.chance(0.3) ? 0 : rr.int(2, 8);
         return { car, b, t, v, u: v + b * t };
-      }, (x) => x.u <= (x.car ? 30 : 15) && distinct(x.b, x.u - x.v, ...(x.v ? [x.u / x.t] : [])));
+      }, (x) => x.u <= (x.car ? 30 : 12) && distinct(x.b, x.u - x.v, ...(x.v ? [x.u / x.t] : [])));
       const { car, b, t, v, u } = x;
       const errors = [{ value: u - v, msg: 'That\'s the speed lost altogether. How much does it lose EACH second?' }];
       if (v) errors.push({ value: u / t, msg: `It doesn't stop — it ends at ${v} m/s. Use the speed it actually lost.` });
@@ -301,10 +316,10 @@ registerTemplates([
       const a = r.pick([2, 3, 4, 5]);
       return {
         type: 'mcq',
-        prompt: `Forward is +. A minecart moving forward has an acceleration of <b>−${a} m/s²</b>. What is happening?`,
+        prompt: `Forward is +. A car moving forward has an acceleration of <b>−${a} m/s²</b>. What is happening?`,
         choices: [`It is slowing down: it loses ${a} m/s every second`, `It is moving backwards at ${a} m/s`, `It moves ${a} m backwards every second`, `It is speeding up by ${a} m/s every second`],
         answer: 0,
-        explain: `A minus sign on a velocity means "moving backwards" — but on an acceleration it means the change points backwards. For a cart moving forward that means slowing down by ${a} m/s each second.`,
+        explain: `A minus sign on a velocity means "moving backwards" — but on an acceleration it means the change points backwards. For a car moving forward that means slowing down by ${a} m/s each second.`,
       };
     },
   },
@@ -373,7 +388,7 @@ registerTemplates([
       const area = v * t1 / 2 + v * t2;
       return {
         type: 'numeric',
-        prompt: `This velocity–time graph shows a minecart trip. How far does the cart travel altogether?${vtGraph({ points: pts, tMax: T, yMax: 20, shade })}`,
+        prompt: `This velocity–time graph shows a car trip. How far does the car travel altogether?${vtGraph({ points: pts, tMax: T, yMax: 20, shade })}`,
         answer: area, unit: 'm',
         hints: ['Split the area into simple shapes. Which parts are rectangles and which are triangles?', 'Rectangle = base × height. Triangle = ½ × base × height. Then add them.'],
         errors: [
@@ -473,7 +488,7 @@ registerTemplates([
       const { up, u, t, v, a } = x;
       const s = (u + v) * t / 2;
       // Minecarts are slower and gentler than cars.
-      const name = Math.max(u, v) <= 12 && Math.abs(a) <= 3 ? r.pick(['A car', 'A minecart']) : 'A car';
+      const name = Math.max(u, v) <= 12 && Math.abs(a) <= 2 ? r.pick(['A car', 'A minecart']) : 'A car';
       return {
         type: 'numeric',
         prompt: `${name} ${up ? 'speeds up' : 'slows down'} steadily from <b>${u} m/s</b> to <b>${v} m/s</b> in <b>${t} s</b>. How far does it travel?`,
@@ -523,11 +538,11 @@ registerTemplates([
       const s = (u + v) * t / 2;
       return {
         type: 'numeric',
-        prompt: `A minecart enters a powered rail at <b>${u} m/s</b> and speeds up steadily. After <b>${t} s</b> it has gone <b>${s} m</b>. How fast is it going at the end?`,
+        prompt: `A car joins a motorway at <b>${u} m/s</b> and speeds up steadily. After <b>${t} s</b> it has gone <b>${s} m</b>. How fast is it going at the end?`,
         answer: v, unit: 'm/s', unitChoices: ACC_UNITS,
-        hints: ['What was its average speed? (distance ÷ time)', 'The average speed is halfway between u and v. What must v be?'],
+        hints: ['What was its average speed, distance ÷ time?', 'The average speed is halfway between u and v. What must v be?'],
         errors: [
-          { value: (u + v) / 2, msg: 'That\'s its average speed. The final speed is further above the average, as far as u is below it.' },
+          { value: (u + v) / 2, msg: 'That\'s the average. v is as far above the average as u is below it.' },
           { value: u + v, msg: 'That\'s u + v. Take away u to find v.' },
           { value: v - u, msg: 'That\'s the speed it gained. Add the starting speed.' },
         ],
@@ -542,7 +557,7 @@ registerTemplates([
       const { u, v } = x;
       return {
         type: 'mcq',
-        prompt: `A minecart speeds up <b>steadily</b> from <b>${u} m/s</b> to <b>${v} m/s</b>. What is its average speed?`,
+        prompt: `A car speeds up <b>steadily</b> from <b>${u} m/s</b> to <b>${v} m/s</b>. What is its average speed?`,
         choices: [`${(u + v) / 2} m/s`, `${v} m/s`, `${u + v} m/s`, `${v - u} m/s`],
         answer: 0,
         explain: `When the speed changes steadily, the average is exactly halfway: ½(${u} + ${v}) = ${(u + v) / 2} m/s. That's why s = ½(u + v)t.`,
@@ -681,7 +696,7 @@ registerTemplates([
           ? ['It is 9 times as long', 'It is 3 times as long', 'It is 6 times as long', 'It stays the same']
           : ['It is 4 times as long', 'It is twice as long', 'It is 8 times as long', 'It stays the same'],
         answer: 0,
-        explain: `Braking distance = u² ÷ (2 × deceleration). ${triple ? '3² = 9' : '2² = 4'}: a little more speed needs a LOT more road to stop — that's why speed limits near schools matter!`,
+        explain: `Braking distance = u² ÷ (2 × deceleration). ${triple ? '3² = 9' : '2² = 4'}: more speed needs a LOT more road to stop — that's why speed limits near schools matter!`,
       };
     },
   },
@@ -765,7 +780,7 @@ registerTemplates([
     generate(r) {
       const x = until(r, (rr) => ({ u: rr.int(1, 8), root: rr.int(2, 8), cart: rr.chance(0.4) }), (x) => {
         const s = x.u * x.root + x.root * x.root;
-        return x.u + 2 * x.root <= (x.cart ? 16 : 24) && distinct(x.root, x.u + x.root, s / x.u);
+        return x.u + 2 * x.root <= (x.cart ? 12 : 24) && distinct(x.root, x.u + x.root, s / x.u);
       });
       const { u, root, cart } = x;
       const s = u * root + root * root;
@@ -796,7 +811,7 @@ registerTemplates([
         type: 'numeric',
         prompt: `A car moving at <b>${u} m/s</b> accelerates at <b>4 m/s²</b>. How long does it take to travel <b>${s} m</b>?`,
         answer: root, unit: 's',
-        hints: ['Put the numbers into s = ut + ½at². You get a 2t² term.', 'Divide every term by 2 so the t² stands alone, then factorise.'],
+        hints: ['What does s = ut + ½at² become with these numbers — and what number sits in front of t²?', 'Divide every term by 2 so the t² stands alone, then factorise.'],
         errors: [
           { value: h + root, msg: `That's the size of the negative answer t = −${h + root}, which we throw away.` },
           { value: s / u, msg: 'That ignores the acceleration — the car keeps getting faster.' },
@@ -847,7 +862,7 @@ registerTemplates([
         type: 'numeric',
         prompt: `A sprinter starts from rest and speeds up steadily, reaching her top speed of <b>${v} m/s</b> after <b>${t} s</b>. How far has she run by then?`,
         answer: v * t / 2, unit: 'm',
-        hints: ['Her speed went steadily from 0 to ' + v + ' m/s. What was her average speed?', 'distance = average speed × time = ½(u + v)t'],
+        hints: ['Her speed went steadily from 0 to ' + v + ' m/s — what was her average speed?', 'distance = average speed × time = ½(u + v)t'],
         errors: [
           { value: v * t, msg: 'She wasn\'t at top speed the whole time. Use her average speed, ½(0 + ' + v + ').' },
           { value: v / t, msg: 'That\'s her acceleration. The question asks for the distance.' },
@@ -951,7 +966,7 @@ registerTemplates([
         type: 'numeric',
         prompt: `A driver going at <b>${u} m/s</b> sees a creeper on the road. It takes her <b>${fmt(tr)} s</b> to react (the car keeps going at full speed), then she brakes at <b>${b} m/s²</b>. What is the total stopping distance?`,
         answer: think + brake, unit: 'm',
-        hints: ['There are two parts: before she presses the brake, and after.', 'Thinking distance = speed × reaction time. Braking distance = u² ÷ (2 × deceleration). Add them.'],
+        hints: ['How far does the car go before she presses the brake? And after?', 'Thinking distance = speed × reaction time. Braking distance = u² ÷ (2 × deceleration). Add them.'],
         errors: [
           { value: brake, msg: 'That\'s just the braking distance. The car also moves while she reacts.' },
           { value: think, msg: 'That\'s just the thinking distance. Add the braking distance.' },
@@ -966,7 +981,7 @@ registerTemplates([
     generate(r) {
       // Alex: s = ½ × 2 × t² = t². Pip: s = d + wt. Meet when t² − wt − d = 0 = (t − root)(t + q).
       const x = until(r, (rr) => {
-        const root = rr.int(4, 8), q = rr.int(1, root - 1);
+        const root = rr.int(4, 6), q = rr.int(1, root - 1);
         return { root, q, w: root - q, d: root * q };
       }, (x) => x.w >= 2 && x.w <= 6 && distinct(x.root, x.q, x.d / x.w));
       const { root, q, w, d } = x;
@@ -974,7 +989,7 @@ registerTemplates([
         type: 'numeric',
         prompt: `Pip's minecart rolls along at a steady <b>${w} m/s</b>. When it is <b>${d} m</b> ahead, Alex's minecart starts from rest behind it on a powered rail, accelerating at <b>2 m/s²</b>. How many seconds until Alex catches Pip?`,
         answer: root, unit: 's',
-        hints: ['Write how far each cart is from Alex\'s start after t seconds.', `Alex: ½ × 2 × t² = t². Pip: ${d} + ${w}t. They meet when these are equal.`, `Make it = 0 and factorise: which two numbers multiply to −${d} and add to −${w}?`],
+        hints: ['How far is each cart from Alex\'s start after t seconds?', `Alex: ½ × 2 × t² = t². Pip: ${d} + ${w}t. They meet when these are equal.`, `Make it = 0 and factorise: which two numbers multiply to −${d} and add to −${w}?`],
         errors: [
           { value: q, msg: `That's the size of the negative answer t = −${q}. Check the signs in your brackets.` },
           { value: d / w, msg: 'Alex doesn\'t move at a steady speed — he keeps speeding up. Use s = ½at² for Alex.' },
@@ -998,7 +1013,7 @@ registerTemplates([
         type: 'numeric',
         prompt: `A creeper steps onto the road <b>${D} m</b> ahead of a car. The driver takes <b>${fmt(tr)} s</b> to react, then brakes at <b>${b} m/s²</b>. What is the <b>fastest</b> the car can be going and still stop in time?`,
         answer: u, unit: 'm/s', unitChoices: ACC_UNITS,
-        hints: ['Call the speed u. Write the thinking distance and the braking distance using u.', `Thinking: ${fmt(tr)}u. Braking: u² ÷ ${2 * b}. Together they make ${D} m.`, `Multiply everything by ${2 * b}, make it = 0 and factorise.`],
+        hints: ['If the speed is u, how far does the car go while she reacts, and while she brakes?', `Thinking: ${fmt(tr)}u. Braking: u² ÷ ${2 * b}. Together they make ${D} m.`, `Multiply everything by ${2 * b}, make it = 0 and factorise.`],
         errors: [
           { value: Math.sqrt(2 * b * D), msg: 'That forgets the reaction time — the car travels at full speed while the driver reacts.' },
           { value: D / tr, msg: 'That forgets the braking distance.' },
@@ -1008,4 +1023,14 @@ registerTemplates([
       };
     },
   },
-]);
+];
+
+// An error value with more than 2 decimal places can never be typed on the keypad: drop it.
+registerTemplates(TEMPLATES.map((t) => ({
+  ...t,
+  generate(r) {
+    const q = t.generate(r);
+    if (q.errors) q.errors = q.errors.filter((e) => isNice(e.value));
+    return q;
+  },
+})));

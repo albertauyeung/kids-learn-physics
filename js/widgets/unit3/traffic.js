@@ -53,11 +53,14 @@ export default function traffic(el, params = {}, api) {
   const st = makeStage(el, W, H);
   const ro = readout();
   const box = controls();
-  let roundNo = 0, R = null, val = 0;
+  let roundNo = 0, R = null, val = 0, tries = 0;
+  const MAX_TRIES = 3;
   let clock = 0, running = false, result = null;
   let alive = true, timer = null;
+  // Between rounds (after a win or 3 misses) Go does nothing until the next light appears.
+  const waiting = () => !!result && (result.ok || tries >= MAX_TRIES);
   const goBtn = button('▶ Go!', () => {
-    if (running) return;
+    if (running || waiting()) return;
     clock = 0; result = null; running = true;
     sfx.click();
   }, 'green');
@@ -65,22 +68,22 @@ export default function traffic(el, params = {}, api) {
 
   function newRound() {
     R = trafficRound(rng, order[roundNo % order.length]);
-    clock = 0; running = false; result = null;
+    clock = 0; running = false; result = null; tries = 0;
     box.innerHTML = '';
     let s;
     if (R.type === 'stop') {
       val = 1;
-      s = slider({ label: 'Brakes: deceleration', min: 1, max: 8, step: 0.5, value: val, unit: 'm/s²', onInput: (v) => { val = v; clock = 0; result = null; } });
+      s = slider({ label: 'Brakes: deceleration', min: 1, max: 8, step: 0.1, value: val, unit: 'm/s²', onInput: (v) => { val = v; if (!waiting()) { clock = 0; result = null; } } });
       banner.set(`Round ${roundNo + 1}/${totalRounds}: <b>Red light!</b> You're doing <b>${R.u} m/s</b> and the stop line is <b>${R.d} m</b> ahead. You brake right now — how hard, to stop <b>exactly on the line</b>?`);
       ro.set([['Speed u', `${R.u} m/s`], ['Stop line', `${R.d} m ahead`], ['You set', 'the deceleration']]);
     } else if (R.type === 'brakepoint') {
       val = 0;
-      s = slider({ label: 'Start braking at', min: 0, max: R.D, step: 1, value: val, unit: 'm', onInput: (v) => { val = v; clock = 0; result = null; } });
+      s = slider({ label: 'Start braking at', min: 0, max: R.D, step: 1, value: val, unit: 'm', onInput: (v) => { val = v; if (!waiting()) { clock = 0; result = null; } } });
       banner.set(`Round ${roundNo + 1}/${totalRounds}: The light ahead is <b>red</b>. You're cruising at <b>${R.u} m/s</b> and your brakes give <b>${R.b} m/s²</b>. The stop line is <b>${R.D} m</b> away. Where must you <b>start braking</b> to stop exactly on the line?`);
       ro.set([['Speed u', `${R.u} m/s`], ['Brakes', `${R.b} m/s²`], ['Stop line', `${R.D} m from the start`], ['You set', 'where the brakes go on']]);
     } else {
       val = 1;
-      s = slider({ label: 'Acceleration', min: 0.5, max: 5, step: 0.5, value: val, unit: 'm/s²', onInput: (v) => { val = v; clock = 0; result = null; } });
+      s = slider({ label: 'Acceleration', min: 0.5, max: 5, step: 0.1, value: val, unit: 'm/s²', onInput: (v) => { val = v; if (!waiting()) { clock = 0; result = null; } } });
       banner.set(`Round ${roundNo + 1}/${totalRounds}: <b>Green wave!</b> You start from rest. The light <b>${R.D} m</b> ahead turns green in exactly <b>${R.T} s</b>. Choose your acceleration so you reach it <b>exactly as it turns green</b> — not before (you'd have to stop), not after.`);
       ro.set([['Start', 'from rest (u = 0)'], ['Light', `${R.D} m ahead`], ['Turns green after', `${R.T} s`], ['You set', 'the acceleration']]);
     }
@@ -110,26 +113,42 @@ export default function traffic(el, params = {}, api) {
   };
   const line = () => (R.type === 'stop' ? R.d : R.D);
 
+  // The worked answer for this round (shown after 3 misses).
+  function solution() {
+    if (R.type === 'stop') return `deceleration = u² ÷ (2 × distance) = ${R.u}² ÷ (2 × ${R.d}) = ${R.u * R.u} ÷ ${2 * R.d} = <b>${fmt(R.b)} m/s²</b>`;
+    if (R.type === 'brakepoint') return `braking distance = ${R.u}² ÷ (2 × ${R.b}) = ${R.u * R.u} ÷ ${2 * R.b} = ${R.sb} m, so brake at ${R.D} − ${R.sb} = <b>${R.p} m</b>`;
+    return `D = ½aT², so a = 2D ÷ T² = 2 × ${R.D} ÷ ${R.T}² = ${2 * R.D} ÷ ${R.T * R.T} = <b>${fmt(R.a)} m/s²</b>`;
+  }
+
   function judge() {
     const x = posAt(endTime());
     const L = line();
+    // Direction only — never the size of the miss, so the round needs the physics, not trial and error.
     let ok, msg;
     if (R.type === 'go') {
       ok = Math.abs(x - L) <= 1;
-      const tc = Math.sqrt((2 * L) / val);
-      msg = ok ? `Perfect timing! You reached the light just as it turned green.`
-        : x > L ? `Too early! You reached the line after ${fmt(tc, 2)} s, while it was still red. Gentler acceleration.`
-          : `Too slow! At ${R.T} s you were still ${fmt(L - x, 1)} m from the light. Think: s = ½at².`;
+      msg = ok ? 'Perfect timing! You reached the light just as it turned green.'
+        : x > L ? 'Too early — you reached the light while it was still red.'
+          : 'Too late — the light turned green before you got there.';
     } else {
       ok = Math.abs(x - L) <= 0.5;
-      msg = ok ? `You stopped exactly on the line (${fmt(x, 2)} m). Smooth!`
-        : x > L ? `You ran the red light by ${fmt(x - L, 1)} m! Think: braking distance = u² ÷ (2 × deceleration).`
-          : `You stopped ${fmt(L - x, 1)} m short of the line. Think: braking distance = u² ÷ (2 × deceleration).`;
+      msg = ok ? 'You stopped exactly on the line. Smooth!'
+        : x > L ? 'Too far — you ran the red light!'
+          : 'Too short — you stopped before the line.';
     }
     result = { ok, x };
     if (!ok) {
       sfx.wrong();
-      banner.set(msg);
+      tries++;
+      if (tries >= MAX_TRIES) {
+        banner.set(`${msg} That was 3 tries. Here's how to work it out: ${solution()}. Try a new light with new numbers!`);
+        timer = setTimeout(() => {
+          if (alive) newRound();
+        }, 6000);
+        return;
+      }
+      const tip = R.type === 'go' ? 'Use s = ½at² with s and t known.' : 'Use braking distance = u² ÷ (2 × deceleration).';
+      banner.set(`${msg} ${tip} Try ${tries + 1} of ${MAX_TRIES}.`);
       return;
     }
     sfx.correct();
@@ -175,7 +194,7 @@ export default function traffic(el, params = {}, api) {
     const carFront = Math.min(xOf(x), W - 4);
     drawCar(ctx, carFront - 16, ROAD, 2, running ? Math.sin(now * 30) * 0.5 : 0);
     const v = running || result ? speedAt(t) : R.type === 'go' ? 0 : R.u;
-    if (v > 0) arrow(ctx, carFront + 2, ROAD - 26, carFront + 2 + Math.max(6, v * 1.5), ROAD - 26, '#80ff20', 3);
+    if (v > 0) arrow(ctx, carFront + 2, ROAD - 26, carFront + 2 + Math.max(16, v * 1.5), ROAD - 26, '#80ff20', 3);
     tag(ctx, `v = ${fmt(v, 1)} m/s`, Math.min(carFront, W - 60), ROAD - 34, { size: 10, color: '#80ff20' });
     tag(ctx, `t = ${fmt(t, 1)} s`, W - 40, 18, { size: 12 });
     if (R.type === 'go') tag(ctx, `green at ${R.T} s`, 60, 18, { size: 11, color: green ? '#30e060' : '#ff6b6b' });

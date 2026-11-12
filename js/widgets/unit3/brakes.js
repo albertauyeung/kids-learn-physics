@@ -37,18 +37,23 @@ export default function brakes(el, params = {}, api) {
   const sb = slider({ label: 'Brakes: deceleration', min: 1, max: 8, step: 0.5, value: p.b, unit: 'm/s²', onInput: (v) => { p.b = v; reset(); } });
   const go = button('▶ Brake!', () => {
     clock = 0; done = null; log = [p.u]; running = true;
-    view = Math.max(60, Math.ceil((Math.max(S(), ...marks.map((m) => m.x)) * 1.15) / 10) * 10);
+    // A planning task keeps the track fixed around its flag, so the zoom doesn't give the distance away.
+    const target = tasks.current()?.target;
+    const far = tasks.planning && target ? target * 1.3 : S();
+    view = Math.max(60, Math.ceil((Math.max(far, ...marks.map((m) => m.x)) * 1.15) / 10) * 10);
+    hidden = false;
     sfx.click();
     show();
   }, 'green');
   el.append(controls(su.el, sb.el), controls(go), ro.el);
 
+  let hidden = false; // the exact result of a missed planning task stays secret
   function show() {
     ro.set([
       ['Acceleration (forward is +)', `a = −${fmt(p.b)} m/s²: it loses ${fmt(p.b)} m/s every second`],
-      log.length && ['Speed at each second', `${log.map((v) => fmt(v, 2)).join(' → ')} m/s`],
-      done && ['Time to stop', `${fmt(done.time, 2)} s`, 'winner'],
-      done && ['Braking distance', `${fmt(done.dist, 2)} m`, 'winner'],
+      log.length && !hidden && !(tasks.planning && running) && ['Speed at each second', `${log.map((v) => fmt(v, 2)).join(' → ')} m/s`],
+      done && ['Time to stop', hidden ? '?' : `${fmt(done.time, 2)} s`, 'winner'],
+      done && ['Braking distance', hidden ? '? (work it out!)' : `${fmt(done.dist, 2)} m`, 'winner'],
     ]);
   }
 
@@ -66,11 +71,12 @@ export default function brakes(el, params = {}, api) {
         running = false;
         log.push(0);
         done = { u: p.u, b: p.b, time: T(), dist: S() };
-        marks.push({ x: S(), label: `${fmt(p.u)} m/s → ${fmt(S(), 2)} m` });
+        const planning = tasks.planning;
+        const ok = tasks.run(done);
+        hidden = planning && !ok;
+        marks.push({ x: S(), label: hidden ? `${fmt(p.u)} m/s, ${fmt(p.b)} m/s²` : `${fmt(p.u)} m/s → ${fmt(S(), 2)} m` });
         if (marks.length > 3) marks.shift();
-        sfx.boom?.();
         show();
-        tasks.run(done);
       }
     }
     const { ctx } = st;
@@ -82,6 +88,16 @@ export default function brakes(el, params = {}, api) {
     ctx.fillStyle = '#fcee4b';
     ctx.fillRect(Math.round(xOf(0)) - 1, ROAD, 3, 26);
     tag(ctx, 'brakes on', xOf(0), ROAD - 46, { size: 10, color: '#fcee4b' });
+    // the flag of a planning task
+    const flagAt = tasks.planning ? tasks.current()?.target : null;
+    if (flagAt) {
+      const fx = xOf(flagAt);
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(Math.round(fx), ROAD - 30, 2, 56);
+      ctx.fillStyle = '#e03030';
+      ctx.fillRect(Math.round(fx) + 2, ROAD - 30, 12, 8);
+      tag(ctx, `flag ${flagAt} m`, fx, ROAD - 36, { size: 10, color: '#fcee4b' });
+    }
     // earlier stops
     marks.forEach((m, i) => {
       const x = xOf(m.x);
@@ -95,17 +111,17 @@ export default function brakes(el, params = {}, api) {
       ctx.fillStyle = 'rgba(0,0,0,0.45)';
       ctx.fillRect(xOf(0), ROAD + 20, xOf(x) - xOf(0), 3);
     }
-    const carX = xOf(x) - 18;
+    const carX = Math.min(xOf(x), W - 4) - 18;
     drawCar(ctx, carX, ROAD, 2.5, running ? Math.sin(now * 30) * 0.5 : 0);
     if (running || !done) {
       // velocity arrow (forward) and acceleration arrow (backwards)
       const v = vNow();
       if (v > 0) arrow(ctx, carX + 22, ROAD - 26, carX + 22 + Math.max(8, v * 2.2), ROAD - 26, '#80ff20', 3);
       arrow(ctx, carX - 20, ROAD - 12, carX - 20 - p.b * 5, ROAD - 12, '#ff6b6b', 3);
-      tag(ctx, `v = ${fmt(v, 1)} m/s`, carX + 30, ROAD - 34, { size: 10, color: '#80ff20', align: 'left' });
+      if (!tasks.planning || !running) tag(ctx, `v = ${fmt(v, 1)} m/s`, carX + 30, ROAD - 34, { size: 10, color: '#80ff20', align: 'left' });
       tag(ctx, `a = −${fmt(p.b)}`, carX - 22, ROAD - 18, { size: 10, color: '#ff6b6b', align: 'right' });
     }
-    tag(ctx, `t = ${fmt(clock, 1)} s`, W - 40, 18, { size: 12 });
+    if (!hidden && !(tasks.planning && running)) tag(ctx, `t = ${fmt(clock, 1)} s`, W - 40, 18, { size: 12 });
   });
 
   show();

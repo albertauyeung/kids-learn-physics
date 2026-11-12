@@ -87,7 +87,7 @@ export default function vtBuilder(el, params = {}, api) {
     pick(0);
   }
   const go = button('▶ Drive', () => {
-    clock = 0; driven = null; running = true;
+    clock = 0; driven = null; running = true; hidden = false;
     sfx.click();
     show();
   }, 'green');
@@ -101,12 +101,21 @@ export default function vtBuilder(el, params = {}, api) {
     return `rectangle ${s.dt} × ${lo} + triangle ½ × ${s.dt} × ${hi - lo} = ${fmt(area, 2)} m`;
   }
 
+  let hidden = false; // a missed planning task: keep the exact distance secret
+  const secret = () => hidden || (tasks.planning && running);
   function show() {
     const ss = segs();
+    if (driven && hidden) {
+      ro.set([
+        ...ss.map((s, i) => [single ? 'Slope = acceleration' : `Piece ${i + 1} slope`, `(${s.v1} − ${s.v0}) ÷ ${s.dt} = ${fmtSigned((s.v1 - s.v0) / s.dt, 2)} m/s²`]),
+        ['Distance', '? — work out the area yourself!'],
+      ]);
+      return;
+    }
     if (!driven) {
       ro.set([
         ['Graph', single ? `${u0} m/s → ${pieces[0].v} m/s in ${pieces[0].dt} s` : `${fmt(Ttot())} s of driving`],
-        ['Distance', running ? `${fmt(distAt(clock), 1)} m so far...` : 'press Drive to measure it'],
+        ['Distance', running ? (secret() ? '?' : `${fmt(distAt(clock), 1)} m so far...`) : 'press Drive to measure it'],
       ]);
       return;
     }
@@ -128,8 +137,10 @@ export default function vtBuilder(el, params = {}, api) {
         running = false;
         const ss = segs();
         driven = { pieces: ss.map((s) => ({ v0: s.v0, v1: s.v1, dt: s.dt })), total: total(), u: u0, v: pieces[pieces.length - 1].v, t: Ttot() };
+        const planning = tasks.planning;
+        const ok = tasks.run(driven);
+        hidden = planning && !ok;
         show();
-        tasks.run(driven);
       } else if (Math.floor(now * 4) !== Math.floor((now - dt) * 4)) show();
     }
     const { ctx } = st;
@@ -146,7 +157,7 @@ export default function vtBuilder(el, params = {}, api) {
     }
     const d = running || driven ? distAt(clock) : 0;
     drawCar(ctx, xOf(d) - 16, ROAD, 2, running ? Math.sin(now * 30) * 0.5 : 0);
-    tag(ctx, `distance ${fmt(d, 1)} m`, W - 70, 18, { size: 11 });
+    tag(ctx, secret() ? 'distance ?' : `distance ${fmt(d, 1)} m`, W - 70, 18, { size: 11 });
     tag(ctx, `t = ${fmt(clock, 1)} s`, 50, 18, { size: 11 });
 
     // ---- graph ----

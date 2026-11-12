@@ -47,7 +47,7 @@ export default {
             u: 0, a: 2, t: 5,
             tasks: [
               { text: 'Start from rest with a = 2 m/s² for 5 s. Watch the speed each second.', check: (p) => p.u === 0 && p.a === 2 && p.t === 5, test: true },
-              { text: 'Starting from rest, reach exactly <b>20 m/s</b> in exactly <b>4 s</b>.', check: (p) => p.u === 0 && p.t === 4 && p.v === 20 },
+              { text: 'Starting from rest, reach exactly <b>20 m/s</b> in exactly <b>5 s</b>.', check: (p) => p.u === 0 && p.t === 5 && p.v === 20 },
               { text: 'Start at <b>6 m/s</b> and reach exactly <b>18 m/s</b> in <b>4 s</b>.', check: (p) => p.u === 6 && p.t === 4 && p.v === 18 },
             ],
           },
@@ -59,13 +59,12 @@ export default {
                  <p><b>u</b> = starting velocity, <b>v</b> = final velocity, <b>t</b> = time taken.</p>
                  <p>Example: a car goes from 0 to 30 m/s in 6 s. a = (30 − 0) ÷ 6 = <b>5 m/s²</b>.</p>
                  <p>The unit <b>m/s²</b> is read "metres per second, every second": the car gains 5 m/s each second (0, 5, 10, 15...).</p>
-                 <p class="tip">Speed gained = a × t. So after t seconds, the speed is u + a × t.</p>`,
+                 <p class="tip">Speed gained = a × t. So after t seconds, the speed is u + a × t. And the time to gain some speed = speed to gain ÷ a.</p>`,
         },
         { type: 'q', t: 'u3.acc-meaning-mcq' },
         { type: 'q', t: 'u3.acc-basic' },
         { type: 'q', t: 'u3.acc-table' },
         { type: 'q', t: 'u3.acc-compare-mcq' },
-        { type: 'q', t: 'u3.acc-basic' },
         { type: 'q', t: 'u3.acc-final' },
         { type: 'q', t: 'u3.eq-t' },
         { type: 'q', t: 'u3.acc-time' },
@@ -107,6 +106,7 @@ export default {
                  <p class="eq">a = (0 − 20) ÷ 5 = −4 m/s²</p>
                  <p>The minus sign means the acceleration points <b>backwards</b> — against the motion — so the car slows down.</p>
                  <p>We often give just the size and call it a <b>deceleration</b> (減速): "a deceleration of 4 m/s²".</p>
+                 <p>Speed lost = deceleration × time. After 2 s of braking at 4 m/s² from 20 m/s: 20 − 4 × 2 = <b>12 m/s</b>. Time to stop = speed ÷ deceleration = 20 ÷ 4 = <b>5 s</b>.</p>
                  <p class="tip">A minus <b>velocity</b> means moving backwards. A minus <b>acceleration</b> on a car moving forward means slowing down. Read each question carefully: does it want the acceleration (with its sign) or the deceleration (a positive size)?</p>`,
         },
         { type: 'q', t: 'u3.dec-sign-mcq' },
@@ -151,7 +151,7 @@ export default {
             tasks: [
               { text: 'Run the trip as it is and watch the shaded area fill in as the car moves.', check: (p) => p.total === 70 },
               { text: 'Change <b>piece 1</b> so the car speeds up at exactly <b>2 m/s²</b>.', check: (p) => p.pieces[0].v1 === 2 * p.pieces[0].dt },
-              { text: 'Make the whole trip exactly <b>120 m</b> long, ending at rest (0 m/s).', check: (p) => p.total === 120 && p.v === 0 },
+              { text: 'Plan a trip exactly <b>120 m</b> long that ends at rest (0 m/s). Work out the areas first — the sim only says "too long" or "too short" until you get it!', check: (p) => p.total === 120 && p.v === 0, plan: { value: (p) => p.total, target: 120, more: 'too short', less: 'too long', hint: 'Add up the areas: triangles ½ × base × height, rectangles base × height.' } },
             ],
           },
         },
@@ -169,19 +169,18 @@ export default {
         { type: 'q', t: 'u3.vt-meaning-mcq' },
         { type: 'q', t: 'u3.vt-area-trap' },
         { type: 'q', t: 'u3.vt-slope' },
-        { type: 'q', t: 'u3.vt-flat-mcq' },
-        { type: 'q', t: 'u3.vt-area-trap' },
       ],
     },
     // ------------------------------------------------------------------
     {
       id: 'mech.u3.l4', type: 'lesson', title: 'Equations from Graphs', icon: 'grass',
       notes: {
-        eq: ['v = u + at', 's = ½(u + v)t'],
+        eq: ['v = u + at', 's = ½(u + v)t', 's = ut + ½at²'],
         tips: [
           'v = u + at: start speed + speed gained.',
           's = ½(u + v)t: average speed × time (the trapezium area).',
           'Example: 4 → 12 m/s in 4 s → s = ½ × (4 + 12) × 4 = 32 m.',
+          's = ut + ½at²: rectangle ut + triangle ½at². Square the time first!',
           'Only for steady (constant) acceleration!',
         ],
       },
@@ -198,8 +197,8 @@ export default {
             mode: 'single', u: 2, v: 10, t: 5,
             tasks: [
               { text: 'Make the car speed up from <b>4 m/s</b> to <b>12 m/s</b> in <b>4 s</b>. How far does it go?', check: (p) => p.u === 4 && p.v === 12 && p.t === 4, test: true },
-              { text: 'Start at <b>6 m/s</b>. In <b>4 s</b>, speed up steadily and cover exactly <b>48 m</b>.', check: (p) => p.u === 6 && p.t === 4 && p.total === 48 },
-              { text: 'Accelerate at exactly <b>3 m/s²</b> for <b>4 s</b> and cover exactly <b>36 m</b>.', check: (p) => p.t === 4 && p.v - p.u === 12 && p.total === 36 },
+              { text: 'Start at <b>6 m/s</b>. In <b>4 s</b>, speed up steadily and cover exactly <b>48 m</b>. Work out the end speed first!', check: (p) => p.u === 6 && p.t === 4 && p.total === 48, plan: { value: (p) => p.total, target: 48, more: 'too short', less: 'too long', hint: 'Average speed = 48 ÷ 4. It is halfway between 6 and v.' } },
+              { text: 'Accelerate at exactly <b>3 m/s²</b> for <b>4 s</b> and cover exactly <b>36 m</b>.', check: (p) => p.t === 4 && p.v - p.u === 12 && p.total === 36, plan: { value: (p) => p.total, target: 36, more: 'too short', less: 'too long', hint: 'In 4 s at 3 m/s² it gains 12 m/s, so v = u + 12. The average speed must be 36 ÷ 4.' } },
             ],
           },
         },
@@ -207,51 +206,50 @@ export default {
           type: 'info', title: 'Two equations from one graph',
           html: `<p><b>From the slope:</b> a = (v − u) ÷ t. Multiply by t and add u:</p>
                  <p class="eq">v = u + at</p>
-                 <p>(start speed + speed gained). <b>From the area:</b> the trapezium = rectangle u × t + triangle ½ × t × (v − u). Tidy it up and you get</p>
+                 <p>(start speed + speed gained). <b>From the area:</b> the trapezium = rectangle u × t + triangle ½ × t × (v − u):</p>
+                 <p class="eq">ut + ½(v − u)t = ut + ½vt − ½ut = ½ut + ½vt = ½(u + v)t</p>
                  <p class="eq">s = ½(u + v)t</p>
                  <p>${vtGraph({ points: [[0, 4], [4, 12]], tMax: 4, yMax: 12, shade: [{ pts: [[0, 0], [0, 4], [4, 4], [4, 0]], color: RECT }, { pts: [[0, 4], [4, 12], [4, 4]], color: TRI }] })}</p>
-                 <p>½(u + v) is the <b>average speed</b>: 4 → 12 m/s in 4 s gives ½ × (4 + 12) × 4 = 16 + 16 = <b>32 m</b>.</p>
+                 <p>½(u + v) is the <b>average speed</b>. 4 → 12 m/s in 4 s: ½ × 16 × 4 = <b>32 m</b> (rectangle 16 + triangle 16 ✔).</p>
                  <p class="tip">These only work when the acceleration is steady (a straight line on the graph).</p>`,
         },
         { type: 'q', t: 'u3.eq-v' },
-        { type: 'q', t: 'u3.acc-final' },
         { type: 'q', t: 'u3.eq-s' },
         { type: 'q', t: 'u3.suvat-avg' },
         { type: 'q', t: 'u3.avg-vel-mcq' },
-        { type: 'q', t: 'u3.suvat-avg-t' },
-        { type: 'q', t: 'u3.suvat-avg-v' },
+        {
+          type: 'info', title: 'Power equation 1: s = ut + ½at²',
+          html: `<p>Often you know the <b>acceleration</b> instead of the final speed. The final speed is u + at, so the rectangle is <b>u × t</b> and the triangle on top is <b>½ × t × at</b>:</p>
+                 <p class="eq">s = ut + ½at²</p>
+                 <p>${vtGraph({ points: [[0, 5], [3, 11]], tMax: 3, yMax: 12, yStep: 1, labelEvery: 2, shade: [{ pts: [[0, 0], [0, 5], [3, 5], [3, 0]], color: RECT }, { pts: [[0, 5], [3, 11], [3, 5]], color: TRI }] })}</p>
+                 <p>Example: u = 5 m/s, a = 2 m/s², t = 3 s → s = 5 × 3 + ½ × 2 × 3² = 15 + 9 = <b>24 m</b>. Check: v = 11 m/s and ½(5 + 11) × 3 = 24 m ✔</p>
+                 <p class="tip">Square the time first: ½at² means ½ × a × t × t.</p>`,
+        },
+        { type: 'q', t: 'u3.suvat-s-rest' },
+        { type: 'q', t: 'u3.suvat-s' },
       ],
     },
     // ------------------------------------------------------------------
     {
-      id: 'mech.u3.l5', type: 'lesson', title: 'The Power Equations', icon: 'grass',
+      id: 'mech.u3.l5', type: 'lesson', title: 'v² = u² + 2as & Stopping Distances', icon: 'grass',
       notes: {
-        eq: ['s = ut + ½at²', 'v² = u² + 2as', 'braking distance = u² ÷ (2 × deceleration)'],
+        eq: ['v² = u² + 2as', 'braking distance = u² ÷ (2 × deceleration)', 'stopping distance = thinking distance + braking distance'],
         tips: [
           'No time in the question? Use v² = u² + 2as.',
           'Example: from rest, a = 2 m/s², s = 25 m → v² = 0 + 2 × 2 × 25 = 100 → v = 10 m/s.',
           'Braking from 20 m/s at 5 m/s² → 400 ÷ 10 = 40 m. Double the speed → 4 × as far (160 m)!',
+          'Thinking distance = speed × reaction time. 20 m/s, 1 s, 5 m/s² → 20 + 40 = 60 m.',
           'Squares: 14² = 196, 16² = 256, 18² = 324, 20² = 400, 24² = 576, 25² = 625, 30² = 900.',
         ],
       },
       steps: [
         {
-          type: 'info', title: 'Power equation 1: s = ut + ½at²',
-          html: `<p>Speeding up from u for t seconds with acceleration a. The final speed is u + at, so the area under the graph is:</p>
-                 <p>rectangle <b>u × t</b> + triangle <b>½ × t × at</b></p>
-                 <p>${vtGraph({ points: [[0, 4], [4, 12]], tMax: 4, yMax: 12, shade: [{ pts: [[0, 0], [0, 4], [4, 4], [4, 0]], color: RECT }, { pts: [[0, 4], [4, 12], [4, 4]], color: TRI }] })}</p>
-                 <p class="eq">s = ut + ½at²</p>
-                 <p>Example: u = 4 m/s, a = 2 m/s², t = 4 s → s = 16 + ½ × 2 × 16 = 16 + 16 = <b>32 m</b> (the same answer as ½(u + v)t!).</p>
-                 <p class="tip">Square the time first: ½at² means ½ × a × t × t.</p>`,
-        },
-        { type: 'q', t: 'u3.suvat-s-rest' },
-        { type: 'q', t: 'u3.suvat-s' },
-        {
           type: 'info', title: 'Power equation 2: v² = u² + 2as',
-          html: `<p>Mix v = u + at and s = ½(u + v)t together so that t disappears, and you get:</p>
-                 <p class="eq">v² = u² + 2as</p>
-                 <p>Use it when the question has <b>no time</b> in it. Example: a car starts from rest and accelerates at 2 m/s² for 25 m.<br>
-                 v² = 0 + 2 × 2 × 25 = 100, so v = √100 = <b>10 m/s</b>.</p>
+          html: `<p>What if a question gives no time? Get rid of t! From v = u + at, the time is <b>t = (v − u) ÷ a</b>. Put that into s = ½(u + v)t:</p>
+                 <p class="eq">s = ½(u + v)(v − u) ÷ a</p>
+                 <p>Factorisation you know: (v + u)(v − u) = v² − u². So</p>
+                 <p class="eq">s = (v² − u²) ÷ 2a &nbsp;→&nbsp; v² = u² + 2as</p>
+                 <p>Example: a car starts from rest and accelerates at 2 m/s² for 25 m. v² = 0 + 2 × 2 × 25 = 100, so v = √100 = <b>10 m/s</b>.</p>
                  <p><b>More square roots:</b></p>
                  <table class="mini-table squares">
                    <tr><td>11² = 121</td><td>12² = 144</td><td>13² = 169</td><td>14² = 196</td><td>15² = 225</td></tr>
@@ -267,28 +265,30 @@ export default {
         },
         {
           type: 'sim', widget: 'u3-brakes', goal: true, title: 'Stopping-Distance Game',
-          html: 'Do the first two tasks to test your prediction. Then use <b>v² = u² + 2as</b> (v = 0 at the end) to plan each stop before you brake.',
+          html: 'Do the first two tasks to test your prediction. For the last one, plan the stop with <b>v² = u² + 2as</b> (v = 0 at the end, a = −deceleration) before you brake.',
           params: {
             u: 10, b: 5,
             tasks: [
               { text: 'Brake from <b>10 m/s</b> at <b>5 m/s²</b>. Note the braking distance.', check: (p) => p.u === 10 && p.b === 5 },
               { text: 'Keep the brakes at 5 m/s² and <b>double the speed</b> to 20 m/s. How much further?', check: (p) => p.u === 20 && p.b === 5, test: true },
-              { text: 'From <b>24 m/s</b>, choose the brakes so the car stops in exactly <b>36 m</b>.', check: (p) => p.u === 24 && Math.abs(p.dist - 36) < 1e-9 },
-              { text: 'With the brakes at <b>4 m/s²</b>, choose the speed that stops in exactly <b>50 m</b>.', check: (p) => p.b === 4 && Math.abs(p.dist - 50) < 1e-9 },
+              { text: 'From <b>24 m/s</b>, choose the brakes so the car stops exactly at the flag, <b>36 m</b> away.', target: 36, check: (p) => p.u === 24 && Math.abs(p.dist - 36) < 1e-9, plan: { value: (p) => p.dist, target: 36, more: 'it stopped before the flag', less: 'it went past the flag', hint: '0 = 24² − 2 × deceleration × 36. What must the deceleration be?' } },
             ],
           },
         },
         {
-          type: 'info', title: 'Braking distance',
-          html: `<p>When a car brakes to a stop, v = 0 and the acceleration is −(deceleration). So v² = u² + 2as becomes:</p>
+          type: 'info', title: 'Braking distance and stopping distance',
+          html: `<p>When a car brakes to a stop, v = 0 and a = −(deceleration). So v² = u² + 2as becomes:</p>
                  <p class="eq">braking distance = u² ÷ (2 × deceleration)</p>
-                 <p>Braking from 20 m/s at 5 m/s²: 400 ÷ 10 = <b>40 m</b>. At double the speed, 40 m/s: 1600 ÷ 10 = <b>160 m</b> — four times as far!</p>
+                 <p>From 20 m/s at 5 m/s²: 400 ÷ 10 = <b>40 m</b>. At double the speed, 40 m/s: 1600 ÷ 10 = <b>160 m</b> — four times as far! (Half the speed → a quarter of the distance.)</p>
+                 <p>But a driver doesn't brake instantly. During the <b>reaction time</b> the car keeps going at full speed — that's the <b>thinking distance</b>:</p>
+                 <p class="eq">stopping distance = speed × reaction time + braking distance</p>
+                 <p>Example: 20 m/s, reaction time 1 s, brakes 5 m/s² → 20 × 1 + 40 = 20 + 40 = <b>60 m</b>.</p>
                  <p class="tip">Speed ×2 → braking distance ×4. Speed ×3 → ×9. That's why driving a little faster is a lot more dangerous.</p>`,
         },
         { type: 'q', t: 'u3.stop-mcq' },
         { type: 'q', t: 'u3.stop-dist' },
+        { type: 'q', t: 'u3.wp-stopping' },
         { type: 'q', t: 'u3.stop-scale' },
-        { type: 'q', t: 'u3.power-choose-mcq' },
       ],
     },
     // ------------------------------------------------------------------
@@ -300,7 +300,8 @@ export default {
           'Example: 21 = 4t + t² → t² + 4t − 21 = 0 → (t + 7)(t − 3) = 0 → t = 3 s.',
           'A product is 0 when one bracket is 0, so there are two answers.',
           'Throw away the negative time: it would be before the start.',
-          'Got 2t²? Divide every term by 2 first.',
+          'Got 2t²? Divide every term by 2 first: 20 = 6t + 2t² → t² + 3t − 10 = 0.',
+          'Sometimes both answers make sense — always check the story.',
         ],
       },
       steps: [
@@ -320,12 +321,15 @@ export default {
                  <p class="eq">t + 7 = 0 → t = −7 &nbsp;&nbsp;or&nbsp;&nbsp; t − 3 = 0 → t = 3</p>
                  <p>t = −7 s would be 7 seconds <b>before</b> the car started — the equation only describes the trip from t = 0 onwards. So we throw it away: <b>t = 3 s</b>.</p>
                  <p>Check: 4 × 3 + 3² = 12 + 9 = <b>21 m</b> ✔</p>
-                 <p class="tip">Always check your answer by putting it back into the equation.</p>`,
+                 <p><b>Got a 2t²?</b> Divide every term by 2 first. A car at 6 m/s accelerating at 4 m/s²: when has it gone 20 m?<br>
+                 20 = 6t + 2t² → ÷ 2 → 10 = 3t + t² → t² + 3t − 10 = 0 → (t + 5)(t − 2) = 0 → <b>t = 2 s</b>.</p>
+                 <p>It even works when the car is <b>slowing down</b> — then a is negative. At 10 m/s braking at 2 m/s² (a = −2) for 3 s: s = 10 × 3 + ½ × (−2) × 3² = 30 − 9 = <b>21 m</b>.</p>
+                 <p class="tip">Always check your answer by putting it back into the equation. And always check the story: here the negative time was impossible, but sometimes <b>both</b> answers make sense (a ball thrown up passes a window on the way up AND on the way down).</p>`,
         },
         {
           type: 'sim', widget: 'u3-factor', goal: true, title: 'Factor Finder',
           html: 'Choose the two numbers for the brackets, check them, then pick the time that makes sense. The car will test your answer!',
-          params: { problems: [{ u: 4, s: 21 }, { u: 2, s: 15 }, { u: 6, s: 16 }] },
+          params: { problems: [{ u: 2, s: 15 }, { u: 3, s: 18 }, { u: 6, s: 16 }] },
         },
         { type: 'q', t: 'u3.quad-factor-mcq' },
         { type: 'q', t: 'u3.quad-solve' },
@@ -339,16 +343,16 @@ export default {
     {
       id: 'mech.u3.psA', type: 'problems', title: 'Calculation Drills', icon: 'crafting',
       steps: [
-        { type: 'q', t: 'u3.acc-basic' },
+        { type: 'q', t: 'u3.acc-time' },
         { type: 'q', t: 'u3.acc-final' },
         { type: 'q', t: 'u3.dec-signed' },
         { type: 'q', t: 'u3.dec-stop-time' },
         { type: 'q', t: 'u3.vt-slope' },
         { type: 'q', t: 'u3.vt-area-trap' },
-        { type: 'q', t: 'u3.suvat-avg' },
+        { type: 'q', t: 'u3.suvat-avg-v' },
         { type: 'q', t: 'u3.suvat-s' },
         { type: 'q', t: 'u3.v2-final' },
-        { type: 'q', t: 'u3.stop-dist' },
+        { type: 'q', t: 'u3.power-choose-mcq' },
       ],
     },
     {

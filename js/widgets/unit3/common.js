@@ -95,6 +95,7 @@ export function trafficLight(ctx, x, roadY, color) {
 export function taskRunner(tasks, banner, api, { intro = '', allDone = 'All tasks done! 🎉', describe } = {}) {
   let idx = 0;
   let finished = false;
+  let misses = 0; // misses on the current task
   const show = (prefix = '') => {
     if (finished) return;
     banner.set(`${prefix}Task ${idx + 1}/${tasks.length}: ${tasks[idx].text}${intro ? ` ${intro}` : ''}`, false);
@@ -108,6 +109,10 @@ export function taskRunner(tasks, banner, api, { intro = '', allDone = 'All task
       return finished;
     },
     current: () => tasks[idx],
+    // The current task wants a planned value: the sim must not show the exact result of a miss.
+    get planning() {
+      return !finished && !!tasks[idx]?.plan;
+    },
     show,
     run(p) {
       if (finished || !tasks.length) return false;
@@ -115,6 +120,7 @@ export function taskRunner(tasks, banner, api, { intro = '', allDone = 'All task
       if (task.check(p)) {
         if (task.test) api.tested?.();
         idx++;
+        misses = 0;
         sfx.correct();
         if (idx >= tasks.length) {
           finished = true;
@@ -126,6 +132,14 @@ export function taskRunner(tasks, banner, api, { intro = '', allDone = 'All task
         return true;
       }
       sfx.wrong();
+      if (task.plan) {
+        // Planning tasks: direction only, never the exact value of the miss (no trial and error).
+        misses++;
+        const v = task.plan.value(p);
+        const dir = v < task.plan.target ? task.plan.more : task.plan.less;
+        banner.set(`Not quite — ${dir}. ${misses >= 2 && task.plan.hint ? `<b>Hint:</b> ${task.plan.hint} ` : 'Work it out before you try again! '}Task ${idx + 1}/${tasks.length}: ${task.text}`, false);
+        return false;
+      }
       banner.set(`Not quite${describe ? ` (${describe(p)})` : ''}. Task ${idx + 1}/${tasks.length}: ${task.text}`, false);
       return false;
     },
