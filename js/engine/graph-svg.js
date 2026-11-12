@@ -1,7 +1,7 @@
 // Small SVG graphs for questions (position–time / distance–time).
 // Returns an SVG string so templates stay plain data + functions.
 
-export function graphSVG({ points, tMax, yMin = 0, yMax, tStep = 1, yStep = 2, yLabel = 'distance (m)', tLabel = 'time (s)', w = 300, h = 200, small = false, color = '#80ff20', labelEvery, lines = [] }) {
+export function graphSVG({ points, tMax, yMin = 0, yMax, tStep = 1, yStep = 2, yLabel = 'distance (m)', tLabel = 'time (s)', w = 300, h = 200, small = false, color = '#80ff20', labelEvery, lines = [], label } = {}) {
   const L = small ? 10 : 38, R = 10, T = 10, B = small ? 10 : 30;
   const gx = (t) => L + (t / tMax) * (w - L - R);
   const gy = (y) => h - B - ((y - yMin) / (yMax - yMin)) * (h - T - B);
@@ -25,7 +25,7 @@ export function graphSVG({ points, tMax, yMin = 0, yMax, tStep = 1, yStep = 2, y
     return `<path d="${d}" fill="none" stroke="${l.color}" stroke-width="3" stroke-linejoin="round"/>${l.label ? `<text x="${Math.max(L + 12, gx(lt) - 4)}" y="${Math.max(T + 12, gy(ly) - 6)}" text-anchor="end" fill="${l.color}" font-weight="700">${l.label}</text>` : ''}`;
   }).join('');
   const main = points ? `<path d="${path}" fill="none" stroke="${color}" stroke-width="${small ? 4 : 3}" stroke-linejoin="round"/>` : '';
-  return `<svg class="graph ${small ? 'small' : ''}" viewBox="0 0 ${w} ${h}" role="img"><rect x="0" y="0" width="${w}" height="${h}" class="g-bg"/>${grid}${axes}${labels}${main}${extra}</svg>`;
+  return `<svg class="graph ${small ? 'small' : ''}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${label || `Graph of ${yLabel} against ${tLabel}`}"><rect x="0" y="0" width="${w}" height="${h}" class="g-bg"/>${grid}${axes}${labels}${main}${extra}</svg>`;
 }
 
 // Right-angled triangle with labelled sides (for Pythagoras).
@@ -33,7 +33,7 @@ export function triangleSVG({ a, b, c = '?', aLabel, bLabel, cLabel, w = 260, h 
   const scale = Math.min((w - 70) / a, (h - 50) / b);
   const x0 = 30, y0 = h - 25;
   const x1 = x0 + a * scale, y1 = y0 - b * scale;
-  return `<svg class="graph" viewBox="0 0 ${w} ${h}" role="img"><rect width="${w}" height="${h}" class="g-bg"/>
+  return `<svg class="graph" viewBox="0 0 ${w} ${h}" role="img" aria-label="Right-angled triangle with sides ${aLabel ?? a}, ${bLabel ?? b} and ${cLabel ?? c}"><rect width="${w}" height="${h}" class="g-bg"/>
     <polygon points="${x0},${y0} ${x1},${y0} ${x1},${y1}" fill="rgba(74,237,217,0.15)" stroke="#4aedd9" stroke-width="3"/>
     <rect x="${x1 - 12}" y="${y0 - 12}" width="12" height="12" fill="none" stroke="#fff" stroke-width="1.5"/>
     <text x="${(x0 + x1) / 2}" y="${y0 + 18}" text-anchor="middle">${aLabel ?? a}</text>

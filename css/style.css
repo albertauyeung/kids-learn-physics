@@ -93,6 +93,8 @@ small { font-size: 14px; }
 .card h3 { font-size: 18px; margin-top: 12px; color: var(--ink-soft); }
 
 /* ---------- Buttons ---------- */
+/* The hidden attribute always hides, even on elements whose class sets a display (e.g. .mc-btn). */
+[hidden] { display: none !important; }
 /* No iPad double-tap zoom when a child taps buttons quickly. */
 button { touch-action: manipulation; }
 .mc-btn {
@@ -347,6 +349,10 @@ summary.notes-unit-title { cursor: pointer; }
 .bubble::before { content: ''; position: absolute; left: -12px; top: 18px; border: 6px solid transparent; border-right-color: #000; border-width: 6px 12px 6px 0; }
 .bubble ul { margin: 6px 0 10px; padding-left: 22px; }
 .bubble p:last-child { margin-bottom: 0; }
+/* Optional derivation inside an info card: closed by default so the main idea stays short. */
+.bubble details.why { margin: 8px 0 4px; border: 2px dashed #9a9a9a; padding: 6px 10px; background: #f6f6f6; }
+.bubble details.why > summary { cursor: pointer; font-weight: 800; color: var(--ink); }
+.bubble details.why[open] > summary { margin-bottom: 6px; }
 .eq {
   font-family: var(--font);
   font-size: 20px;
@@ -367,7 +373,7 @@ canvas.stage { width: 100%; display: block; border: 3px solid #000; background: 
 
 .sim-controls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin: 10px 0; }
 .slider { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 10px; flex: 1 1 200px; background: #b0b0b0; border: 2px solid #555; padding: 6px 10px; margin: 6px 0; }
-.slider-label { font-size: 15px; color: var(--ink-soft); }
+.slider-label { font-size: 15px; color: var(--ink); } /* --ink-soft on the grey slider fails contrast */
 .slider-value { font-weight: 700; color: var(--ink); text-align: right; }
 .slider input { grid-column: 1 / -1; width: 100%; accent-color: var(--green); height: 28px; }
 .readout { background: #1b1527; color: #fff; border: 3px solid #000; padding: 8px 12px; font-size: 16px; }
@@ -624,6 +630,8 @@ svg.graph .g-axis-label { fill: #aaa; font-size: 11px; }
   }
   .sim-box:has(canvas) > * { grid-column: 1 / -1; }
   .sim-box:has(canvas) > canvas.stage { grid-column: 1; grid-row: span 8; }
+  /* Landscape iPad / laptop: keep tall stages short enough that the card's text, controls and readout stay on screen. */
+  .sim-box > canvas.stage { max-height: 48vh; width: auto; max-width: 100%; justify-self: center; }
   .sim-box:has(canvas) > .sim-controls,
   .sim-box:has(canvas) > .slider,
   .sim-box:has(canvas) > .readout { grid-column: 2; }

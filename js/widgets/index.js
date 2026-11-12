@@ -11,6 +11,9 @@ import travelator from './travelator.js';
 import twoCarts from './two-carts.js';
 import river from './river.js';
 import slopeReader from './slope-reader.js';
+import unit3 from './unit3/index.js';
+import unit4 from './unit4/index.js';
+import unit5 from './unit5/index.js';
 
 export const WIDGETS = {
   sorter,
@@ -24,6 +27,10 @@ export const WIDGETS = {
   'two-carts': twoCarts,
   river,
   'slope-reader': slopeReader,
+  // Later units keep their widgets in their own folder (each index.js exports { name: widget }).
+  ...unit3,
+  ...unit4,
+  ...unit5,
 };
 
 export function mountWidget(name, el, params, api) {

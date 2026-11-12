@@ -38,6 +38,7 @@ export function runSession(root, { session, review = [], notes = [], onFinish, o
   const wide = () => window.matchMedia('(min-width: 900px)').matches;
   const notesBtn = h('button', { class: 'mc-btn small notes-btn', type: 'button', 'aria-expanded': 'false', onClick: () => sheet.toggle() }, '📖 Notes');
   const sheet = notesPanel(notes, session.id, {
+    hideCurrent: session.type === 'lesson',
     onToggle: (open) => {
       wrap.classList.toggle('notes-open', open);
       notesBtn.setAttribute('aria-expanded', String(open));
@@ -65,11 +66,13 @@ export function runSession(root, { session, review = [], notes = [], onFinish, o
   };
   mainBtn.addEventListener('click', press);
   // Enter = press the main button. Skip it when focus is on another button, whose own
-  // Enter-click would otherwise fire as well (choices and unit chips are safe to repeat).
+  // Enter-click would otherwise fire as well (choices and unit chips are safe to repeat),
+  // or on a fold-out's summary, where Enter opens the "Why does this work?" box.
   const keyHandler = (e) => {
     if (e.key !== 'Enter' || e.repeat || mainBtn.disabled || modal) return;
     const a = document.activeElement;
     if (a?.tagName === 'BUTTON' && !a.matches('.choice.on, .unit-chip.on')) return;
+    if (a?.tagName === 'SUMMARY') return;
     e.preventDefault();
     press();
   };
@@ -126,6 +129,7 @@ export function runSession(root, { session, review = [], notes = [], onFinish, o
 
   // ---------- info ----------
   function showInfo(step) {
+    sheet.revealCurrent(); // the lesson has started explaining: its notes are no longer a spoiler
     const card = h('div', { class: 'card info-card' });
     if (step.title) card.append(h('h2', {}, step.title));
     const body = h('div', { class: 'info-body' });

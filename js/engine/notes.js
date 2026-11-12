@@ -4,15 +4,27 @@
 import { h } from '../core/util.js';
 
 // sections: [{ title, lessons: [{ id, title, notes: { eq: [], tips: [] } }], open }]
-export function notesPanel(sections, currentId, { onToggle } = {}) {
+// hideCurrent: keep this lesson's card locked until revealCurrent() (it would give away the opening prediction).
+export function notesPanel(sections, currentId, { onToggle, hideCurrent = false } = {}) {
   let isOpen = false;
+  let locked = hideCurrent;
+  const placeholders = [];
   const closeBtn = h('button', { class: 'icon-btn notes-close', type: 'button', 'aria-label': 'Close notes', onClick: () => toggle(false) }, '✕');
   const body = h('div', { class: 'notes-body' });
   const el = h('aside', { class: 'notes-panel', 'aria-label': 'Cheat sheet', hidden: true },
     h('div', { class: 'notes-head' }, h('h2', {}, '📖 Cheat sheet'), closeBtn),
     body);
 
-  const card = (l) => h('section', { class: `notes-card ${l.id === currentId ? 'current' : ''}` },
+  const card = (l) => {
+    if (l.id === currentId && locked) {
+      const ph = h('section', { class: 'notes-card current locked' }, h('h3', {}, l.title, h('span', { class: 'notes-now' }, 'this lesson')),
+        h('p', { class: 'muted' }, '🔒 This lesson\'s notes unlock after its first explanation — make your prediction first!'));
+      placeholders.push([ph, l]);
+      return ph;
+    }
+    return fullCard(l);
+  };
+  const fullCard = (l) => h('section', { class: `notes-card ${l.id === currentId ? 'current' : ''}` },
     h('h3', {}, l.title, l.id === currentId ? h('span', { class: 'notes-now' }, 'this lesson') : ''),
     h('div', { class: 'notes-eqs' }, l.notes.eq.map((e) => h('div', { class: 'notes-eq', html: e }))),
     l.notes.tips?.length ? h('ul', { class: 'notes-tips' }, l.notes.tips.map((t) => h('li', { html: t }))) : '');
@@ -33,5 +45,10 @@ export function notesPanel(sections, currentId, { onToggle } = {}) {
     onToggle?.(open);
     if (open) body.scrollTop = 0;
   }
-  return { el, toggle, get open() { return isOpen; } };
+  function revealCurrent() {
+    if (!locked) return;
+    locked = false;
+    for (const [ph, l] of placeholders) ph.replaceWith(fullCard(l));
+  }
+  return { el, toggle, revealCurrent, get open() { return isOpen; } };
 }
