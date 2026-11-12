@@ -350,7 +350,12 @@ function warmupReview(units, current) {
   for (const m of rng.shuffle(uniqueMistakes())) if (picks.length < 1) picks.push(m);
   // Then the question type practised longest ago (never-seen first), so old ideas keep coming back.
   const seen = S.state.seen || {};
-  const pool = rng.shuffle([...new Set(done)].filter(hasTemplate)).sort((a, b) => (seen[a] || '').localeCompare(seen[b] || ''));
+  const oldestFirst = (ids) => rng.shuffle([...new Set(ids)].filter(hasTemplate)).sort((a, b) => (seen[a] || '').localeCompare(seen[b] || ''));
+  // Half the time, revisit the unit just before this one: with hundreds of question types, the
+  // oldest-first rule alone would keep returning to Unit 1 and let last unit's ideas fade.
+  const uIdx = units.findIndex((u) => u.sessions.includes(current));
+  const prev = uIdx > 0 ? units[uIdx - 1].sessions.filter((s) => S.sessionRecord(s.id)?.completions).flatMap(sessionTemplates) : [];
+  const pool = [...(prev.length && rng.chance(0.5) ? oldestFirst(prev) : []), ...oldestFirst(done)];
   for (const t of pool) if (picks.length < 2 && !picks.includes(t)) picks.push(t);
   return picks;
 }
