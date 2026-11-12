@@ -12,7 +12,7 @@ export default function tug(el, params = {}, api) {
   const left = params.left || [{ sprite: 'u4zombie', name: 'Zombie', f: 120 }, { sprite: 'u4zombie', name: 'Zombie', f: 90 }, { sprite: 'u4golem', name: 'Golem', f: 150 }];
   const right = params.right || [{ sprite: 'friend', name: 'Alex', f: 160 }];
   let pip = params.pip ?? 150;
-  const W = 480, H = 240, GROUND = 196, ROPE = 168, MID = 240;
+  const W = 480, H = 226, GROUND = 196, ROPE = 168, MID = 240;
   const banner = taskBanner();
   el.append(banner.el);
   const st = makeStage(el, W, H);

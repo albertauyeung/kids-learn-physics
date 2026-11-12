@@ -39,7 +39,7 @@ export default {
           type: 'predict', prompt: 'Tug-of-war! The left team pulls with <b>360 N</b> altogether. The right team pulls with <b>310 N</b>. What happens to the rope?',
           choices: ['It moves left, with a resultant force of 50 N', 'It moves right, with a resultant force of 50 N', 'It moves left, with a resultant force of 670 N', 'It doesn\'t move: both teams are pulling'],
           answer: 0, keepOrder: true, revealAfterSim: true,
-          explain: 'The pulls point opposite ways, so they partly cancel: 360 − 310 = 50 N, towards the stronger team on the left.',
+          explain: 'With Pip pulling 150 N, the right team makes 160 + 150 = 310 N. The pulls point opposite ways, so they partly cancel: 360 − 310 = 50 N, towards the stronger team on the left.',
         },
         {
           type: 'sim', widget: 'u4-tug', goal: true, title: 'Tug-of-War',
@@ -52,7 +52,6 @@ export default {
               { text: 'Test your prediction: press <b>Pull!</b> with Pip pulling <b>150 N</b>.', check: (res, pip) => pip === 150, tested: true },
               { text: 'Make the forces <b>balanced</b>, so the rope doesn\'t move at all.', check: (res) => res === 0 },
               { text: 'Make the resultant force <b>40 N to the right</b>.', check: (res) => res === 40 },
-              { text: 'Make the resultant force <b>90 N to the left</b>.', check: (res) => res === -90 },
             ],
           },
         },
@@ -61,9 +60,12 @@ export default {
           html: `<p>When several forces act on one thing, combine them into one <b>resultant force</b>: the force that really decides what happens.</p>
                  <p>Use signs, just like velocities in Unit 2: <b>+</b> for right, <b>−</b> for left.</p>
                  <ul><li>Same direction → <b>add</b>: 80 N + 50 N = 130 N</li>
-                 <li>Opposite directions → they partly cancel: (+310) + (−360) = <b>−50 N</b>, so 50 N to the left</li>
-                 <li>Equal and opposite → resultant <b>0</b>: the forces are <b>balanced</b></li></ul>
-                 <p>A <b>free-body diagram</b> shows one object as a box, with an arrow for every force on it:</p>
+                 <li>Opposite directions → they partly cancel: (+310) + (−360) = <b>−50 N</b>, 50 N to the left</li>
+                 <li>Equal and opposite → resultant <b>0</b>: <b>balanced</b></li></ul>`,
+        },
+        {
+          type: 'info', title: 'Free-body diagrams',
+          html: `<p>A <b>free-body diagram</b> shows one object as a box, with an arrow for every force on it:</p>
                  ${fbdSVG({ right: [{ value: 120, label: 'Pip pushes' }], left: [{ value: 80, label: 'Alex pulls' }], up: { value: 300, label: 'floor' }, down: { value: 300, label: 'gravity' } })}
                  <p class="tip">Up and down cancel (300 N each). Along the floor: 120 − 80 = <b>40 N to the right</b>.</p>`,
         },
@@ -73,7 +75,6 @@ export default {
         { type: 'q', t: 'u4.fbd-balanced-mcq' },
         { type: 'q', t: 'u4.missing-force' },
         { type: 'q', t: 'u4.fbd-resultant' },
-        { type: 'q', t: 'u4.resultant-many' },
       ],
     },
     // ------------------------------------------------------------------
@@ -93,7 +94,7 @@ export default {
           type: 'predict', prompt: 'Pip glides through deep space at <b>3 m/s</b>. His jetpack is off, and there is no air out there. What happens next?',
           choices: ['He slowly slows down and stops', 'He keeps gliding at 3 m/s', 'He speeds up', 'He stops straight away'],
           answer: 1, keepOrder: true, revealAfterSim: true,
-          explain: 'Nothing pushes or pulls on Pip, so nothing changes his motion: he keeps going at 3 m/s in a straight line.',
+          explain: 'With the jetpack off, nothing pushes or pulls on Pip, so nothing changes his motion: he kept gliding at 3 m/s in a straight line.',
         },
         {
           type: 'sim', widget: 'u4-space', goal: true, title: 'Space Skater',
@@ -110,11 +111,14 @@ export default {
         {
           type: 'info', title: "Newton's First Law",
           html: `<p class="eq">no resultant force → no change in motion</p>
-                 <p>If the forces on something are <b>balanced</b> (or there are none at all), it does <b>not</b> speed up, slow down or turn:</p>
+                 <p>If the forces on something are <b>balanced</b> (or there are none), it does <b>not</b> speed up, slow down or turn:</p>
                  <ul><li>If it is still, it <b>stays still</b>.</li>
-                 <li>If it is moving, it <b>keeps moving at the same speed in a straight line</b> — forever, if nothing stops it!</li></ul>
-                 <p class="tip">Surprise: things don't need a force to <b>keep</b> moving. A football on grass stops because <b>friction and air resistance</b> push against it. In space there's nothing to stop Pip.</p>
-                 <p>So a car cruising at a steady 25 m/s has <b>balanced</b> forces: the engine's push exactly matches air resistance + friction.</p>`,
+                 <li>If it is moving, it <b>keeps moving at the same speed in a straight line</b>.</li></ul>`,
+        },
+        {
+          type: 'info', title: 'So why do things stop?',
+          html: `<p>Things don't need a force to <b>keep</b> moving. A football on grass stops because <b>friction and air resistance</b> push against it. In space there's nothing to stop Pip.</p>
+                 <p class="tip">A car cruising at a steady 25 m/s has <b>balanced</b> forces: the engine's push exactly matches air resistance + friction.</p>`,
         },
         {
           type: 'info', title: 'Inertia',
@@ -141,6 +145,7 @@ export default {
           'Same force, double the mass → half the acceleration.',
           'Example: 1200 kg car, resultant 3600 N → a = 3600 ÷ 1200 = 3 m/s².',
           'Things moving together (Pip in a minecart): add their masses.',
+          'Rearranged: a = F ÷ m and m = F ÷ a.',
         ],
       },
       steps: [
@@ -148,7 +153,7 @@ export default {
           type: 'predict', prompt: 'A <b>60 N</b> push gives a <b>20 kg</b> cart an acceleration of <b>3 m/s²</b>. What acceleration does the same 60 N push give a <b>40 kg</b> cart?',
           choices: ['6 m/s²', '3 m/s²', '1.5 m/s²', '0 m/s² — it is too heavy to move'],
           answer: 2, keepOrder: true, revealAfterSim: true,
-          explain: 'Double the mass with the same force gives half the acceleration: 3 ÷ 2 = 1.5 m/s².',
+          explain: 'Your second push (60 N on 40 kg) shows it: double the mass with the same force gives half the acceleration, 3 ÷ 2 = 1.5 m/s².',
         },
         {
           type: 'sim', widget: 'u4-carts', goal: true, title: 'Cart Pusher',
@@ -165,12 +170,16 @@ export default {
         },
         {
           type: 'info', title: "Newton's Second Law",
-          html: `<p>A resultant force makes things <b>accelerate</b>. How much? Newton found the rule:</p>
+          html: `<p>A resultant force makes things <b>accelerate</b>. Newton found the rule:</p>
                  <p class="eq">F = m × a</p>
-                 <p><b>F</b> = resultant force (N), <b>m</b> = mass (kg), <b>a</b> = acceleration (m/s²). In fact <b>1 N</b> is the force that makes <b>1 kg</b> accelerate at <b>1 m/s²</b>.</p>
-                 <ul><li>Bigger force → bigger acceleration.</li><li>Bigger mass → smaller acceleration (same force, double mass → half the acceleration).</li></ul>
+                 <p><b>F</b> = resultant force (N), <b>m</b> = mass (kg), <b>a</b> = acceleration (m/s²). <b>1 N</b> makes <b>1 kg</b> accelerate at <b>1 m/s²</b>.</p>
+                 <p class="tip">Remember the space skater? 60 N on 60 kg changed his speed by 1 m/s every second: a = 60 ÷ 60 = 1 m/s².</p>`,
+        },
+        {
+          type: 'info', title: 'Using F = ma',
+          html: `<ul><li>Bigger force → bigger acceleration.</li><li>Bigger mass → smaller acceleration (double the mass → half the acceleration).</li></ul>
                  <p>Example: a 1200 kg car with a resultant force of 3600 N: a = 3600 ÷ 1200 = <b>3 m/s²</b>.</p>
-                 <p class="tip">Always use the <b>resultant</b> force. And if things move together (Pip in a minecart), <b>add their masses</b>.</p>`,
+                 <p class="tip">Always use the <b>resultant</b> force. If things move together (Pip in a minecart), <b>add their masses</b>.</p>`,
         },
         {
           type: 'equation', prompt: 'Rearrange F = m × a to find the <b>acceleration</b>.',
@@ -180,14 +189,8 @@ export default {
         { type: 'q', t: 'u4.fma-a' },
         { type: 'q', t: 'u4.fma-F' },
         { type: 'q', t: 'u4.fma-change-mcq' },
-        {
-          type: 'equation', prompt: 'Rearrange F = m × a to find the <b>mass</b>.',
-          lhs: 'm', tiles: ['F', 'a', '÷', '×', 'm'], answers: [['F', '÷', 'a']],
-          explain: 'Divide both sides of F = m × a by a: m = F ÷ a.',
-        },
         { type: 'q', t: 'u4.fma-m' },
         { type: 'q', t: 'u4.fma-resultant' },
-        { type: 'q', t: 'u4.fma-loaded' },
       ],
     },
     // ------------------------------------------------------------------
@@ -201,6 +204,7 @@ export default {
           'If something stays still, friction exactly balances the push (up to its maximum).',
           'Example: 10 kg box, 50 N push, 30 N friction → (50 − 30) ÷ 10 = 2 m/s².',
           'Grip (friction) is what lets shoes, tyres and brakes work.',
+          'Time to stop = speed ÷ deceleration; sliding distance = u² ÷ (2 × deceleration) (Unit 3).',
         ],
       },
       steps: [
@@ -208,7 +212,7 @@ export default {
           type: 'predict', prompt: 'Pip pushes a heavy crate on a carpet with <b>60 N</b>, but it <b>doesn\'t budge</b>. How big is the friction force on the crate?',
           choices: ['0 N — nothing is moving', '60 N — exactly as big as the push', 'More than 60 N', 'It depends on how heavy Pip is'],
           answer: 1, keepOrder: true, revealAfterSim: true,
-          explain: 'The crate stays still, so the forces are balanced: friction pushes back with exactly 60 N. Friction only pushes as hard as it needs to — up to a maximum.',
+          explain: 'Your carpet test showed it: the crate stayed still, so the forces were balanced and friction pushed back with exactly 60 N. Friction only pushes as hard as it needs to — up to a maximum.',
         },
         {
           type: 'sim', widget: 'u4-friction', goal: true, title: 'Ice vs Carpet',
@@ -224,13 +228,16 @@ export default {
         },
         {
           type: 'info', title: 'Friction',
-          html: `<p><b>Friction</b> is a force between two surfaces that acts <b>against sliding</b>. Rough surfaces (carpet, rubber) give lots of friction; smooth ones (ice) give very little.</p>
-                 <ul><li>If you push gently, friction pushes back <b>just as hard</b>, so nothing moves (up to its maximum).</li>
-                 <li>Once it slides: <b>resultant = push − friction</b>.</li>
-                 <li>When you let go, friction is the only force left, so it <b>slows</b> the crate: deceleration = friction ÷ mass.</li></ul>
+          html: `<p><b>Friction</b> is a force between two surfaces that acts <b>against sliding</b>. Rough surfaces (carpet, rubber) give lots; smooth ones (ice) give very little.</p>
+                 <p>Push gently and friction pushes back <b>just as hard</b>, so nothing moves — up to its maximum.</p>
+                 <p class="tip">Friction is also <b>grip</b>! Shoes, tyres and brakes all need it. Try walking on ice!</p>`,
+        },
+        {
+          type: 'info', title: 'Sliding and stopping',
+          html: `<p>Once it slides: <b>resultant = push − friction</b>.</p>
                  <p>Example: push a 10 kg box with 50 N against 30 N of friction: (50 − 30) ÷ 10 = <b>2 m/s²</b>.</p>
-                 <p class="tip">In our sims, once something slides, friction stays at its maximum (in real life it drops a little).</p>
-                 <p class="tip">Friction isn't just a nuisance — it's <b>grip</b>! Shoes, tyres and brakes all need it. Try walking on ice!</p>`,
+                 <p>Let go, and friction is the only force left: it <b>slows</b> the crate, deceleration = friction ÷ mass.</p>
+                 <p class="tip">In our sims, once something slides, friction stays at its maximum (in real life it drops a little).</p>`,
         },
         { type: 'q', t: 'u4.fric-dir-mcq' },
         { type: 'q', t: 'u4.fric-resultant' },
@@ -238,7 +245,7 @@ export default {
         { type: 'q', t: 'u4.fric-accel' },
         { type: 'q', t: 'u4.fric-stuck' },
         { type: 'q', t: 'u4.fric-decel' },
-        { type: 'q', t: 'u4.fric-push' },
+        { type: 'q', t: 'u4.fric-stop-time' },
       ],
     },
     // ------------------------------------------------------------------
@@ -258,7 +265,7 @@ export default {
           type: 'predict', prompt: 'Pip (<b>40 kg</b>) and Steve (<b>80 kg</b>) stand still on ice skates, then push each other apart. Who gets pushed with the <b>bigger force</b>?',
           choices: ['Pip, because he is lighter', 'Steve, because he is heavier', 'They get exactly the same force', 'Only the one who does the pushing'],
           answer: 2, keepOrder: true, revealAfterSim: true,
-          explain: 'The forces are equal and opposite. Pip moves off faster only because the same force gives a lighter skater a bigger acceleration (a = F ÷ m).',
+          explain: 'Your first push showed two equal arrows: 120 N on Pip and 120 N on Steve. Pip moved off faster only because the same force gives a lighter skater a bigger acceleration (a = F ÷ m).',
         },
         {
           type: 'sim', widget: 'u4-push-apart', goal: true, title: 'Skater Push-Off',
@@ -276,18 +283,20 @@ export default {
           type: 'info', title: "Newton's Third Law",
           html: `<p>Forces always come in <b>pairs</b>. If A pushes on B, then B pushes back on A:</p>
                  <p class="eq">same size · opposite direction · on the OTHER object</p>
-                 <ul><li>🚀 A rocket pushes hot gas <b>down</b> → the gas pushes the rocket <b>up</b>.</li>
-                 <li>🏊 A swimmer pushes water <b>backwards</b> → the water pushes the swimmer <b>forwards</b>.</li>
-                 <li>🚶 Your foot pushes the ground <b>backwards</b> → the ground pushes you <b>forwards</b>. (On ice your foot slips, so you can hardly push — that's why walking on ice is really hard!)</li></ul>
                  <p class="tip">The two forces act on <b>different</b> objects, so they never cancel. Same force, different masses: a = F ÷ m, so the lighter skater flies off faster.</p>`,
+        },
+        {
+          type: 'info', title: 'Pairs everywhere',
+          html: `<ul><li>🚀 A rocket pushes hot gas <b>down</b> → the gas pushes the rocket <b>up</b>.</li>
+                 <li>🏊 A swimmer pushes water <b>backwards</b> → the water pushes the swimmer <b>forwards</b>.</li>
+                 <li>🚶 Your foot pushes the ground <b>backwards</b> → the ground pushes you <b>forwards</b>. On ice your foot slips, so you can hardly push — that's why walking on ice is really hard!</li></ul>`,
         },
         { type: 'q', t: 'u4.n3-pair-mcq' },
         { type: 'q', t: 'u4.n3-force' },
         { type: 'q', t: 'u4.n3-cancel-mcq' },
         { type: 'q', t: 'u4.n3-which-mcq' },
         { type: 'q', t: 'u4.n3-skaters' },
-        { type: 'q', t: 'u4.n3-force' },
-        { type: 'q', t: 'u4.n3-speed-ratio' },
+        { type: 'q', t: 'u4.n3-vs-balanced-mcq' },
       ],
     },
     // ------------------------------------------------------------------
@@ -303,6 +312,7 @@ export default {
         { type: 'q', t: 'u4.fric-decel' },
         { type: 'q', t: 'u4.fric-push' },
         { type: 'q', t: 'u4.n3-skaters' },
+        { type: 'q', t: 'u4.fma-loaded' },
         { type: 'q', t: 'u4.fma-ratio' },
       ],
     },
@@ -312,9 +322,9 @@ export default {
         { type: 'q', t: 'u4.wp-car' },
         { type: 'q', t: 'u4.wp-rocket' },
         { type: 'q', t: 'u4.wp-sled-dogs' },
-        { type: 'q', t: 'u4.fric-stop-time' },
         { type: 'q', t: 'u4.wp-stop-dist' },
         { type: 'q', t: 'u4.n3-speed-ratio' },
+        { type: 'q', t: 'u3.quad-time' },
         { type: 'q', t: 'u4.puzzle-blocks' },
         { type: 'q', t: 'u4.puzzle-two-pushes' },
       ],
@@ -324,7 +334,7 @@ export default {
       steps: [
         {
           type: 'info', title: 'Unit 4 Review', speaker: 'friend',
-          html: `<p>One question on each big idea — plus two from Units 1 and 2 to keep them fresh. Get <b>8 out of 10</b> right first time to <b>master</b> Unit 4!</p>`,
+          html: `<p>One question on each big idea — plus two from Unit 3 to keep them fresh. Get <b>8 out of 10</b> right first time to <b>master</b> Unit 4!</p>`,
         },
         { type: 'q', t: 'u4.fbd-resultant' },
         { type: 'q', t: 'u4.n1-state-mcq' },
@@ -334,29 +344,34 @@ export default {
         { type: 'q', t: 'u4.fric-push' },
         { type: 'q', t: 'u4.n3-cancel-mcq' },
         { type: 'q', t: 'u4.n3-skaters' },
-        { type: 'q', t: 'u2.add-opposite' },
-        { type: 'q', t: 'u1.kmh-to-ms' },
+        { type: 'q', t: 'u3.vt-area-trap' },
+        { type: 'q', t: 'u3.suvat-s' },
       ],
     },
     {
       id: 'mech.u4.boss', type: 'boss', title: 'Boss: Ice Hockey Physics', icon: 'portal',
       steps: [
         {
-          type: 'info', title: 'BOSS MISSION: Ice Hockey Physics', speaker: 'u4puck',
-          html: `<p>Pip is training on the ice rink! Each shot, the puck must <b>stop right in the target zone</b>. Friction is the only force slowing it down:</p>
-                 <p class="eq">deceleration a = friction ÷ mass</p>
-                 <p>The puck ends at rest, so Unit 3's power equation gives:</p>
-                 <p class="eq">(launch speed)² = 2 × a × distance</p>
-                 <p>Some shots ask for the <b>stick's push</b> instead. The stick touches the puck for just <b>0.1 s</b> (too short for friction to matter): speed = (push ÷ mass) × 0.1.</p>
+          type: 'info', title: 'BOSS MISSION: Ice Hockey Physics',
+          html: `<p>Pip is training on the ice rink! Each shot must <b>stop right in the target zone</b>. Friction is the only force slowing the puck:</p>
+                 <p class="eq">deceleration = friction ÷ mass</p>
+                 <p>The puck ends at rest, so turn Unit 3's braking distance round:</p>
+                 <p class="eq">(launch speed)² = 2 × deceleration × distance</p>
                  <p>You get <b>3 tries</b> per shot. Land <b>3 shots</b> to win!</p>`,
+        },
+        {
+          type: 'info', title: 'Stick shots',
+          html: `<p>Some shots ask for the <b>stick's push</b> instead of the speed. The stick touches the puck for just <b>0.1 s</b> — too short for friction to matter.</p>
+                 <p>In that 0.1 s the push speeds the puck up at push ÷ mass, so:</p>
+                 <p class="eq">speed = (push ÷ mass) × 0.1</p>
+                 <p class="tip">Work out the speed you need first, then the push that gives it.</p>`,
         },
         { type: 'sim', widget: 'u4-hockey', goal: true, title: 'Ice Hockey Physics', params: { rounds: 3 } },
         { type: 'q', t: 'u4.hockey-speed' },
         { type: 'q', t: 'u4.fric-decel' },
         { type: 'q', t: 'u4.wp-stop-dist' },
-        { type: 'q', t: 'u4.fric-push' },
         { type: 'q', t: 'u4.n3-skaters' },
-        { type: 'q', t: 'u4.n1-state-mcq' },
+        { type: 'q', t: 'u3.brake-decel' },
       ],
     },
   ],

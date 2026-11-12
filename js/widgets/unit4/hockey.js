@@ -40,11 +40,32 @@ export default function hockey(el, params = {}, api) {
   const st = makeStage(el, W, H);
   const ro = readout();
   const box = controls();
-  el.append(box, controls(button('🏒 Shoot!', () => shoot(), 'green')), ro.el);
+  // After a goal or a 3-miss reveal the worked solution stays up until he presses "Next shot ▶".
+  const nextBtn = button('Next shot ▶', () => nextShot(), 'green');
+  nextBtn.style.display = 'none';
+  const shootBtn = button('🏒 Shoot!', () => shoot(), 'green');
+  el.append(box, controls(shootBtn, nextBtn), ro.el);
 
   let choice = 0, x = 0, v = 0, running = false, swing = 0, stopped = null, finished = false;
-  let tries = 0, solved = false, note = '', busy = false;
-  const solutionText = (r) => `a = ${fmt(r.f)} ÷ ${fmt(r.m)} = ${fmt(r.a)} m/s²; speed² = 2 × ${fmt(r.a)} × ${fmt(r.d)} = ${r.v * r.v}, so speed = ${r.v} m/s${r.kind === 'hit' ? `; push = ${fmt(r.m)} × ${r.v} ÷ ${HIT_T} = ${fmt(r.push)} N` : ''}.`;
+  let tries = 0, solved = false, note = '', busy = false, pending = null;
+  const solutionText = (r) => `deceleration = ${fmt(r.f)} ÷ ${fmt(r.m)} = ${fmt(r.a)} m/s²; speed² = 2 × ${fmt(r.a)} × ${fmt(r.d)} = ${r.v * r.v}, so speed = ${r.v} m/s${r.kind === 'hit' ? `; push = ${fmt(r.m)} × ${r.v} ÷ ${HIT_T} = ${fmt(r.push)} N` : ''}.`;
+  function waitForNext(kind) {
+    busy = true;
+    pending = kind;
+    lock(true);
+    shootBtn.style.display = 'none';
+    nextBtn.style.display = '';
+  }
+  function nextShot() {
+    if (!pending) return;
+    if (pending === 'win') roundNo++; // the counter moves on only when the next shot appears
+    pending = null;
+    busy = false;
+    nextBtn.style.display = 'none';
+    shootBtn.style.display = '';
+    newRound();
+    lock(false);
+  }
   function newRound() {
     const prev = R;
     // a fresh shot must really be new: different numbers from the one before
@@ -140,15 +161,8 @@ export default function hockey(el, params = {}, api) {
             banner.set('GOAL x3! You used friction like a pro. Ice Hockey Champion! 🏆', true);
             api.done();
           } else {
-            busy = true;
-            banner.set(`In the zone! ${solutionText(R)} Next shot...`, true);
-            setTimeout(() => {
-              if (!alive) return;
-              busy = false;
-              roundNo++; // the counter moves on only when the next shot appears
-              newRound();
-              lock(false);
-            }, 2500);
+            waitForNext('win');
+            banner.set(`In the zone! ${solutionText(R)} Press <b>Next shot ▶</b> when you're ready.`, true);
           }
         } else {
           tries++;
@@ -156,13 +170,14 @@ export default function hockey(el, params = {}, api) {
           const dir = x >= RINK ? 'Way too hard — it hit the boards!' : x > R.d ? 'Too far!' : 'Too short!';
           if (tries >= TRIES) {
             // three misses: show how to solve it, then a fresh shot (the shot counter doesn't move on)
-            note = `${dir} <b>Out of tries.</b> The answer was: ${solutionText(R)} Here's a new one. `;
-            newRound();
-            lock(false);
+            solved = true; // show the worked steps in the readout too
+            waitForNext('reveal');
+            show();
+            banner.set(`${dir} <b>Out of tries.</b> The answer was: ${solutionText(R)} Press <b>Next shot ▶</b> for a new shot with new numbers.`);
           } else {
             lock(false);
             show();
-            banner.set(`${dir} ${TRIES - tries} ${TRIES - tries === 1 ? 'try' : 'tries'} left. Work out a = friction ÷ mass, then (launch speed)² = 2 × a × distance.${R.kind === 'hit' ? ' Then push = mass × speed ÷ 0.1.' : ''}`);
+            banner.set(`${dir} ${TRIES - tries} ${TRIES - tries === 1 ? 'try' : 'tries'} left. Work out deceleration = friction ÷ mass, then (launch speed)² = 2 × deceleration × distance.${R.kind === 'hit' ? ' Then push = mass × speed ÷ 0.1.' : ''}`);
           }
         }
       }

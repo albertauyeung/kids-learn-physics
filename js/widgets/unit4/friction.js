@@ -135,6 +135,8 @@ export default function friction(el, params = {}, api) {
       tag(ctx, `friction ${fNow} N`, crateX + size / 2 - Math.max(14, fNow * 0.35) / 2, FLOOR + 22, { size: 10, color: '#ffb0b0' });
     }
     tag(ctx, `${fmt(v, 1)} m/s`, crateX + size / 2, 24, { size: 11, color: '#fcee4b' });
+    // the value the tasks ask about, on the canvas so it is always on screen
+    if (result) tag(ctx, result.moved ? `while pushing: a = ${fmt(result.a, 2)} m/s²` : `friction = ${P} N, a = 0`, W / 2, 50, { size: 13, color: '#fcee4b' });
     if (running) tag(ctx, pushing ? 'pushing...' : 'sliding — only friction acts', 90, 20, { size: 11, color: pushing ? '#ff9b3d' : '#4aedd9' });
   });
 

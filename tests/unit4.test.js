@@ -239,7 +239,7 @@ test('unit 4 shape: lessons, problem sets, review and boss', () => {
   const review = unit4.sessions.find((s) => s.id === 'mech.u4.review');
   const qs = review.steps.filter((x) => x.type === 'q');
   assert.equal(qs.length, 10);
-  assert.equal(qs.filter((x) => /^u[12]\./.test(x.t)).length, 2);
+  assert.equal(qs.filter((x) => /^u[123]\./.test(x.t)).length, 2);
   const psB = unit4.sessions.find((s) => s.id === 'mech.u4.psB');
   const puzzles = psB.steps.filter((x) => x.type === 'q' && instantiate(x.t, 1).puzzle).length;
   assert.ok(puzzles >= 1 && puzzles <= 2);

@@ -488,7 +488,7 @@ registerTemplates(typeable([
   {
     id: 'u4.fma-loaded', concepts: [C.n2], tier: 'scientist',
     generate(r) {
-      const v = until(r, (rr) => ({ mc: rr.pick([20, 25, 40, 50]), mp: rr.pick([30, 35, 40, 45]), a: rr.pick([0.5, 1, 1.5, 2]) }), (x) => x.mc !== x.mp && Number.isInteger((x.mc + x.mp) * x.a) && nice(((x.mc + x.mp) * x.a) / x.mc) && nice(((x.mc + x.mp) * x.a) / x.mp));
+      const v = until(r, (rr) => ({ mc: rr.pick([20, 25, 40, 50]), mp: 40, a: rr.pick([0.5, 1, 1.5, 2]) }), (x) => x.mc !== x.mp && Number.isInteger((x.mc + x.mp) * x.a) && nice(((x.mc + x.mp) * x.a) / x.mc) && nice(((x.mc + x.mp) * x.a) / x.mp));
       const M = v.mc + v.mp, F = M * v.a;
       return {
         type: 'numeric',
@@ -728,9 +728,32 @@ registerTemplates(typeable([
     },
   },
   {
+    id: 'u4.n3-vs-balanced-mcq', concepts: [C.n3, C.n1], tier: 'scientist',
+    generate(r) {
+      const s = r.pick([
+        { obj: 'A book rests on a table', down: 'Gravity pulls the book down', up: 'the table pushes it up', F: r.pick([5, 8, 10]), pair: 'the Earth pulls the book down ↔ the book pulls the Earth up' },
+        { obj: 'A lamp hangs still from a cord', down: 'Gravity pulls the lamp down', up: 'the cord pulls it up', F: r.pick([10, 20, 30]), pair: 'the cord pulls the lamp up ↔ the lamp pulls the cord down' },
+        { obj: 'Pip stands still on the floor', down: 'Gravity pulls Pip down', up: 'the floor pushes him up', F: 400, pair: 'the floor pushes Pip up ↔ Pip pushes the floor down' },
+        { obj: 'A crate sits on a shelf', down: 'Gravity pulls the crate down', up: 'the shelf pushes it up', F: r.pick([50, 80, 120]), pair: 'the shelf pushes the crate up ↔ the crate pushes the shelf down' },
+      ]);
+      return {
+        type: 'mcq',
+        prompt: `${s.obj}. ${s.down} with <b>${s.F} N</b>, and ${s.up} with <b>${s.F} N</b>. Are these two forces a Newton's 3rd-law pair?`,
+        choices: [
+          'No — both act on the same object, so they are balanced forces, not a pair',
+          'Yes — they are equal and opposite',
+          'Yes — they cancel each other out',
+          'No — a 3rd-law pair must point the same way',
+        ],
+        answer: 0,
+        explain: `A 3rd-law pair acts on <b>two different</b> objects. Both of these act on the same thing, so they are simply <b>balanced</b> (Newton's 1st law). A real pair: ${s.pair}.`,
+      };
+    },
+  },
+  {
     id: 'u4.n3-force', concepts: [C.n3], tier: 'explorer',
     generate(r) {
-      const [m1, m2] = r.pick([[30, 60], [40, 80], [35, 70], [45, 90], [30, 90]]);
+      const m1 = 40, m2 = r.pick([60, 70, 80, 90]); // Pip is always 40 kg; his dad varies
       const F = r.int(3, 10) * 20;
       return {
         type: 'numeric',
@@ -749,7 +772,7 @@ registerTemplates(typeable([
   {
     id: 'u4.n3-which-mcq', concepts: [C.n3, C.n2], tier: 'scientist',
     generate(r) {
-      const m1 = r.pick([30, 35, 40]), m2 = r.pick([70, 80, 90]);
+      const m1 = 40, m2 = r.pick([70, 80, 90]);
       return {
         type: 'mcq',
         prompt: `Pip (<b>${m1} kg</b>) and Steve (<b>${m2} kg</b>) stand still on ice skates, then push each other apart. Which is true?`,
@@ -767,7 +790,7 @@ registerTemplates(typeable([
   {
     id: 'u4.n3-skaters', concepts: [C.n3, C.n2], tier: 'scientist',
     generate(r) {
-      const v = until(r, (rr) => ({ m1: rr.pick([30, 35, 40, 45]), m2: rr.pick([60, 70, 75, 80, 90]), F: rr.int(3, 12) * 20, light: rr.chance(0.5) }), (x) => {
+      const v = until(r, (rr) => ({ m1: 40, m2: rr.pick([60, 64, 80, 90]), F: rr.int(3, 12) * 20, light: rr.chance(0.5) }), (x) => {
         const a = x.F / (x.light ? x.m1 : x.m2), b = x.F / (x.light ? x.m2 : x.m1);
         return nice(a) && nice(b) && a <= 6 && distinct(a, b, x.F / (x.m1 + x.m2), x.F);
       });
@@ -790,7 +813,7 @@ registerTemplates(typeable([
   {
     id: 'u4.n3-speed-ratio', concepts: [C.n3, C.n2], tier: 'engineer',
     generate(r) {
-      const v = until(r, (rr) => ({ m1: rr.pick([30, 35, 40, 45]), m2: rr.pick([60, 70, 75, 80, 90]), v1: rr.pick([1, 1.5, 2, 2.5, 3, 4]), t: rr.pick([0.5, 1]) }), (x) => {
+      const v = until(r, (rr) => ({ m1: 40, m2: rr.pick([60, 64, 80]), v1: rr.pick([1, 1.5, 2, 2.5, 3, 4]), t: rr.pick([0.5, 1]) }), (x) => {
         const v2 = (x.m1 * x.v1) / x.m2, F = (x.m1 * x.v1) / x.t;
         return x.m1 !== x.m2 && nice(v2) && nice((x.v1 * x.m2) / x.m1) && v2 <= 6 && v2 >= 0.5 && F <= 300 && distinct(v2, x.v1, (x.v1 * x.m2) / x.m1, F);
       });
@@ -904,11 +927,11 @@ registerTemplates(typeable([
         type: 'numeric',
         prompt: `An ice-hockey puck has a mass of <b>${fmt(m)} kg</b>. Friction on it is <b>${fmt(f)} N</b>. Pip wants it to slide exactly <b>${fmt(d)} m</b> and stop. How fast must he send it off?`,
         answer: v, unit: 'm/s',
-        hints: ['What deceleration does friction give the puck?', 'It stops, so (launch speed)² = 2 × a × distance. Then take the square root.'],
+        hints: ['What deceleration does friction give the puck?', 'It stops, so (launch speed)² = 2 × deceleration × distance — Unit 3\'s braking distance u² ÷ (2 × deceleration), turned round. Then take the square root.'],
         errors: [
           { value: v * v, msg: 'That\'s the speed SQUARED — take the square root.' },
         ],
-        solution: `a = ${fmt(f)} ÷ ${fmt(m)} = ${fmt(a)} m/s². Speed² = 2 × ${fmt(a)} × ${fmt(d)} = ${v * v}, so speed = √${v * v} = <b>${v} m/s</b>`,
+        solution: `Deceleration = ${fmt(f)} ÷ ${fmt(m)} = ${fmt(a)} m/s². Speed² = 2 × ${fmt(a)} × ${fmt(d)} = ${v * v}, so speed = √${v * v} = <b>${v} m/s</b>`,
       };
     },
   },

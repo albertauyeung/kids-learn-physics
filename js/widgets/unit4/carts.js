@@ -36,12 +36,14 @@ export default function carts(el, params = {}, api) {
   }
 
   function show() {
-    const rows = [['Push', `${F} N`], ['Mass', `${m} kg`]];
+    const rows = [];
+    // The value the tasks ask about comes first, so it is on screen even on short (landscape) screens.
     if (done) {
-      rows.push([`Speed after ${fmt(done.tp, 2)} s of pushing`, `${fmt(done.v, 2)} m/s`]);
       rows.push(['Acceleration = speed gained ÷ time', `${fmt(done.v, 2)} ÷ ${fmt(done.tp, 2)} = ${fmt(done.a, 2)} m/s²`, 'winner']);
+      rows.push([`Speed after ${fmt(done.tp, 2)} s of pushing`, `${fmt(done.v, 2)} m/s`]);
     } else rows.push(['Acceleration', 'press Push! to measure it']);
-    log.forEach((r, i) => rows.push([`Run ${r.n}`, `${r.F} N on ${r.m} kg → ${fmt(r.a, 2)} m/s²`, i === log.length - 1 ? 'winner' : '']));
+    rows.push(['Push and mass', `${F} N on ${m} kg`]);
+    log.slice(-2, -1).forEach((r) => rows.push([`Run ${r.n} (before)`, `${r.F} N on ${r.m} kg → ${fmt(r.a, 2)} m/s²`]));
     ro.set(rows);
     if (!done) {
       tasks.showCurrent();
@@ -96,6 +98,7 @@ export default function carts(el, params = {}, api) {
     }
     const vNow = running ? a() * Math.min(t, PUSH_T) : done ? done.v : 0;
     tag(ctx, `${fmt(vNow, 1)} m/s`, cx, 26, { size: 11, color: '#fcee4b' });
+    if (done) tag(ctx, `a = ${fmt(done.a, 2)} m/s²`, W / 2, 50, { size: 13, color: '#fcee4b' });
     tag(ctx, `t = ${fmt(Math.min(running || done ? t : 0, 9), 1)} s`, W - 40, 20, { size: 11 });
     if (running && t < PUSH_T) tag(ctx, 'pushing...', 60, 20, { size: 11, color: '#ff9b3d' });
     else if (running) tag(ctx, 'gliding (no force)', 70, 20, { size: 11, color: '#4aedd9' });
