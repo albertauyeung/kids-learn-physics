@@ -5,7 +5,9 @@ import assert from 'node:assert/strict';
 import unit3 from '../js/content/mechanics/unit3.js';
 import { allTemplates, instantiate } from '../js/engine/templates.js';
 import { fmt } from '../js/core/util.js';
-import { trafficRound } from '../js/widgets/unit3/traffic.js';
+import { trafficRound, nextRound, answerOf, START } from '../js/widgets/unit3/traffic.js';
+import { taskRunner } from '../js/widgets/unit3/common.js';
+import { setSoundEnabled } from '../js/core/sound.js';
 import '../js/content/course.js'; // registers the Unit 1–2 templates used in the review
 import { makeRng } from '../js/core/util.js';
 
@@ -336,4 +338,45 @@ test('Unit 3 sims: planning tasks give direction-only feedback data', () => {
     assert.ok(typeof task.plan.value === 'function' && Number.isFinite(task.plan.target) && task.plan.more && task.plan.less && task.plan.hint, `${step.s}: ${task.text}`);
     assert.ok(!new RegExp(`\\b${task.plan.target}\\b`).test(task.plan.more + task.plan.less), 'direction text must not contain numbers');
   }
+});
+
+// ---------- Review round 3 ----------
+test('Unit 3 boss: a rerolled round never repeats the answer, and slider starts are never answers', () => {
+  for (let seed = 1; seed <= 300; seed++) {
+    const rng = makeRng(seed);
+    for (const type of ['stop', 'brakepoint', 'go']) {
+      let prev = null;
+      for (let k = 0; k < 6; k++) {
+        const r = nextRound(rng, type, prev);
+        if (prev) assert.notEqual(answerOf(r), answerOf(prev), `${type} seed ${seed}`);
+        assert.notEqual(answerOf(r), START[type], `${type}: the slider would start on the answer`);
+        prev = r;
+      }
+    }
+  }
+});
+
+test('Unit 3 sims: planning feedback points the right way, and a right value with a wrong setting says so', () => {
+  setSoundEnabled(false);
+  const msgs = [];
+  const banner = { set: (h) => msgs.push(h) };
+  const api = { done() {}, tested() {} };
+  const step = (title) => sims.find((x) => x.title === title);
+  const run = (title, idx, r) => {
+    const tasks = step(title).params.tasks;
+    const tr = taskRunner([tasks[idx]], banner, api);
+    tr.run(r);
+    return msgs[msgs.length - 1];
+  };
+  // brakes: u = 12, b = 2 stops on the 36 m flag but the task wants 24 m/s
+  assert.match(run('Stopping-Distance Game', 2, { u: 12, b: 2, time: 6, dist: 36 }), /stopped on the flag, but it must start at 24/);
+  assert.match(run('Stopping-Distance Game', 2, { u: 24, b: 6, time: 4, dist: 48 }), /went past the flag/);
+  assert.match(run('Stopping-Distance Game', 2, { u: 24, b: 8.5, time: 24 / 8.5, dist: 576 / 17 }), /stopped before the flag/);
+  const trap = (u, v, t) => ({ pieces: [{ v0: u, v1: v, dt: t }], total: ((u + v) / 2) * t, u, v, t });
+  assert.match(run('Trapezium Lab', 2, trap(9, 9, 4)), /right distance, but it must speed up/);
+  assert.match(run('Trapezium Lab', 1, trap(8, 16, 4)), /right distance, but it must start at 6/);
+  assert.match(run('Trapezium Lab', 1, trap(6, 10, 4)), /too short/);
+  // 20 + 60 + 40 = 120 m, but it ends at 10 m/s
+  const multi = { pieces: [{ v0: 0, v1: 10, dt: 4 }, { v0: 10, v1: 10, dt: 6 }, { v0: 10, v1: 10, dt: 4 }], total: 120, u: 0, v: 10, t: 14 };
+  assert.match(run('Graph Builder', 2, multi), /right length, but the trip must end at rest/);
 });

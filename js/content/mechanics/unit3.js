@@ -149,9 +149,9 @@ export default {
           params: {
             mode: 'multi', pieces: [{ v: 10, dt: 4 }, { v: 10, dt: 4 }, { v: 0, dt: 2 }],
             tasks: [
-              { text: 'Run the trip as it is and watch the shaded area fill in as the car moves.', check: (p) => p.total === 70 },
+              { text: 'Run the trip as it is (piece 1: 0 → 10 m/s in 4 s, piece 2: 10 m/s for 4 s, piece 3: 10 → 0 m/s in 2 s) and watch the shaded area fill in.', check: (p) => p.total === 70 },
               { text: 'Change <b>piece 1</b> so the car speeds up at exactly <b>2 m/s²</b>.', check: (p) => p.pieces[0].v1 === 2 * p.pieces[0].dt },
-              { text: 'Plan a trip exactly <b>120 m</b> long that ends at rest (0 m/s). Work out the areas first — the sim only says "too long" or "too short" until you get it!', check: (p) => p.total === 120 && p.v === 0, plan: { value: (p) => p.total, target: 120, more: 'too short', less: 'too long', hint: 'Add up the areas: triangles ½ × base × height, rectangles base × height.' } },
+              { text: 'Plan a trip exactly <b>120 m</b> long that ends at rest (0 m/s). Work out the areas first — the sim only says "too long" or "too short" until you get it!', check: (p) => p.total === 120 && p.v === 0, plan: { value: (p) => p.total, target: 120, more: 'too short', less: 'too long', other: 'right length, but the trip must end at rest (0 m/s)', hint: 'Add up the areas: triangles ½ × base × height, rectangles base × height.' } },
             ],
           },
         },
@@ -197,8 +197,8 @@ export default {
             mode: 'single', u: 2, v: 10, t: 5,
             tasks: [
               { text: 'Make the car speed up from <b>4 m/s</b> to <b>12 m/s</b> in <b>4 s</b>. How far does it go?', check: (p) => p.u === 4 && p.v === 12 && p.t === 4, test: true },
-              { text: 'Start at <b>6 m/s</b>. In <b>4 s</b>, speed up steadily and cover exactly <b>48 m</b>. Work out the end speed first!', check: (p) => p.u === 6 && p.t === 4 && p.total === 48, plan: { value: (p) => p.total, target: 48, more: 'too short', less: 'too long', hint: 'Average speed = 48 ÷ 4. It is halfway between 6 and v.' } },
-              { text: 'Accelerate at exactly <b>3 m/s²</b> for <b>4 s</b> and cover exactly <b>36 m</b>.', check: (p) => p.t === 4 && p.v - p.u === 12 && p.total === 36, plan: { value: (p) => p.total, target: 36, more: 'too short', less: 'too long', hint: 'In 4 s at 3 m/s² it gains 12 m/s, so v = u + 12. The average speed must be 36 ÷ 4.' } },
+              { text: 'Start at <b>6 m/s</b>. In <b>4 s</b>, speed up steadily and cover exactly <b>48 m</b>. Work out the end speed first!', check: (p) => p.u === 6 && p.t === 4 && p.total === 48, plan: { value: (p) => p.total, target: 48, more: 'too short', less: 'too long', other: 'right distance, but it must start at 6 m/s and take 4 s', hint: 'Average speed = 48 ÷ 4. It is halfway between 6 and v.' } },
+              { text: 'Accelerate at exactly <b>3 m/s²</b> for <b>4 s</b> and cover exactly <b>36 m</b>.', check: (p) => p.t === 4 && p.v - p.u === 12 && p.total === 36, plan: { value: (p) => p.total, target: 36, more: 'too short', less: 'too long', other: 'right distance, but it must speed up at exactly 3 m/s² for 4 s', hint: 'In 4 s at 3 m/s² it gains 12 m/s, so v = u + 12. The average speed must be 36 ÷ 4.' } },
             ],
           },
         },
@@ -271,7 +271,7 @@ export default {
             tasks: [
               { text: 'Brake from <b>10 m/s</b> at <b>5 m/s²</b>. Note the braking distance.', check: (p) => p.u === 10 && p.b === 5 },
               { text: 'Keep the brakes at 5 m/s² and <b>double the speed</b> to 20 m/s. How much further?', check: (p) => p.u === 20 && p.b === 5, test: true },
-              { text: 'From <b>24 m/s</b>, choose the brakes so the car stops exactly at the flag, <b>36 m</b> away.', target: 36, check: (p) => p.u === 24 && Math.abs(p.dist - 36) < 1e-9, plan: { value: (p) => p.dist, target: 36, more: 'it stopped before the flag', less: 'it went past the flag', hint: '0 = 24² − 2 × deceleration × 36. What must the deceleration be?' } },
+              { text: 'From <b>24 m/s</b>, choose the brakes so the car stops exactly at the flag, <b>36 m</b> away.', target: 36, check: (p) => p.u === 24 && Math.abs(p.dist - 36) < 1e-9, plan: { value: (p) => p.dist, target: 36, more: 'it stopped before the flag', less: 'it went past the flag', other: 'it stopped on the flag, but it must start at 24 m/s', hint: '0 = 24² − 2 × deceleration × 36. What must the deceleration be?' } },
             ],
           },
         },

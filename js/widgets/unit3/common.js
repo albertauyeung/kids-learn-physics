@@ -60,7 +60,9 @@ export function speedo(ctx, cx, cy, r, v, vmax) {
     ctx.moveTo(cx + Math.cos(a) * (r - 2), cy + Math.sin(a) * (r - 2));
     ctx.lineTo(cx + Math.cos(a) * (r - (major ? 9 : 5)), cy + Math.sin(a) * (r - (major ? 9 : 5)));
     ctx.stroke();
-    if (major) text(ctx, String(k), cx + Math.cos(a) * (r - 18), cy + Math.sin(a) * (r - 18) + 4, { size: 8, align: 'center', shadow: false, color: '#ccc' });
+    // the end labels sit a little inside the dial so its edge doesn't cut them
+    const la = k === 0 ? a + 0.22 : k >= vmax ? a - 0.22 : a;
+    if (major) text(ctx, String(k), cx + Math.cos(la) * (r - 19), cy + Math.sin(la) * (r - 19) + 4, { size: 8, align: 'center', shadow: false, color: '#ccc' });
   }
   ctx.strokeStyle = '#ff5a3d';
   ctx.lineWidth = 3;
@@ -136,7 +138,9 @@ export function taskRunner(tasks, banner, api, { intro = '', allDone = 'All task
         // Planning tasks: direction only, never the exact value of the miss (no trial and error).
         misses++;
         const v = task.plan.value(p);
-        const dir = v < task.plan.target ? task.plan.more : task.plan.less;
+        // Right value but another condition fails (e.g. wrong start speed): say so, not a false direction.
+        const dir = Math.abs(v - task.plan.target) < 1e-9 ? (task.plan.other || 'right distance, but read the task again — something else isn\'t right yet')
+          : v < task.plan.target ? task.plan.more : task.plan.less;
         banner.set(`Not quite — ${dir}. ${misses >= 2 && task.plan.hint ? `<b>Hint:</b> ${task.plan.hint} ` : 'Work it out before you try again! '}Task ${idx + 1}/${tasks.length}: ${task.text}`, false);
         return false;
       }

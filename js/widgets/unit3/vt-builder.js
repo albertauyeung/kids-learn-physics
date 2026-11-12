@@ -147,16 +147,19 @@ export default function vtBuilder(el, params = {}, api) {
     // ---- road strip ----
     sky(ctx, W, ROAD);
     drawRoad(ctx, W, ROAD, 24, 0);
-    const L = single ? 200 : total() > 290 ? 500 : 300; // fixed, so the road doesn't give the distance away
+    const L = single ? 200 : 500; // fixed for good, so the road never gives the distance away
     const xOf = (m) => 44 + (m / L) * (W - 84);
-    ctx.fillStyle = '#ddd';
-    const step = L <= 300 ? 25 : 50;
-    for (let m = 0; m <= L; m += step) {
-      ctx.fillRect(Math.round(xOf(m)), ROAD + 24, 1, 5);
-      text(ctx, `${m}`, xOf(m), ROAD + 40, { size: 9, align: 'center' });
+    // While planning, the road has no distance labels: the area must be worked out.
+    if (!tasks.planning) {
+      ctx.fillStyle = '#ddd';
+      const step = single ? 25 : 50;
+      for (let m = 0; m <= L; m += step) {
+        ctx.fillRect(Math.round(xOf(m)), ROAD + 24, 1, 5);
+        text(ctx, `${m}`, xOf(m), ROAD + 40, { size: 9, align: 'center' });
+      }
     }
     const d = running || driven ? distAt(clock) : 0;
-    drawCar(ctx, xOf(d) - 16, ROAD, 2, running ? Math.sin(now * 30) * 0.5 : 0);
+    drawCar(ctx, Math.min(xOf(d), W - 4) - 16, ROAD, 2, running ? Math.sin(now * 30) * 0.5 : 0);
     tag(ctx, secret() ? 'distance ?' : `distance ${fmt(d, 1)} m`, W - 70, 18, { size: 11 });
     tag(ctx, `t = ${fmt(clock, 1)} s`, 50, 18, { size: 11 });
 

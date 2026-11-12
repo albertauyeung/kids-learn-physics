@@ -30,7 +30,7 @@ export default function brakes(el, params = {}, api) {
   const xNow = () => p.u * clock - 0.5 * p.b * clock * clock;
 
   const reset = () => {
-    clock = 0; running = false; done = null; log = [];
+    clock = 0; running = false; done = null; log = []; hidden = false;
     show();
   };
   const su = slider({ label: 'Speed u', min: 5, max: 30, step: 1, value: p.u, unit: 'm/s', onInput: (v) => { p.u = v; reset(); } });
@@ -39,8 +39,9 @@ export default function brakes(el, params = {}, api) {
     clock = 0; done = null; log = [p.u]; running = true;
     // A planning task keeps the track fixed around its flag, so the zoom doesn't give the distance away.
     const target = tasks.current()?.target;
-    const far = tasks.planning && target ? target * 1.3 : S();
-    view = Math.max(60, Math.ceil((Math.max(far, ...marks.map((m) => m.x)) * 1.15) / 10) * 10);
+    view = tasks.planning && target
+      ? Math.ceil((target * 1.4) / 10) * 10 // fixed: ignores this run and earlier marks
+      : Math.max(60, Math.ceil((Math.max(S(), ...marks.map((m) => m.x)) * 1.15) / 10) * 10);
     hidden = false;
     sfx.click();
     show();
@@ -74,8 +75,11 @@ export default function brakes(el, params = {}, api) {
         const planning = tasks.planning;
         const ok = tasks.run(done);
         hidden = planning && !ok;
-        marks.push({ x: S(), label: hidden ? `${fmt(p.u)} m/s, ${fmt(p.b)} m/s²` : `${fmt(p.u)} m/s → ${fmt(S(), 2)} m` });
-        if (marks.length > 3) marks.shift();
+        // A missed planning run leaves no mark (its distance stays secret).
+        if (!hidden) {
+          marks.push({ x: S(), label: `${fmt(p.u)} m/s → ${fmt(S(), 2)} m` });
+          if (marks.length > 3) marks.shift();
+        }
         show();
       }
     }
@@ -83,27 +87,29 @@ export default function brakes(el, params = {}, api) {
     const xOf = (m) => X0 + (m / view) * (W - X0 - 30);
     sky(ctx, W, ROAD);
     drawRoad(ctx, W, ROAD, 26, 0);
-    ruler(ctx, xOf, ROAD + 30, 0, view, view > 100 ? 10 : 5, view > 200 ? 50 : view > 100 ? 20 : 10);
+    const planning = tasks.planning;
+    // No ruler while planning: the flag is the only distance on show.
+    if (!planning) ruler(ctx, xOf, ROAD + 30, 0, view, view > 100 ? 10 : 5, view > 200 ? 50 : view > 100 ? 20 : 10);
     // start line where the brakes go on
     ctx.fillStyle = '#fcee4b';
     ctx.fillRect(Math.round(xOf(0)) - 1, ROAD, 3, 26);
-    tag(ctx, 'brakes on', xOf(0), ROAD - 46, { size: 10, color: '#fcee4b' });
+    tag(ctx, '▲ brakes on', xOf(0) - 6, H - 6, { size: 10, color: '#fcee4b', align: 'left' });
     // the flag of a planning task
-    const flagAt = tasks.planning ? tasks.current()?.target : null;
+    const flagAt = planning ? tasks.current()?.target : null;
     if (flagAt) {
       const fx = xOf(flagAt);
       ctx.fillStyle = '#fff';
       ctx.fillRect(Math.round(fx), ROAD - 30, 2, 56);
       ctx.fillStyle = '#e03030';
       ctx.fillRect(Math.round(fx) + 2, ROAD - 30, 12, 8);
-      tag(ctx, `flag ${flagAt} m`, fx, ROAD - 36, { size: 10, color: '#fcee4b' });
+      tag(ctx, `flag ${flagAt} m`, fx, ROAD - 54, { size: 10, color: '#fcee4b' });
     }
     // earlier stops
-    marks.forEach((m, i) => {
+    if (!planning) marks.forEach((m, i) => {
       const x = xOf(m.x);
       ctx.fillStyle = i === marks.length - 1 && done ? '#80ff20' : 'rgba(255,255,255,0.7)';
       ctx.fillRect(Math.round(x), ROAD - 8, 2, 34);
-      tag(ctx, m.label, x, ROAD - 12 - (marks.length - 1 - i) * 16 - 34, { size: 9, color: i === marks.length - 1 && done ? '#80ff20' : '#ddd' });
+      tag(ctx, m.label, x, 18 + (marks.length - 1 - i) * 15, { size: 9, color: i === marks.length - 1 && done ? '#80ff20' : '#ddd' });
     });
     const x = running || done ? xNow() : 0;
     // skid marks
@@ -121,7 +127,7 @@ export default function brakes(el, params = {}, api) {
       if (!tasks.planning || !running) tag(ctx, `v = ${fmt(v, 1)} m/s`, carX + 30, ROAD - 34, { size: 10, color: '#80ff20', align: 'left' });
       tag(ctx, `a = −${fmt(p.b)}`, carX - 22, ROAD - 18, { size: 10, color: '#ff6b6b', align: 'right' });
     }
-    if (!hidden && !(tasks.planning && running)) tag(ctx, `t = ${fmt(clock, 1)} s`, W - 40, 18, { size: 12 });
+    if (!hidden && !(planning && running)) tag(ctx, `t = ${fmt(clock, 1)} s`, W - 4, H - 6, { size: 11, align: 'right' });
   });
 
   show();

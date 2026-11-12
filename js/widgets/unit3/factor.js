@@ -50,6 +50,7 @@ export default function factor(el, params = {}, api) {
   function intro() {
     const { u, s } = cur();
     stage = 'factor';
+    sp.disabled = false; sq.disabled = false;
     rootBox.innerHTML = '';
     checkBtn.disabled = false;
     banner.set(`Problem ${k + 1}/${problems.length}: a car at <b>${u} m/s</b> accelerates at <b>2 m/s²</b>. When has it gone <b>${s} m</b>? s = ut + ½at² gives <b>${s} = ${u}t + t²</b>, so <b>${eqText()}</b>. Find two numbers that multiply to −${s} and add to +${u}.`);
@@ -63,6 +64,7 @@ export default function factor(el, params = {}, api) {
       sfx.correct();
       stage = 'root';
       checkBtn.disabled = true;
+      sp.disabled = true; sq.disabled = true; // the brackets are fixed now
       const r1 = -p, r2 = -q;
       banner.set(`Yes! (t ${sgn(p)})(t ${sgn(q)}) = 0, so t = ${fmt(r1)} or t = ${fmt(r2)}. Which one is the answer?`, true);
       rootBox.innerHTML = '';
