@@ -15,6 +15,7 @@ let api = null; // { onUser, signIn, signOut, read, write }
 let user = null; // { uid, email }
 let status = 'signed-out'; // signed-out | syncing | synced | offline
 let pulled = false; // read the cloud copy since the app was last shown?
+let syncing = false;
 let lastPushed = null;
 let timer = null;
 const listeners = new Set();
@@ -75,7 +76,13 @@ export async function initCloud() {
     else setStatus('signed-out');
   });
   S.onChange(() => {
-    if (!user || !pulled) return;
+    if (!user) return;
+    // The last cloud read failed (e.g. Wi-Fi dropped as the app opened): try again now, rather
+    // than leaving this visit's progress un-uploaded until the app is next reopened.
+    if (!pulled) {
+      if (!syncing) syncNow();
+      return;
+    }
     clearTimeout(timer);
     timer = setTimeout(push, PUSH_DELAY_MS);
   });
@@ -93,8 +100,9 @@ export async function signOut() {
 
 // Read the cloud copy: adopt it if it is ahead, otherwise upload ours.
 export async function syncNow() {
-  if (!user) return;
+  if (!user || syncing) return;
   pulled = false;
+  syncing = true;
   setStatus('syncing');
   try {
     const remote = await api.read(user.uid);
@@ -110,6 +118,8 @@ export async function syncNow() {
   } catch (err) {
     console.warn('Cloud sync failed:', err);
     setStatus('offline');
+  } finally {
+    syncing = false;
   }
 }
 
