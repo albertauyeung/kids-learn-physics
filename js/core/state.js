@@ -125,6 +125,33 @@ export function replaceWith(saved) {
   emit();
 }
 
+// Parent tool: rebuild progress lost with a device's storage (e.g. a deleted Home Screen app).
+// Marks the given sessions as done, sets the streak, and makes sure XP and the boss
+// achievements are at least what those sessions would have earned. Never lowers anything.
+export function restoreProgress(sessions, streakDays) {
+  reloadIfChanged();
+  const today = dateStr();
+  let xp = 0;
+  for (const s of sessions) {
+    const rec = (state.sessions[s.id] ||= { completions: 0, bestAccuracy: 0, perfect: false, lastDate: null });
+    rec.completions = Math.max(rec.completions, 1);
+    rec.bestAccuracy = Math.max(rec.bestAccuracy, 0.85);
+    rec.lastDate ||= today;
+    xp += Math.round((BASE_XP[s.type] || 10) * 0.9) + 2;
+    if (s.type === 'boss' && s.unitNumber) state.achievements[`unit${s.unitNumber}`] ||= today;
+  }
+  if (sessions.length) state.achievements.first_steps ||= today;
+  state.xp = Math.max(state.xp, xp);
+  state.emeralds = Math.max(state.emeralds, sessions.length * 3);
+  const n = Math.max(0, Math.floor(streakDays) || 0);
+  if (n > 0) {
+    state.streak.count = n;
+    state.streak.best = Math.max(state.streak.best, n);
+    state.streak.lastDate = today; // counts today, so the streak is safe until tomorrow
+  }
+  persist();
+}
+
 export function resetAll() {
   state = fresh();
   persist();

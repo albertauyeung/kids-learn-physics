@@ -199,3 +199,27 @@ test('adopting a cloud copy keeps its progress and saves it on this device', () 
     delete globalThis.localStorage;
   }
 });
+
+test('parent restore rebuilds lost progress without lowering anything', () => {
+  fakeStorage();
+  try {
+    const sessions = [
+      { id: 'mech.u1.l1', type: 'lesson', unitNumber: 1 },
+      { id: 'mech.u1.boss', type: 'boss', unitNumber: 1 },
+      { id: 'mech.u2.l1', type: 'lesson', unitNumber: 2 },
+    ];
+    S.restoreProgress(sessions, 12);
+    assert.equal(S.state.streak.count, 12);
+    assert.equal(S.state.streak.lastDate, today);
+    assert.ok(S.sessionRecord('mech.u1.boss').completions >= 1);
+    assert.ok(S.state.achievements.unit1);
+    assert.ok(S.state.xp > 0);
+    const xp = S.state.xp;
+    S.state.xp = xp + 500;
+    S.restoreProgress(sessions, 0); // a second restore never lowers XP or touches the streak
+    assert.equal(S.state.xp, xp + 500);
+    assert.equal(S.state.streak.count, 12);
+  } finally {
+    delete globalThis.localStorage;
+  }
+});

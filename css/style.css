@@ -217,6 +217,7 @@ button { touch-action: manipulation; }
 .cal-xp { font-size: 13px; }
 .practice-btn { margin-top: 10px; width: 100%; }
 .notice { background: #3b2a5a; border: 3px solid #000; padding: 10px 14px; margin: 12px 0 0; }
+.notice a { color: var(--gold); font-weight: 800; }
 
 /* ---------- Units & path ---------- */
 .unit { margin: 26px 0 8px; }

@@ -31,8 +31,10 @@ document.addEventListener('visibilitychange', () => {
   cloud.syncNow(); // another device may have made progress meanwhile
 });
 // Cloud save (optional): when a newer copy arrives from another device, redraw unless mid-session.
-cloud.onCloudChange(({ replaced }) => {
-  if (replaced && !inSession()) route();
+cloud.onCloudChange(({ replaced, user }) => {
+  // Also redraw when sign-in finishes after the map was drawn, so the backup reminder goes away.
+  const staleNudge = user && document.querySelector('.backup-nudge');
+  if ((replaced || staleNudge) && !inSession()) route();
   else renderCloudCard();
 });
 cloud.initCloud();
@@ -187,6 +189,12 @@ function learnScreen(main) {
   const notices = st.notices.splice(0);
   for (const n of notices) main.append(h('div', { class: 'notice' }, n));
   if (notices.length) S.persist();
+  // Progress lives only on this device until a grown-up signs in, and deleting a Home Screen app deletes it.
+  const cs = cloud.cloudState();
+  if (cs.enabled && !cs.user && st.xp >= 20) {
+    main.append(h('div', { class: 'notice backup-nudge' }, '💾 Keep your progress safe: ask a grown-up to sign in under ',
+      h('a', { href: '#/profile' }, 'Profile → Cloud save'), '.'));
+  }
 
   const d = S.today();
   const goalPct = Math.min(1, d.xp / st.profile.dailyGoal);
@@ -660,6 +668,33 @@ async function signInClicked() {
 }
 
 // Grown-up settings sit behind a small maths gate: friction for a child, not security.
+// Parent corner: rebuild progress after a device lost its storage.
+function restoreForm() {
+  const all = playableUnits().flatMap((u) => u.sessions.map((s) => ({ ...s, unitNumber: u.number, unitTitle: u.title })));
+  const done = all.filter((s) => S.sessionRecord(s.id)?.completions);
+  const last = done.length ? all.indexOf(done[done.length - 1]) : -1;
+  const pick = h('select', { class: 'select', 'aria-label': 'Last finished session' },
+    all.map((s, i) => h('option', { value: i, selected: i === last }, `Unit ${s.unitNumber}: ${s.title}`)));
+  const days = h('input', { class: 'text-input gate-input', inputmode: 'numeric', autocomplete: 'off', value: S.state.streak.count || '', 'aria-label': 'Streak days' });
+  return h('div', { class: 'restore' },
+    h('h3', {}, 'Restore lost progress'),
+    h('p', { class: 'muted' }, 'If this device lost its progress, pick the last session finished and the streak, then press Restore. Nothing already earned is lowered.'),
+    h('label', { class: 'setting' }, h('span', {}, 'Finished up to'), pick),
+    h('label', { class: 'setting' }, h('span', {}, 'Streak (days)'), days),
+    h('button', {
+      class: 'mc-btn small green', type: 'button',
+      onClick: () => {
+        const upto = all.slice(0, Number(pick.value) + 1);
+        const n = Number(days.value);
+        if (!confirm(`Mark ${upto.length} sessions as finished${n > 0 ? ` and set the streak to ${n} days` : ''}?`)) return;
+        S.restoreProgress(upto, n);
+        toast('Progress restored!');
+        go('#/learn');
+      },
+    }, 'Restore'),
+  );
+}
+
 function parentSettings(st) {
   const box = h('div', { class: 'parent-settings' });
   const open = () => {
@@ -667,6 +702,7 @@ function parentSettings(st) {
     box.append(
       h('h3', {}, 'Parent settings'),
       toggle('Unlock all sessions', st.settings.unlockAll, (v) => S.update((s) => (s.settings.unlockAll = v))),
+      restoreForm(),
       h('button', {
         class: 'mc-btn small red', type: 'button',
         onClick: () => { if (confirm('Reset ALL progress? This cannot be undone.')) { S.resetAll(); go('#/learn'); } },
